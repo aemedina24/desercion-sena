@@ -1,7 +1,7 @@
 [project]
 name = "desercion"
 version = "0.1.0"
-description = "Add your description here"
+description = "Sistema de alerta temprana de deserción de aprendices del SENA con prácticas de MLOps"
 readme = "README.md"
 authors = [
     { name = "aemedina24", email = "aemedina@unal.edu.co" }

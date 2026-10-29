@@ -1,0 +1,9 @@
+stages:
+  process:
+    cmd: uv run python -m desercion.process
+    deps:
+      - data/raw/aprendices.parquet
+      - src/desercion/process.py
+    outs:
+      - data/processed/aprendices.parquet
+      - data/processed/auditoria.parquet
