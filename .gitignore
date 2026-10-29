@@ -1,0 +1,40 @@
+@'
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# --- Herramientas ---
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# --- Secretos (nunca a Git) ---
+.env
+
+# --- Datos y modelos: los versiona DVC, no Git ---
+/data/raw/*
+/data/processed/*
+/data/final/*
+!/data/**/.gitkeep
+!/data/**/.gitignore
+!/data/**/*.dvc
+/models/*
+!/models/.gitkeep
+
+# --- MLflow local ---
+mlruns/
+mlartifacts/
+
+# --- Sistema operativo y editor ---
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+'@ | Set-Content -Path .gitignore -Encoding ascii
+

@@ -1,0 +1,5 @@
+outs:
+- md5: b87b3fd6c3a6800daa5e6f10b499f4f1
+  size: 329351
+  hash: md5
+  path: aprendices.parquet
