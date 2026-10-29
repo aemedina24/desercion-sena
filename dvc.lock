@@ -1,0 +1,22 @@
+schema: '2.0'
+stages:
+  process:
+    cmd: uv run python -m desercion.process
+    deps:
+    - path: data/raw/aprendices.parquet
+      hash: md5
+      md5: b87b3fd6c3a6800daa5e6f10b499f4f1
+      size: 329351
+    - path: src/desercion/process.py
+      hash: md5
+      md5: 1584201dd81afb8b3ad3c6fbdbdbdf14
+      size: 3724
+    outs:
+    - path: data/processed/aprendices.parquet
+      hash: md5
+      md5: 0d77a9242935daa8e260952a321f7ea4
+      size: 278201
+    - path: data/processed/auditoria.parquet
+      hash: md5
+      md5: ed70ac8a11fefeee6cafba4203960d3c
+      size: 70544
