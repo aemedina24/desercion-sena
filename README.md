@@ -72,6 +72,27 @@ desercion-sena/
 
 ---
 
+## Cuadernos
+
+Los cuadernos muestran y explican los resultados; la lógica vive en `src/desercion/` y se importa desde ellos.
+
+| Cuaderno | Contenido |
+|---|---|
+| `notebooks/01_eda.ipynb` | Exploración de los datos y conclusiones para construir las variables |
+| `notebooks/02_modelo_base.ipynb` | Primer experimento: regresión logística |
+| `notebooks/03_comparacion_modelos.ipynb` | Comparación de experimentos registrados en MLflow (modelo base, LightGBM y Optuna) |
+| `notebooks/04_evaluacion_y_equidad.ipynb` | Métricas por modalidad y subgrupo, y factores de riesgo con SHAP |
+
+---
+
+## Cómo trabajamos
+
+- Cada tarea es un Issue con autor y revisor ([plan de trabajo](docs/plan_trabajo.md)).
+- Una rama por tarea; nadie trabaja directamente en `main`.
+- Todo cambio entra por Pull Request, con la aprobación del otro integrante y la CI en verde.
+
+---
+
 ## Instalación
 
 Requisitos: Git, [uv](https://docs.astral.sh/uv/) y Python 3.11 (uv lo instala si no está).
@@ -113,3 +134,10 @@ uv run dvc config --local core.site_cache_dir "$env:LOCALAPPDATA\iterative\dvc\s
 ```
 
 **La terminal muestra `(base)`.** Hay un entorno de Conda activo. Ejecute `conda deactivate` antes de trabajar en el proyecto.
+
+**DVC vuelve a ejecutar etapas sin cambios o modifica `dvc.lock` (Windows).** Git convirtió los saltos de línea a CRLF y cambió el hash de los archivos. El repositorio incluye `.gitattributes` para evitarlo; si ocurre en una copia anterior:
+
+```powershell
+git rm -r --cached -q .
+git reset --hard
+```
