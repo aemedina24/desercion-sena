@@ -1,0 +1,9 @@
+# Saltos de linea LF en todos los sistemas operativos.
+# Evita que DVC vea cambios falsos cuando se trabaja desde Windows y Linux (CI).
+* text=auto eol=lf
+
+# Archivos binarios: nunca se modifican
+*.parquet binary
+*.pkl binary
+*.png binary
+*.jpg binary
