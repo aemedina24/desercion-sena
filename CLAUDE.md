@@ -55,7 +55,8 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 ## Problemas conocidos
 
 - DVC "attempt to write a readonly database": `uv run dvc config --local core.site_cache_dir "$env:LOCALAPPDATA\iterative\dvc\site_cache"`.
-- DVC detecta cambios falsos: saltos de línea CRLF. Ya resuelto con `.gitattributes`.
+- DVC detecta cambios falsos por saltos de línea CRLF: resuelto con `.gitattributes`. Comprobar con `git ls-files --eol <archivo>` (debe decir `w/lf`).
+- **Regla:** si `dvc repro` o `dvc status` modifican `dvc.lock` sin que nadie haya cambiado código ni datos, no hacer commit; primero investigar la causa. Un `dvc.lock` con hashes equivocados se propaga a todo el equipo.
 
 ## Cómo debe ayudar Claude
 
