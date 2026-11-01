@@ -22,7 +22,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 - [x] A: David · R: Andrés · `validate.py`: esquema de Pandera de los datos procesados
 - [x] A: David · R: Andrés · `tests/test_validate.py`: acepta datos buenos y rechaza datos malos
 - [x] A: David · R: Andrés · `tests/test_process.py`: sin traslados ni columnas de fuga
-- [ ] A: Andrés · R: David · `docs/datos.md`: diccionario de variables con su rol
+- [x] A: Andrés · R: David · `docs/datos.md`: diccionario de variables con su rol (PR #6)
 
 ## 31 oct–2 nov · Exploración, variables y CI
 
