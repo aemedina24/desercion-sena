@@ -18,17 +18,23 @@ def resultado(crudos: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return procesar(crudos)
 
 
-def test_excluye_traslados_aunque_tengan_espacios(resultado):
+@pytest.mark.parametrize(
+    ("id_aprendiz", "estado"),
+    [
+        # " traslado " trae espacios: la limpieza de texto va antes de excluir.
+        ("A-000003", "traslado"),
+        ("A-000004", "cancelado"),
+    ],
+)
+def test_excluye_traslados_y_cancelados(resultado, id_aprendiz, estado):
     datos, auditoria = resultado
-    # A-000003 es " traslado ": la limpieza de texto va antes de la exclusión.
-    assert "A-000003" not in set(datos["id_aprendiz"])
-    assert "A-000003" not in set(auditoria["id_aprendiz"])
-    assert len(datos) == 3
+    assert id_aprendiz not in set(datos["id_aprendiz"]), estado
+    assert id_aprendiz not in set(auditoria["id_aprendiz"]), estado
 
 
-def test_conserva_estados_que_no_son_traslado(resultado):
+def test_conserva_completados_y_desertores(resultado):
     datos, _ = resultado
-    assert list(datos["id_aprendiz"]) == ["A-000001", "A-000002", "A-000004"]
+    assert list(datos["id_aprendiz"]) == ["A-000001", "A-000002"]
 
 
 @pytest.mark.parametrize("columna", ["estado_final", "fecha_desercion"])
@@ -42,7 +48,7 @@ def test_sexo_va_solo_a_auditoria(resultado):
     datos, auditoria = resultado
     assert "sexo" not in datos.columns
     assert list(auditoria.columns) == ["id_aprendiz", "sexo", "modalidad"]
-    assert list(auditoria["sexo"]) == ["F", "M", "M"]
+    assert list(auditoria["sexo"]) == ["F", "M"]
 
 
 def test_auditoria_se_alinea_con_los_datos(resultado):
@@ -78,9 +84,9 @@ def test_conserva_las_columnas_del_modelo(resultado):
 
 def test_limpia_espacios_del_texto(resultado):
     datos, auditoria = resultado
-    assert list(datos["modalidad"]) == ["virtual", "presencial", "virtual"]
-    assert list(datos["municipio_residencia"]) == ["Medellín", "Bello", "Turbo"]
-    assert list(auditoria["modalidad"]) == ["virtual", "presencial", "virtual"]
+    assert list(datos["modalidad"]) == ["virtual", "presencial"]
+    assert list(datos["municipio_residencia"]) == ["Medellín", "Bello"]
+    assert list(auditoria["modalidad"]) == ["virtual", "presencial"]
 
 
 def test_no_modifica_la_entrada(crudos):

@@ -20,7 +20,7 @@ def crudos() -> pd.DataFrame:
     - A-000001: completó el programa.
     - A-000002: desertó (tiene fecha_desercion) y su texto trae espacios.
     - A-000003: traslado escrito con espacios; debe excluirse igual.
-    - A-000004: cancelado; no es traslado, así que se conserva.
+    - A-000004: cancelado; también se excluye (decisión del PR #8).
     """
     return pd.DataFrame(
         {
