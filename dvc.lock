@@ -9,14 +9,14 @@ stages:
       size: 329351
     - path: src/desercion/process.py
       hash: md5
-      md5: 1584201dd81afb8b3ad3c6fbdbdbdf14
-      size: 3724
+      md5: 6f0af232f9caead93e16b46586e81698
+      size: 3849
     outs:
     - path: data/processed/aprendices.parquet
       hash: md5
-      md5: 0d77a9242935daa8e260952a321f7ea4
-      size: 278201
+      md5: 56c7d3a39ce1eea9ea5bc4ac5a23eab2
+      size: 271272
     - path: data/processed/auditoria.parquet
       hash: md5
-      md5: ed70ac8a11fefeee6cafba4203960d3c
-      size: 70544
+      md5: b78176879f97280f64792ac9f93db632
+      size: 68654
