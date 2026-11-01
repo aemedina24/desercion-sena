@@ -20,3 +20,19 @@ stages:
       hash: md5
       md5: b78176879f97280f64792ac9f93db632
       size: 68654
+  validate:
+    cmd: uv run python -m desercion.validate
+    deps:
+    - path: data/processed/aprendices.parquet
+      hash: md5
+      md5: 56c7d3a39ce1eea9ea5bc4ac5a23eab2
+      size: 271272
+    - path: src/desercion/validate.py
+      hash: md5
+      md5: 75ced9b211a1b195c3341ea81f572838
+      size: 11506
+    outs:
+    - path: reports/validacion.json
+      hash: md5
+      md5: dc442a5b5beaa12dc2b173e5ff5b7110
+      size: 66

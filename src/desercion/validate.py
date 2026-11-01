@@ -5,12 +5,16 @@ docs/datos.md: columnas exactas, tipos, nulos permitidos, rangos, categorías y
 reglas del negocio entre columnas. Si algo falla, se detiene el pipeline antes
 de que los datos lleguen a features.py.
 
+Si pasa, escribe reports/validacion.json, que la etapa features declara como
+dependencia en dvc.yaml: así DVC no construye variables con datos sin validar.
+
 Uso (desde la raíz del repositorio):
     uv run python -m desercion.validate
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -19,6 +23,7 @@ import pandera.pandas as pa
 from pandera.pandas import Check, Column
 
 RUTA_PROCESADOS = Path("data/processed/aprendices.parquet")
+RUTA_REPORTE = Path("reports/validacion.json")
 
 # Nunca deben llegar al modelo (fuga, auditoría o descartadas en process.py).
 COLUMNAS_PROHIBIDAS = [
@@ -286,6 +291,15 @@ def resumir_fallos(fallos: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(resumen, columns=["regla", "columna", "casos", "ejemplo"])
 
 
+def resumen_validacion(df: pd.DataFrame) -> dict[str, int | float]:
+    """Métricas de los datos que pasaron la validación, para reports/validacion.json."""
+    return {
+        "filas": len(df),
+        "columnas": df.shape[1],
+        "tasa_desercion": round(float(df["deserto"].mean()), 4),
+    }
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 
@@ -301,9 +315,14 @@ def main() -> None:
         )
         raise SystemExit(1) from None
 
+    RUTA_REPORTE.parent.mkdir(parents=True, exist_ok=True)
+    reporte = json.dumps(resumen_validacion(datos), indent=2)
+    RUTA_REPORTE.write_text(reporte + "\n", encoding="utf-8", newline="\n")
+
     logger.info(
         "Contrato OK: %s filas x %s columnas en %s", *datos.shape, RUTA_PROCESADOS
     )
+    logger.info("Reporte -> %s", RUTA_REPORTE)
 
 
 if __name__ == "__main__":

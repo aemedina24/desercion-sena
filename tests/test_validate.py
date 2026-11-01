@@ -13,7 +13,7 @@ import pandas as pd
 import pandera.errors
 import pytest
 
-from desercion.validate import ESQUEMA, resumir_fallos, validar
+from desercion.validate import ESQUEMA, resumen_validacion, resumir_fallos, validar
 
 Mutacion = Callable[[pd.DataFrame], None]
 
@@ -225,3 +225,11 @@ def test_resumen_cuenta_filas_en_las_reglas_entre_columnas(procesados):
     assert resumen.loc["jornada_otra_si_virtual", "ejemplo"] == "A-000002"
     assert resumen.loc["in_range(14, 100)", "columna"] == "edad"
     assert len(resumen) == 2
+
+
+def test_resumen_validacion(procesados):
+    assert resumen_validacion(procesados) == {
+        "filas": 3,
+        "columnas": 43,
+        "tasa_desercion": 0.3333,
+    }
