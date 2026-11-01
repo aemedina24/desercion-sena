@@ -31,7 +31,7 @@ Detalle de tareas en [`docs/plan_trabajo.md`](docs/plan_trabajo.md).
 | **Variable objetivo** | `deserto`: 1 si el aprendiz desertó después de la fecha de corte, 0 si no |
 | **Momento de la predicción** | Alrededor de la semana 4 de formación |
 | **Métrica principal** | Recall de la clase "deserta", acompañado de F1 y ROC-AUC |
-| **Exclusiones** | Los traslados no se consideran deserción y se excluyen |
+| **Exclusiones** | Los traslados y las cancelaciones no se consideran deserción y se excluyen |
 
 **Criterios éticos:** no se usan datos sensibles (etnia, religión, orientación sexual, biométricos). El sexo se guarda aparte y solo se usa para auditar la equidad del modelo. Cada instructor consulta únicamente sus fichas.
 

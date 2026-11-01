@@ -23,8 +23,9 @@ RUTA_PROCESADOS = Path("data/processed/aprendices.parquet")
 RUTA_AUDITORIA = Path("data/processed/auditoria.parquet")
 
 # --- Reglas de limpieza (documentadas en docs/datos.md) --------------------
-# Un traslado no es abandono: se excluye del estudio.
-ESTADOS_EXCLUIDOS = ["traslado"]
+# Un traslado no es abandono, y una cancelación es una decisión administrativa:
+# ninguno es la deserción que el modelo predice, así que se excluyen del estudio.
+ESTADOS_EXCLUIDOS = ["traslado", "cancelado"]
 
 # Tabla aparte para auditar la equidad; el modelo nunca la ve.
 COLUMNAS_AUDITORIA = ["id_aprendiz", "sexo", "modalidad"]

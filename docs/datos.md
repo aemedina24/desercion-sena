@@ -7,13 +7,13 @@ Describe los datos que produce la etapa `process` y el rol de cada variable en e
 | | Archivo | Filas | Columnas |
 |---|---|---|---|
 | Entrada | `data/raw/aprendices.parquet` (versionado con DVC) | 10.000 | 50 |
-| Salida | `data/processed/aprendices.parquet` | 9.789 | 43 |
-| Salida | `data/processed/auditoria.parquet` | 9.789 | 3 |
+| Salida | `data/processed/aprendices.parquet` | 9.518 | 43 |
+| Salida | `data/processed/auditoria.parquet` | 9.518 | 3 |
 
 Reglas que aplica `src/desercion/process.py`:
 
 1. **Texto:** se quitan los espacios al inicio y al final de todas las columnas de texto.
-2. **Traslados:** se excluyen los registros con `estado_final = "traslado"` (211 filas). Un traslado no es deserción.
+2. **Traslados y cancelaciones:** se excluyen los registros con `estado_final` igual a `"traslado"` (211 filas) o `"cancelado"` (271 filas), 482 en total. Un traslado no es abandono, y una cancelación es una decisión administrativa; ninguno es la deserción que el modelo predice. Si se conservaran con `deserto = 0`, el modelo aprendería que salir del programa por cancelación equivale a terminarlo.
 3. **Auditoría:** `id_aprendiz`, `sexo` y `modalidad` se copian a `auditoria.parquet`. `sexo` sale de los datos del modelo y solo se usa para auditar equidad.
 4. **Fuga de datos:** se eliminan `estado_final` y `fecha_desercion`, porque describen el resultado que el modelo debe predecir.
 5. **Descartadas:**
@@ -62,14 +62,14 @@ Reglas que aplica `src/desercion/process.py`:
 
 | Columna | Tipo | Nulos | Valores / rango | Rol | Descripción |
 |---|---|---|---|---|---|
-| `edad` | entero | 0 | 16–60 | Variable | Edad al iniciar |
+| `edad` | entero | 0 | 16–60 | Variable | Edad al iniciar (rango válido 14–100: el SENA admite desde los 14 años, sin edad máxima) |
 | `municipio_residencia` | texto | 0 | 16 municipios (ej. `Apartadó`, `Turbo`) | Variable | Municipio donde vive |
 | `nivel_educativo` | texto | 0 | 6 niveles (ej. `bachillerato`, `tecnologo`) | Variable | Máximo nivel educativo alcanzado |
 | `situacion_laboral` | texto | 0 | 4 valores (ej. `desempleado`, `otra`) | Variable | Situación laboral |
 | `horas_trabajo_semana` | entero | 0 | 0–60 | Variable | Horas de trabajo a la semana |
 | `responsabilidades_cuidado` | booleano | 0 | True/False | Variable | Tiene personas a su cargo |
-| `horas_disponibles_estudio` | decimal | 693 | 2–33 | Variable | Horas a la semana que dice tener para estudiar |
-| `dificultad_economica_reportada` | texto | 693 | `alta`, `media`, `baja` | Variable | Dificultad económica que reporta |
+| `horas_disponibles_estudio` | decimal | 679 | 2–33 | Variable | Horas a la semana que dice tener para estudiar |
+| `dificultad_economica_reportada` | texto | 679 | `alta`, `media`, `baja` | Variable | Dificultad económica que reporta |
 
 ### Historial en el SENA
 
@@ -78,10 +78,10 @@ Reglas que aplica `src/desercion/process.py`:
 | `n_cursos_previos` | entero | 0 | 0–7 | Variable | Cursos anteriores en el SENA |
 | `n_cursos_completados` | entero | 0 | 0–7 | Variable | Cursos anteriores terminados |
 | `n_cursos_abandonados` | entero | 0 | 0–4 | Variable | Cursos anteriores abandonados |
-| `tasa_finalizacion_previa` | decimal | 3.092 | 0–1 | Variable | Proporción de cursos previos terminados |
+| `tasa_finalizacion_previa` | decimal | 3.022 | 0–1 | Variable | Proporción de cursos previos terminados |
 | `es_primer_curso` | booleano | 0 | True/False | Variable | Es su primer curso en el SENA |
-| `meses_desde_ultimo_curso` | decimal | 2.711 | 0,1–62,6 | Variable | Meses desde que terminó o dejó su último curso |
-| `abandono_ultimo_curso` | booleano (admite nulos) | 2.711 | True/False | Variable | Abandonó su último curso |
+| `meses_desde_ultimo_curso` | decimal | 2.647 | 0,1–58,5 | Variable | Meses desde que terminó o dejó su último curso |
+| `abandono_ultimo_curso` | booleano (admite nulos) | 2.647 | True/False | Variable | Abandonó su último curso |
 | `experiencia_virtual_previa` | booleano | 0 | True/False | Variable | Ya estudió antes en modalidad virtual |
 
 ### Conectividad y equipo
@@ -90,7 +90,7 @@ Reglas que aplica `src/desercion/process.py`:
 |---|---|---|---|---|---|
 | `tipo_conexion` | texto | 0 | 4 valores (ej. `cable`, `otra`) | Variable | Cómo se conecta a internet |
 | `tipo_plan_internet` | texto | 0 | 3 valores (ej. `prepago`, `otro`) | Variable | Tipo de plan de internet |
-| `calidad_internet` | texto | 693 | `alta`, `media`, `baja` | Variable | Calidad de conexión que reporta |
+| `calidad_internet` | texto | 679 | `alta`, `media`, `baja` | Variable | Calidad de conexión que reporta |
 | `dispositivo_principal` | texto | 0 | 4 valores (ej. `celular`, `tableta`) | Variable | Dispositivo con el que estudia |
 | `comparte_dispositivo` | booleano | 0 | True/False | Variable | Comparte el dispositivo con otras personas |
 | `disponibilidad_equipo` | booleano | 0 | True/False | Variable | Tiene equipo disponible para estudiar |
@@ -108,7 +108,7 @@ Estas variables se miden **hasta `fecha_corte`**. Si alguna usara información p
 | `ingresos_plataforma_ultimos_7d` | entero | 0 | 0–18 | Variable | Ingresos a la plataforma en los últimos 7 días |
 | `actividades_pendientes` | entero | 0 | 0–9 | Variable | Actividades sin entregar |
 | `evaluaciones_no_presentadas` | entero | 0 | 0–2 | Variable | Evaluaciones que no presentó |
-| `asistencia_porcentaje` | decimal | 4.831 | 0,41–1 | Variable | Proporción de asistencia a sesiones |
+| `asistencia_porcentaje` | decimal | 4.712 | 0,41–1 | Variable | Proporción de asistencia a sesiones |
 | `solicito_apoyo` | booleano | 0 | True/False | Variable | Pidió apoyo (bienestar, instructor) |
 
 ## Valores faltantes
@@ -117,18 +117,52 @@ Los nulos no son errores de carga: siguen reglas del negocio. El esquema de vali
 
 | Columnas | Nulos | Motivo | Estado |
 |---|---|---|---|
-| `meses_desde_ultimo_curso`, `abandono_ultimo_curso` | 2.711 | No hay curso anterior: nulo si y solo si `es_primer_curso = True` | ✅ Confirmado |
-| `tasa_finalizacion_previa` | 3.092 | No hay cursos previos cerrados (`n_cursos_completados + n_cursos_abandonados = 0`), así que la tasa sería una división por cero: 2.711 por primer curso y 381 con cursos previos que siguen abiertos | ✅ Confirmado |
-| `calidad_internet`, `horas_disponibles_estudio`, `dificultad_economica_reportada` | 693 | Son las mismas 693 filas: no respondieron la encuesta de caracterización | ✅ Confirmado (mismas filas) |
-| `asistencia_porcentaje` | 4.831 | Nulo si y solo si `modalidad = virtual` (no hay sesiones con asistencia) | ✅ Confirmado |
-| `promedio_calificaciones` | 1 | Caso aislado | ⚠️ Revisar |
+| `meses_desde_ultimo_curso`, `abandono_ultimo_curso` | 2.647 | No hay curso anterior: nulo si y solo si `es_primer_curso = True` | ✅ Confirmado |
+| `tasa_finalizacion_previa` | 3.022 | No hay cursos previos cerrados (`n_cursos_completados + n_cursos_abandonados = 0`), así que la tasa sería una división por cero: 2.647 por primer curso y 375 con cursos previos que siguen abiertos | ✅ Confirmado |
+| `calidad_internet`, `horas_disponibles_estudio`, `dificultad_economica_reportada` | 679 | Son las mismas 679 filas: no respondieron la encuesta de caracterización | ✅ Confirmado (mismas filas) |
+| `asistencia_porcentaje` | 4.712 | Nulo si y solo si `modalidad = virtual` (no hay sesiones con asistencia) | ✅ Confirmado |
+| `promedio_calificaciones` | 1 | Sin calificaciones registradas a la fecha de corte (ninguna actividad aprobada). Se conserva la fila: es un caso real que el modelo verá en producción | ✅ Decidido |
 
 Implicación para el modelo: estos nulos tienen significado, así que en `features.py` no se rellenan a ciegas con la media. Se decide por columna (por ejemplo, indicador "sin encuesta" o dejar que LightGBM los maneje).
 
+## Reglas de validación
+
+Acordadas entre Andrés y David; se implementan en `src/desercion/validate.py` con Pandera sobre `data/processed/aprendices.parquet`. Si una regla cambia, se actualizan este documento y el esquema en el mismo PR.
+
+**Tipos:** se valida sin convertir (`coerce=False`): un tipo incorrecto hace fallar la validación. Ojo: `abandono_ultimo_curso` es `boolean` (admite nulos), no `bool`.
+
+**Categorías:** lista cerrada con los valores observados en todas las columnas categóricas, incluido `municipio_residencia` (un valor nuevo detiene el pipeline para decidir qué hacer). Los códigos se validan por formato: `id_programa` con `P-\d{3}` e `id_cohorte` con `\d{4}-T[1-4]`.
+
+**Rangos:**
+
+| Columnas | Regla |
+|---|---|
+| Porcentajes y tasas | 0–1 |
+| `promedio_calificaciones` | 0–5 (admite nulo) |
+| `edad` | 14–100 |
+| Conteos y horas | ≥ 0 |
+| `horas_trabajo_semana`, `horas_disponibles_estudio` | ≤ 168 |
+| `dias_desde_inicio` | 21–35 (ventana de la semana 4, decisión del proyecto) |
+| `duracion_programa_meses` | 6, 12 o 24 |
+
+**Relaciones entre columnas:**
+
+- `dias_sin_ingreso ≤ dias_desde_inicio`
+- `dias_desde_inicio = fecha_corte − fecha_inicio`
+- `porcentaje_actividades_aprobadas ≤ porcentaje_actividades_entregadas` (no se aprueba lo que no se entregó)
+- `jornada = "otra"` si y solo si `modalidad = "virtual"` (en formación virtual no hay jornada)
+- `asistencia_porcentaje` nulo si y solo si `modalidad = "virtual"`
+- `meses_desde_ultimo_curso` y `abandono_ultimo_curso` nulos si y solo si `es_primer_curso = True`
+- `calidad_internet`, `horas_disponibles_estudio` y `dificultad_economica_reportada` nulos en las mismas filas (encuesta no respondida)
+
+**Etapa DVC `validate`:** depende de `data/processed/aprendices.parquet` y de `src/desercion/validate.py`, y escribe `reports/validacion.json` como métrica (`cache: false`, se sube a Git). La etapa `features` depende de ese JSON, así que no se construyen variables con datos que no pasaron la validación.
+
+**Alcance:** este esquema es para los datos de entrenamiento. En la API, un valor de categoría nuevo (por ejemplo, un municipio) no debe tumbar el servicio: el modelo lo trata como desconocido.
+
 ## Puntos abiertos
 
-- [ ] Decidir qué hacer con el único nulo de `promedio_calificaciones`.
-- [ ] `nivel_formacion` viene en mayúsculas y las demás columnas de texto en minúsculas. No hay valores duplicados; se deja así por ahora. Si se normaliza, se hace en `process.py` y se avisa a David porque cambia el esquema.
+- [x] Nulo de `promedio_calificaciones`: se permite (`nullable`) y no se elimina la fila.
+- [x] `nivel_formacion` se deja en mayúsculas, tal como viene: los valores son consistentes y no hay duplicados. Si algún día se normaliza, se hace en `process.py` y se actualiza el esquema en el mismo PR.
 - [ ] Revisar las descripciones con la fuente de los datos.
 
 ## Tabla de auditoría
