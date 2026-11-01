@@ -21,7 +21,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - **Problema:** clasificación binaria. Etiqueta `deserto` (1 = desertó después de la fecha de corte).
 - **Un solo modelo de seguimiento**, con corte alrededor de la semana 4. El modelo de ingreso queda como trabajo futuro.
 - **Métrica principal:** recall de la clase "deserta"; además F1 y ROC-AUC, reportadas por modalidad.
-- **Traslados** se excluyen (no son deserción).
+- **Traslados y cancelaciones** se excluyen (no son la deserción que se predice).
 - **Columnas que nunca entran al modelo:** `estado_final` y `fecha_desercion` (fuga de datos); `sexo` solo va en `data/processed/auditoria.parquet` para auditar equidad; identificadores y fechas solo para agrupar y dividir.
 - **Columnas descartadas:** `nombre_programa`, `barrio_residencia`, `municipio_nacimiento`, `tasa_abandono_previa`.
 - **Validación:** entrenar con las cohortes antiguas y evaluar con la más reciente (`id_cohorte`); en Optuna, `GroupKFold` por `id_aprendiz`.
@@ -31,7 +31,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 ## Datos y pipeline
 
 - `data/raw/aprendices.parquet`: 10.000 × 50, versionado con DVC (no está en Git; se comparte por fuera).
-- Etapa `process` (`src/desercion/process.py`) → `data/processed/aprendices.parquet` (9.789 × 43) y `auditoria.parquet`.
+- Etapa `process` (`src/desercion/process.py`) → `data/processed/aprendices.parquet` (9.518 × 43) y `auditoria.parquet`.
 - El pipeline se ejecuta con `uv run dvc repro`. Cada etapa nueva se declara en `dvc.yaml`.
 
 ## Convenciones de código
