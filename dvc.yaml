@@ -7,3 +7,11 @@ stages:
     outs:
       - data/processed/aprendices.parquet
       - data/processed/auditoria.parquet
+  validate:
+    cmd: uv run python -m desercion.validate
+    deps:
+      - data/processed/aprendices.parquet
+      - src/desercion/validate.py
+    metrics:
+      - reports/validacion.json:
+          cache: false
