@@ -17,11 +17,11 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 
 ## 29–30 oct · Validación de datos y diccionario
 
-- [ ] A: David · Limpiar su carpeta tras el PR #2 y comprobar `dvc status`
-- [ ] A: Juntos · Acordar el contrato: las 43 columnas de `data/processed/aprendices.parquet`
-- [ ] A: David · R: Andrés · `validate.py`: esquema de Pandera de los datos procesados
-- [ ] A: David · R: Andrés · `tests/test_validate.py`: acepta datos buenos y rechaza datos malos
-- [ ] A: David · R: Andrés · `tests/test_process.py`: sin traslados ni columnas de fuga
+- [x] A: David · Limpiar su carpeta tras el PR #2 y comprobar `dvc status`
+- [x] A: Juntos · Acordar el contrato: las 43 columnas de `data/processed/aprendices.parquet`
+- [x] A: David · R: Andrés · `validate.py`: esquema de Pandera de los datos procesados
+- [x] A: David · R: Andrés · `tests/test_validate.py`: acepta datos buenos y rechaza datos malos
+- [x] A: David · R: Andrés · `tests/test_process.py`: sin traslados ni columnas de fuga
 - [x] A: Andrés · R: David · `docs/datos.md`: diccionario de variables con su rol (PR #6)
 
 ## 31 oct–2 nov · Exploración, variables y CI
