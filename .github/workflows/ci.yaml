@@ -1,0 +1,41 @@
+# Integración continua: Ruff y pytest en cada Pull Request y en cada push a main.
+# No necesita datos: las pruebas usan DataFrames construidos en tests/conftest.py.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Si llega un push nuevo a la misma rama, se cancela la ejecución anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    name: Ruff y pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # --locked falla si uv.lock no corresponde a pyproject.toml: todos instalan
+      # exactamente las mismas versiones. Python sale de .python-version.
+      - name: Instalar dependencias
+        run: uv sync --locked
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Pytest
+        run: uv run pytest
