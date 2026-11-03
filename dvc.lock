@@ -49,8 +49,8 @@ stages:
       size: 66
     - path: src/desercion/features.py
       hash: md5
-      md5: 145b2c33a4436be37afa9fa42cdd765e
-      size: 4070
+      md5: bb7926ecc2ccd2a1aab21213bae9fdbd
+      size: 4013
     outs:
     - path: data/features/test.parquet
       hash: md5

@@ -1,0 +1,21 @@
+# Formato común para todos los editores (VS Code: extensión "EditorConfig").
+# Evita que Windows guarde archivos con CRLF y DVC registre hashes que nadie
+# más puede reproducir (ver tests/test_dvc_lock.py).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{py,toml}]
+indent_style = space
+indent_size = 4
+
+[*.{yaml,yml,json}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
