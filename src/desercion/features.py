@@ -37,7 +37,7 @@ COLUMNAS_NO_MODELO = [
     "id_programa",  # demasiadas categorías: el modelo memorizaría programas
     "municipio_residencia",  # demasiadas categorías
     "fecha_inicio",  # resumida en dias_desde_inicio
-    "fecha_corte",  # igual para todos dentro de una cohorte
+    "fecha_corte",  # resumida en dias_desde_inicio (fecha_corte - fecha_inicio)
 ]
 
 logger = logging.getLogger(__name__)
@@ -105,11 +105,16 @@ def main() -> None:
     logger.info("Entrada: %s filas x %s columnas", *datos.shape)
     logger.info(
         "Train: %s filas, deserción %.1f%% -> %s",
-        len(train), 100 * train["deserto"].mean(), RUTA_TRAIN,
+        len(train),
+        100 * train["deserto"].mean(),
+        RUTA_TRAIN,
     )
     logger.info(
         "Test:  %s filas, deserción %.1f%% -> %s (cohortes %s)",
-        len(test), 100 * test["deserto"].mean(), RUTA_TEST, COHORTES_TEST,
+        len(test),
+        100 * test["deserto"].mean(),
+        RUTA_TEST,
+        COHORTES_TEST,
     )
 
 
