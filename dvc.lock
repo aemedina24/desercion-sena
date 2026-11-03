@@ -36,3 +36,27 @@ stages:
       hash: md5
       md5: dc442a5b5beaa12dc2b173e5ff5b7110
       size: 66
+  features:
+    cmd: uv run python -m desercion.features
+    deps:
+    - path: data/processed/aprendices.parquet
+      hash: md5
+      md5: 56c7d3a39ce1eea9ea5bc4ac5a23eab2
+      size: 271272
+    - path: reports/validacion.json
+      hash: md5
+      md5: dc442a5b5beaa12dc2b173e5ff5b7110
+      size: 66
+    - path: src/desercion/features.py
+      hash: md5
+      md5: 145b2c33a4436be37afa9fa42cdd765e
+      size: 4070
+    outs:
+    - path: data/features/test.parquet
+      hash: md5
+      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
+      size: 83810
+    - path: data/features/train.parquet
+      hash: md5
+      md5: f246b383a15b410ddbe185518d6bb6d0
+      size: 286979
