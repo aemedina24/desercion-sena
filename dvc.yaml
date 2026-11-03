@@ -15,3 +15,12 @@ stages:
     metrics:
       - reports/validacion.json:
           cache: false
+  features:
+    cmd: uv run python -m desercion.features
+    deps:
+      - data/processed/aprendices.parquet
+      - reports/validacion.json
+      - src/desercion/features.py
+    outs:
+      - data/features/train.parquet
+      - data/features/test.parquet
