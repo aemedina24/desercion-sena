@@ -73,8 +73,8 @@ stages:
       size: 286979
     - path: src/desercion/train_model.py
       hash: md5
-      md5: 06a2e3cf1655668f6c9ab1021fc3cb3d
-      size: 8736
+      md5: e2a3554f7f637101fc4b3f487ee1e68b
+      size: 8750
     params:
       config/model/logistic.yaml:
         C: 1.0
@@ -84,5 +84,5 @@ stages:
     outs:
     - path: reports/metricas_modelo_base.json
       hash: md5
-      md5: a8a62d3e7948c963cec663558f0f15ce
-      size: 294
+      md5: d87470f9805ea64e75a271b23ad5057e
+      size: 284
