@@ -30,6 +30,7 @@ stages:
       - data/features/train.parquet
       - data/features/test.parquet
       - src/desercion/train_model.py
+      - src/desercion/modelado.py
     params:
       - config/model/logistic.yaml:
     metrics:

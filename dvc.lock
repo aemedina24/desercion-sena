@@ -71,10 +71,14 @@ stages:
       hash: md5
       md5: f246b383a15b410ddbe185518d6bb6d0
       size: 286979
+    - path: src/desercion/modelado.py
+      hash: md5
+      md5: 67eafdce3dc944516509e68dbf2bfff6
+      size: 2298
     - path: src/desercion/train_model.py
       hash: md5
-      md5: e2a3554f7f637101fc4b3f487ee1e68b
-      size: 8750
+      md5: f9d2e8a68961fd6d057a883bb842fca1
+      size: 7785
     params:
       config/model/logistic.yaml:
         C: 1.0

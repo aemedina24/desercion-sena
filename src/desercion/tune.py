@@ -12,19 +12,18 @@ import json
 import logging
 from pathlib import Path
 
-import numpy as np
 import optuna
 import pandas as pd
 import yaml
 from lightgbm import LGBMClassifier
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import average_precision_score, precision_recall_curve
+from sklearn.metrics import average_precision_score
 from sklearn.model_selection import GroupKFold, cross_val_predict, cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
-from desercion.train_model import RUTA_TRAIN, separar_x_y, tipos_de_columnas
+from desercion.modelado import RUTA_TRAIN, elegir_umbral, separar_x_y, tipos_de_columnas
 
 # --- Rutas -----------------------------------------------------------------
 RUTA_TUNING = Path("config/tuning/optuna.yaml")
@@ -83,24 +82,6 @@ def sugerir_params(trial: optuna.Trial, espacio: dict) -> dict:
                 nombre, rango["low"], rango["high"], log=log
             )
     return params
-
-
-def elegir_umbral(
-    y: pd.Series, probabilidad: np.ndarray, recall_objetivo: float
-) -> dict:
-    """Entre los umbrales con recall >= objetivo, el de mayor precisión."""
-    precision, recall, umbrales = precision_recall_curve(y, probabilidad)
-    # precision y recall tienen un elemento más que umbrales: se descarta el último.
-    cumplen = recall[:-1] >= recall_objetivo
-    if not cumplen.any():
-        raise ValueError(f"Ningún umbral alcanza recall {recall_objetivo}")
-    candidatos = np.where(cumplen)[0]
-    mejor = candidatos[np.argmax(precision[:-1][candidatos])]
-    return {
-        "umbral": float(umbrales[mejor]),
-        "precision_oof": float(precision[mejor]),
-        "recall_oof": float(recall[mejor]),
-    }
 
 
 def main() -> None:

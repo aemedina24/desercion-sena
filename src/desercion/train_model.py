@@ -48,17 +48,18 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from desercion.modelado import (
+    RUTA_TEST,
+    RUTA_TRAIN,
+    separar_x_y,
+    tipos_de_columnas,
+)
+
 # --- Rutas -----------------------------------------------------------------
-RUTA_TRAIN = Path("data/features/train.parquet")
-RUTA_TEST = Path("data/features/test.parquet")
 RUTA_CONFIG = Path("config/model/logistic.yaml")
 RUTA_METRICAS = Path("reports/metricas_modelo_base.json")
 
 # --- Parámetros ------------------------------------------------------------
-ETIQUETA = "deserto"
-# Se conservan en features.py para trazabilidad y para el split; no son
-# información del aprendiz y el modelo los memorizaría.
-COLUMNAS_NO_MODELO = ["id_aprendiz", "id_cohorte"]
 # Las métricas se reportan también por modalidad (decisión en CLAUDE.md).
 COLUMNA_SUBGRUPO = "modalidad"
 
@@ -71,23 +72,6 @@ logger = logging.getLogger(__name__)
 def cargar_config(ruta: Path = RUTA_CONFIG) -> dict:
     """Lee los hiperparámetros del modelo."""
     return yaml.safe_load(ruta.read_text(encoding="utf-8"))
-
-
-def separar_x_y(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """Separa las variables del modelo (X) de la etiqueta (y)."""
-    x = df.drop(columns=[ETIQUETA, *COLUMNAS_NO_MODELO])
-    # Booleanos (incluido el "boolean" con nulos) como 0/1: así se imputan y
-    # escalan como cualquier número. pd.NA pasa a NaN.
-    booleanas = x.select_dtypes(include=["bool", "boolean"]).columns
-    x[booleanas] = x[booleanas].astype("float64")
-    return x, df[ETIQUETA]
-
-
-def tipos_de_columnas(x: pd.DataFrame) -> tuple[list[str], list[str]]:
-    """(numéricas, categóricas) según el tipo de dato de cada columna."""
-    numericas = x.select_dtypes(include="number").columns.tolist()
-    categoricas = [c for c in x.columns if c not in numericas]
-    return numericas, categoricas
 
 
 def construir_pipeline(
@@ -233,7 +217,9 @@ def main() -> None:
         )
 
     RUTA_METRICAS.parent.mkdir(parents=True, exist_ok=True)
-    RUTA_METRICAS.write_text(json.dumps(metricas, indent=2) + "\n", encoding="utf-8", newline="\n")
+    RUTA_METRICAS.write_text(
+        json.dumps(metricas, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     for nombre, valor in metricas.items():
         logger.info("%-20s %.3f", nombre, valor)
 
