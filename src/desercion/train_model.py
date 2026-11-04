@@ -45,12 +45,15 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.model_selection import GroupKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from desercion.modelado import (
+    COLUMNA_GRUPO,
     RUTA_TEST,
     RUTA_TRAIN,
+    elegir_umbral,
     separar_x_y,
     tipos_de_columnas,
 )
@@ -185,12 +188,32 @@ def main() -> None:
     )
 
     pipeline = construir_pipeline(numericas, categoricas, config)
+
+    # Umbral con predicciones out-of-fold en train: cada fila la predice un
+    # modelo que no la vio. Test no participa en la elección.
+    probabilidad_oof = cross_val_predict(
+        pipeline,
+        x_train,
+        y_train,
+        groups=train[COLUMNA_GRUPO],
+        cv=GroupKFold(n_splits=config["cv_n_splits"]),
+        method="predict_proba",
+    )[:, 1]
+    eleccion = elegir_umbral(y_train, probabilidad_oof, config["recall_objetivo"])
+    umbral = eleccion["umbral"]
+    logger.info(
+        "Umbral out-of-fold: %.3f (recall %.3f, precisión %.3f)",
+        umbral,
+        eleccion["recall_oof"],
+        eleccion["precision_oof"],
+    )
+
     pipeline.fit(x_train, y_train)
 
     probabilidad = pipeline.predict_proba(x_test)[:, 1]
-    metricas = calcular_metricas(y_test, probabilidad, config["umbral"])
+    metricas = eleccion | calcular_metricas(y_test, probabilidad, umbral)
     metricas |= metricas_por_subgrupo(
-        y_test, probabilidad, x_test[COLUMNA_SUBGRUPO], config["umbral"]
+        y_test, probabilidad, x_test[COLUMNA_SUBGRUPO], umbral
     )
 
     mlflow.set_experiment(EXPERIMENTO)

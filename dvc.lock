@@ -73,20 +73,21 @@ stages:
       size: 286979
     - path: src/desercion/modelado.py
       hash: md5
-      md5: 67eafdce3dc944516509e68dbf2bfff6
-      size: 2298
+      md5: 8a5462ad4911dd5a98b32e7771ddddff
+      size: 2405
     - path: src/desercion/train_model.py
       hash: md5
-      md5: f9d2e8a68961fd6d057a883bb842fca1
-      size: 7785
+      md5: fca99ce2445503850d72a1f67502e38c
+      size: 8539
     params:
       config/model/logistic.yaml:
         C: 1.0
         class_weight: balanced
+        cv_n_splits: 5
         max_iter: 1000
-        umbral: 0.5
+        recall_objetivo: 0.7
     outs:
     - path: reports/metricas_modelo_base.json
       hash: md5
-      md5: d87470f9805ea64e75a271b23ad5057e
-      size: 284
+      md5: d95bfc978f701e8b1ea2838a90005d7f
+      size: 392

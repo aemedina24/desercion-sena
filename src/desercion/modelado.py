@@ -19,6 +19,8 @@ ETIQUETA = "deserto"
 # Se conservan en features.py para trazabilidad y para el split; no son
 # información del aprendiz y el modelo los memorizaría.
 COLUMNAS_NO_MODELO = ["id_aprendiz", "id_cohorte"]
+# Grupo de la validación cruzada: cada fold valida sobre cohortes completas.
+COLUMNA_GRUPO = "id_cohorte"
 
 
 def separar_x_y(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
