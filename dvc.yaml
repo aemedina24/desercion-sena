@@ -34,4 +34,4 @@ stages:
       - config/model/logistic.yaml:
     metrics:
       - reports/metricas_modelo_base.json:
-          cache: false  
+          cache: false

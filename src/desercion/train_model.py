@@ -233,7 +233,7 @@ def main() -> None:
         )
 
     RUTA_METRICAS.parent.mkdir(parents=True, exist_ok=True)
-    RUTA_METRICAS.write_text(json.dumps(metricas, indent=2) + "\n", encoding="utf-8")
+    RUTA_METRICAS.write_text(json.dumps(metricas, indent=2) + "\n", encoding="utf-8", newline="\n")
     for nombre, valor in metricas.items():
         logger.info("%-20s %.3f", nombre, valor)
 
