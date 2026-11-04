@@ -113,7 +113,18 @@ uv run dvc status
 
 Debe responder *"Data and pipelines are up to date"*.
 
+### Credenciales de MLflow (DagsHub)
+
+La etapa `train` registra cada experimento en el MLflow de DagsHub. Requiere acceso al repositorio en DagsHub y un token personal (DagsHub → *Your settings* → *Tokens*). Copie la plantilla y complete sus datos:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+`.env` está en `.gitignore`: nunca se sube a Git. Cada integrante usa su propio token.
+
 ---
+
 
 ## Uso
 

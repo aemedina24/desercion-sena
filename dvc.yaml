@@ -24,3 +24,14 @@ stages:
     outs:
       - data/features/train.parquet
       - data/features/test.parquet
+  train:
+    cmd: uv run python -m desercion.train_model
+    deps:
+      - data/features/train.parquet
+      - data/features/test.parquet
+      - src/desercion/train_model.py
+    params:
+      - config/model/logistic.yaml:
+    metrics:
+      - reports/metricas_modelo_base.json:
+          cache: false

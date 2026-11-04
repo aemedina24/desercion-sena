@@ -1,4 +1,4 @@
-@'
+
 # --- Python ---
 __pycache__/
 *.py[cod]
@@ -36,5 +36,5 @@ mlartifacts/
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
-'@ | Set-Content -Path .gitignore -Encoding ascii
+
 

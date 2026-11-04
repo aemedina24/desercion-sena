@@ -1,0 +1,13 @@
+# Modelo base: regresión logística.
+# DVC los declara como params de la etapa train: si cambias un valor,
+# `dvc repro` vuelve a entrenar y `dvc params diff` muestra qué cambió.
+
+# Regularización: más pequeño = modelo más simple (menos sobreajuste).
+C: 1.0
+# Iteraciones máximas del optimizador.
+max_iter: 1000
+# "balanced" pesa cada clase según su frecuencia (69/31): sin esto el modelo
+# tiende a predecir siempre "no deserta".
+class_weight: balanced
+# Probabilidad a partir de la cual se marca a un aprendiz en riesgo.
+umbral: 0.5

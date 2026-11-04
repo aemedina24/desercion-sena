@@ -34,7 +34,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 
 ## 3–4 nov · Entrenamiento y experimentos
 
-- [ ] A: Andrés · R: David · División temporal por cohorte y `train_model.py` (modelo base en MLflow)
+- [x] A: Andrés · R: David · División temporal por cohorte y `train_model.py` (modelo base en MLflow)
 - [ ] A: Andrés · R: David · `notebooks/02_modelo_base.ipynb`
 - [ ] A: Andrés · R: David · `tune.py`: LightGBM con Optuna y `GroupKFold`; registrar `desercion-seguimiento`
 - [ ] A: David · R: Andrés · `tests/test_model_behavior.py`: rendimiento mínimo, invariancia y fuga
