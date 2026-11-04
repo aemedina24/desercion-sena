@@ -1,0 +1,33 @@
+# Búsqueda de hiperparámetros de LightGBM con Optuna (etapa tune).
+# DVC los declara como params de la etapa tune: si cambias un valor,
+# `dvc repro` vuelve a buscar y `dvc params diff` muestra qué cambió.
+
+# Semilla del muestreador de Optuna y de LightGBM: misma semilla, mismo resultado.
+seed: 42
+# Combinaciones a probar. Cada una entrena n_splits modelos.
+n_trials: 50
+
+# Validación cruzada dentro de train. Test no se usa en esta etapa.
+cv:
+  n_splits: 5
+  # Cada fold valida sobre cohortes completas que no vio, como test.
+  # Verificado: 1 fila por aprendiz y tasas de deserción estables por cohorte.
+  group_col: id_cohorte
+
+# PR-AUC: mide la clase minoritaria (~31 %) y no depende del umbral.
+metrica: average_precision
+
+# El umbral se elige con predicciones out-of-fold de train:
+# el menor umbral que alcanza este recall, con la mayor precisión posible.
+umbral:
+  recall_objetivo: 0.70
+
+# Rangos de búsqueda. log: true muestrea en escala logarítmica.
+espacio_busqueda:
+  n_estimators:      {low: 100,   high: 800}
+  learning_rate:     {low: 0.01,  high: 0.2,  log: true}
+  num_leaves:        {low: 8,     high: 64}
+  min_child_samples: {low: 10,    high: 100}
+  subsample:         {low: 0.6,   high: 1.0}
+  colsample_bytree:  {low: 0.6,   high: 1.0}
+  reg_lambda:        {low: 0.001, high: 10.0, log: true}
