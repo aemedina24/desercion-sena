@@ -60,3 +60,29 @@ stages:
       hash: md5
       md5: f246b383a15b410ddbe185518d6bb6d0
       size: 286979
+  train:
+    cmd: uv run python -m desercion.train_model
+    deps:
+    - path: data/features/test.parquet
+      hash: md5
+      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
+      size: 83810
+    - path: data/features/train.parquet
+      hash: md5
+      md5: f246b383a15b410ddbe185518d6bb6d0
+      size: 286979
+    - path: src/desercion/train_model.py
+      hash: md5
+      md5: 06a2e3cf1655668f6c9ab1021fc3cb3d
+      size: 8736
+    params:
+      config/model/logistic.yaml:
+        C: 1.0
+        class_weight: balanced
+        max_iter: 1000
+        umbral: 0.5
+    outs:
+    - path: reports/metricas_modelo_base.json
+      hash: md5
+      md5: a8a62d3e7948c963cec663558f0f15ce
+      size: 294
