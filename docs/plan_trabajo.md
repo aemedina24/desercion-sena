@@ -35,8 +35,8 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 ## 3–4 nov · Entrenamiento y experimentos
 
 - [x] A: Andrés · R: David · División temporal por cohorte y `train_model.py` (modelo base en MLflow)
-- [ ] A: Andrés · R: David · `notebooks/02_modelo_base.ipynb`
-- [ ] A: Andrés · R: David · `tune.py`: LightGBM con Optuna y `GroupKFold`; registrar `desercion-seguimiento`
+- [x] A: Andrés · R: David · `notebooks/02_modelo_base.ipynb` (PR #18)
+- [x] A: Andrés · R: David · `tune.py`: LightGBM con Optuna y `GroupKFold` (experimento; el modelo final es la logística con umbral out-of-fold, ADR 0002, PR #17)
 - [ ] A: David · R: Andrés · `tests/test_model_behavior.py`: rendimiento mínimo, invariancia y fuga
 
 ## 5–6 nov · Evaluación, equidad y base de la API
