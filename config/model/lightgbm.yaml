@@ -1,0 +1,10 @@
+# Modelo LightGBM: parámetros fijos que no busca Optuna.
+# Los hiperparámetros buscados están en config/tuning/optuna.yaml y los
+# mejores los escribe la etapa tune como salida del pipeline (no se editan a mano).
+
+objective: binary
+# Igual que el modelo base, para que la comparación sea justa.
+class_weight: balanced
+random_state: 42
+# Silencia los mensajes internos de LightGBM en cada trial.
+verbose: -1

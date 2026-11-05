@@ -9,5 +9,8 @@ max_iter: 1000
 # "balanced" pesa cada clase según su frecuencia (69/31): sin esto el modelo
 # tiende a predecir siempre "no deserta".
 class_weight: balanced
-# Probabilidad a partir de la cual se marca a un aprendiz en riesgo.
-umbral: 0.5
+# El umbral ya no es fijo: train lo elige con predicciones out-of-fold en train
+# (GroupKFold por cohorte), entre los que alcanzan este recall, el de mayor
+# precisión. Test no se usa para elegirlo.
+recall_objetivo: 0.70
+cv_n_splits: 5

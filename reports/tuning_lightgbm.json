@@ -1,0 +1,17 @@
+{
+  "mejores_params": {
+    "n_estimators": 359,
+    "learning_rate": 0.013087531018484793,
+    "num_leaves": 18,
+    "min_child_samples": 48,
+    "subsample": 0.915955034905243,
+    "colsample_bytree": 0.6699440539806791,
+    "reg_lambda": 0.02790143274076043
+  },
+  "pr_auc_cv_media": 0.5809375409927344,
+  "pr_auc_oof": 0.5773303193102062,
+  "umbral": 0.44020800026629064,
+  "precision_oof": 0.47090810222947255,
+  "recall_oof": 0.7012145748987855,
+  "n_trials": 50
+}
