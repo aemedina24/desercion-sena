@@ -17,26 +17,26 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 
 ## 29–30 oct · Validación de datos y diccionario
 
-- [ ] A: David · Limpiar su carpeta tras el PR #2 y comprobar `dvc status`
-- [ ] A: Juntos · Acordar el contrato: las 43 columnas de `data/processed/aprendices.parquet`
-- [ ] A: David · R: Andrés · `validate.py`: esquema de Pandera de los datos procesados
-- [ ] A: David · R: Andrés · `tests/test_validate.py`: acepta datos buenos y rechaza datos malos
-- [ ] A: David · R: Andrés · `tests/test_process.py`: sin traslados ni columnas de fuga
-- [] A: Andrés · R: David · `docs/datos.md`: diccionario de variables con su rol
+- [x] A: David · Limpiar su carpeta tras el PR #2 y comprobar `dvc status`
+- [x] A: Juntos · Acordar el contrato: las 43 columnas de `data/processed/aprendices.parquet`
+- [x] A: David · R: Andrés · `validate.py`: esquema de Pandera de los datos procesados
+- [x] A: David · R: Andrés · `tests/test_validate.py`: acepta datos buenos y rechaza datos malos
+- [x] A: David · R: Andrés · `tests/test_process.py`: sin traslados ni columnas de fuga
+- [x] A: Andrés · R: David · `docs/datos.md`: diccionario de variables con su rol (PR #6)
 
 ## 31 oct–2 nov · Exploración, variables y CI
 
-- [ ] A: Andrés · R: David · `notebooks/01_eda.ipynb`: exploración y conclusiones
-- [ ] A: Andrés · R: David · `features.py`, `config/features/seguimiento.yaml` y etapa `features`
-- [ ] A: David · R: Andrés · `tests/test_features.py`: sin fuga temporal en las variables
-- [ ] A: David · R: Andrés · `.github/workflows/ci.yaml`: Ruff y pytest en cada push y PR
+- [x] A: Andrés · R: David · `notebooks/01_eda.ipynb`: exploración y conclusiones
+- [x] A: Andrés · R: David · `features.py`, `config/features/seguimiento.yaml` y etapa `features`
+- [x] A: David · R: Andrés · `tests/test_features.py`: sin fuga temporal en las variables
+- [x] A: David · R: Andrés · `.github/workflows/ci.yaml`: Ruff y pytest en cada push y PR
 - [ ] A: David · Regla de protección de `main`: exigir 1 aprobación y CI en verde
 
 ## 3–4 nov · Entrenamiento y experimentos
 
-- [ ] A: Andrés · R: David · División temporal por cohorte y `train_model.py` (modelo base en MLflow)
-- [ ] A: Andrés · R: David · `notebooks/02_modelo_base.ipynb`
-- [x] A: Andrés · R: David · `tune.py`: LightGBM con Optuna y `GroupKFold`; registrar `desercion-seguimiento`
+- [x] A: Andrés · R: David · División temporal por cohorte y `train_model.py` (modelo base en MLflow)
+- [x] A: Andrés · R: David · `notebooks/02_modelo_base.ipynb` (PR #18)
+- [x] A: Andrés · R: David · `tune.py`: LightGBM con Optuna y `GroupKFold` (experimento; el modelo final es la logística con umbral out-of-fold, ADR 0002, PR #17)
 - [ ] A: David · R: Andrés · `tests/test_model_behavior.py`: rendimiento mínimo, invariancia y fuga
 
 ## 5–6 nov · Evaluación, equidad y base de la API
