@@ -1,4 +1,4 @@
-# ADR 001: Elección del modelo final
+# ADR 002: Elección del modelo final
 
 - **Estado:** Aceptada
 - **Fecha:** 2026-11-04
@@ -97,6 +97,7 @@ Razones:
 
 ```powershell
 uv sync
-uv run python -m desercion.tune      # experimento LightGBM, unos minutos
-uv run dvc repro train               # modelo final con umbral out-of-fold
+uv run python -m desercion.tune               # experimento LightGBM, unos minutos
+uv run python -m desercion.comparar_modelos   # tabla de comparación, en MLflow
+uv run dvc repro train                        # modelo final con umbral out-of-fold
 ```
