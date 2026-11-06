@@ -4,7 +4,7 @@ Este archivo resume el proyecto para que cualquier sesión de Claude (de Andrés
 
 ## Qué es
 
-Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta temprana que estima el riesgo de deserción de aprendices del SENA en modalidad **virtual, presencial y mixta**, y entrega al instructor una API con la lista de aprendices ordenada por riesgo, los factores que lo explican (aportes de los coeficientes de la logística, equivalentes a SHAP lineal)
+Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta temprana que estima el riesgo de deserción de aprendices del SENA en modalidad **virtual, presencial y mixta**, y entrega al instructor una API con la lista de aprendices ordenada por riesgo, los factores que lo explican (aportes de los coeficientes de la logística, equivalentes a SHAP lineal) y medidas sugeridas.
 
 - **Entrega:** 11 de noviembre de 2026.
 - **Equipo:** Andrés (`aemedina24`, datos y modelo) · David (ingeniería y calidad).
@@ -27,6 +27,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - **Validación:** entrenar con las cohortes antiguas y evaluar con la más reciente (`id_cohorte`); en Optuna, `GroupKFold` por `id_aprendiz`.
 - **Sin Hydra:** configuración en YAML simple dentro de `config/`.
 - **Ética:** Ley 1581 de 2012. No se usan datos sensibles (etnia, religión, orientación sexual, biométricos).
+- **Explicación:** aporte = coef × (valor − media de train), agrupado por variable original (`explain.py`). Es SHAP exacto para un modelo lineal; no se usa la librería `shap`.
 
 ## Datos y pipeline
 
