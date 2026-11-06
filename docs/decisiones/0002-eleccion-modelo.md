@@ -100,5 +100,4 @@ uv sync
 uv run python -m desercion.tune               # experimento LightGBM, unos minutos
 uv run python -m desercion.comparar_modelos   # tabla de comparación, en MLflow
 uv run dvc repro train                        # modelo final con umbral out-of-fold
-uv run python -m desercion.comparar_modelos   # tabla de comparación, en MLflow
 ```
