@@ -4,7 +4,7 @@ Este archivo resume el proyecto para que cualquier sesión de Claude (de Andrés
 
 ## Qué es
 
-Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta temprana que estima el riesgo de deserción de aprendices del SENA en modalidad **virtual, presencial y mixta**, y entrega al instructor una API con la lista de aprendices ordenada por riesgo, los factores que lo explican (SHAP) y medidas sugeridas.
+Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta temprana que estima el riesgo de deserción de aprendices del SENA en modalidad **virtual, presencial y mixta**, y entrega al instructor una API con la lista de aprendices ordenada por riesgo, los factores que lo explican (aportes de los coeficientes de la logística, equivalentes a SHAP lineal)
 
 - **Entrega:** 11 de noviembre de 2026.
 - **Equipo:** Andrés (`aemedina24`, datos y modelo) · David (ingeniería y calidad).

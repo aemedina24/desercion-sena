@@ -8,11 +8,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import skops.io as sio
 from sklearn.metrics import precision_recall_curve
+from sklearn.pipeline import Pipeline
 
 # --- Rutas -----------------------------------------------------------------
 RUTA_TRAIN = Path("data/features/train.parquet")
 RUTA_TEST = Path("data/features/test.parquet")
+# El modelo que se despliega: lo escribe train y lo versiona DVC.
+RUTA_MODELO = Path("models/modelo.skops")
+RUTA_METRICAS = Path("reports/metricas_modelo_base.json")
 
 # --- Parámetros ------------------------------------------------------------
 ETIQUETA = "deserto"
@@ -21,6 +26,10 @@ ETIQUETA = "deserto"
 COLUMNAS_NO_MODELO = ["id_aprendiz", "id_cohorte"]
 # Grupo de la validación cruzada: cada fold valida sobre cohortes completas.
 COLUMNA_GRUPO = "id_cohorte"
+# skops guarda el modelo sin pickle; al cargar solo se aceptan estos tipos
+# externos (los usan el imputador y el one-hot). Cualquier otro tipo es una
+# señal de que el archivo no es el que esperamos y la carga falla.
+TIPOS_CONFIABLES = ["numpy.dtype"]
 
 
 def separar_x_y(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
@@ -56,3 +65,14 @@ def elegir_umbral(
         "precision_oof": float(precision[mejor]),
         "recall_oof": float(recall[mejor]),
     }
+
+
+def guardar_modelo(pipeline: Pipeline, ruta: Path = RUTA_MODELO) -> None:
+    """Guarda el Pipeline entrenado en formato skops."""
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    sio.dump(pipeline, ruta)
+
+
+def cargar_modelo(ruta: Path = RUTA_MODELO) -> Pipeline:
+    """Carga el Pipeline aceptando solo los tipos de TIPOS_CONFIABLES."""
+    return sio.load(ruta, trusted=TIPOS_CONFIABLES)

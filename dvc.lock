@@ -73,12 +73,12 @@ stages:
       size: 286979
     - path: src/desercion/modelado.py
       hash: md5
-      md5: 8a5462ad4911dd5a98b32e7771ddddff
-      size: 2405
+      md5: 6c182c49a9349b043a2d650e56e883d2
+      size: 3284
     - path: src/desercion/train_model.py
       hash: md5
-      md5: fca99ce2445503850d72a1f67502e38c
-      size: 8539
+      md5: ffeb2dbccdf9502b7a801788c08c7d49
+      size: 8843
     params:
       config/model/logistic.yaml:
         C: 1.0
@@ -87,7 +87,67 @@ stages:
         max_iter: 1000
         recall_objetivo: 0.7
     outs:
+    - path: models/modelo.skops
+      hash: md5
+      md5: f0dd9683c0396c196eb6cd409b605c29
+      size: 331741
     - path: reports/metricas_modelo_base.json
       hash: md5
       md5: d95bfc978f701e8b1ea2838a90005d7f
       size: 392
+  evaluate:
+    cmd: uv run python -m desercion.evaluate
+    deps:
+    - path: data/features/test.parquet
+      hash: md5
+      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
+      size: 83810
+    - path: models/modelo.skops
+      hash: md5
+      md5: f0dd9683c0396c196eb6cd409b605c29
+      size: 331741
+    - path: reports/metricas_modelo_base.json
+      hash: md5
+      md5: d95bfc978f701e8b1ea2838a90005d7f
+      size: 392
+    - path: src/desercion/evaluate.py
+      hash: md5
+      md5: dbe047143cdf62ec63acef557066215d
+      size: 4503
+    - path: src/desercion/modelado.py
+      hash: md5
+      md5: 6c182c49a9349b043a2d650e56e883d2
+      size: 3284
+    outs:
+    - path: reports/evaluacion.json
+      hash: md5
+      md5: 21f8f1a4badd648c4b14ce14ccbceb19
+      size: 2128
+  explain:
+    cmd: uv run python -m desercion.explain
+    deps:
+    - path: data/features/test.parquet
+      hash: md5
+      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
+      size: 83810
+    - path: data/features/train.parquet
+      hash: md5
+      md5: f246b383a15b410ddbe185518d6bb6d0
+      size: 286979
+    - path: models/modelo.skops
+      hash: md5
+      md5: f0dd9683c0396c196eb6cd409b605c29
+      size: 331741
+    - path: src/desercion/explain.py
+      hash: md5
+      md5: 151dabf703973df0518e425d42f72d71
+      size: 6103
+    - path: src/desercion/modelado.py
+      hash: md5
+      md5: 6c182c49a9349b043a2d650e56e883d2
+      size: 3284
+    outs:
+    - path: reports/importancia_variables.json
+      hash: md5
+      md5: fa2f91777a79ebfcb6bfbb8cb8974c2d
+      size: 3338
