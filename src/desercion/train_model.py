@@ -5,6 +5,8 @@ Entradas:
     data/features/test.parquet    (cohortes recientes: solo se evalúan)
     config/model/logistic.yaml    (hiperparámetros)
 Salidas:
+    models/modelo.skops                 (el Pipeline que usan evaluate, explain
+                                         y la API; lo versiona DVC)
     reports/metricas_modelo_base.json   (métricas en test, las lee DVC)
     Un run en MLflow con parámetros, métricas, el modelo y la versión de los
     datos y del código que lo produjeron.
@@ -51,16 +53,17 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from desercion.modelado import (
     COLUMNA_GRUPO,
+    RUTA_METRICAS,
     RUTA_TEST,
     RUTA_TRAIN,
     elegir_umbral,
+    guardar_modelo,
     separar_x_y,
     tipos_de_columnas,
 )
 
 # --- Rutas -----------------------------------------------------------------
 RUTA_CONFIG = Path("config/model/logistic.yaml")
-RUTA_METRICAS = Path("reports/metricas_modelo_base.json")
 
 # --- Parámetros ------------------------------------------------------------
 # Las métricas se reportan también por modalidad (decisión en CLAUDE.md).
@@ -209,6 +212,9 @@ def main() -> None:
     )
 
     pipeline.fit(x_train, y_train)
+    # Copia local del mismo modelo que se registra en MLflow: DVC la versiona
+    # y la etapa evaluate y la API la leen sin depender de DagsHub.
+    guardar_modelo(pipeline)
 
     probabilidad = pipeline.predict_proba(x_test)[:, 1]
     metricas = eleccion | calcular_metricas(y_test, probabilidad, umbral)

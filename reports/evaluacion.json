@@ -1,0 +1,69 @@
+{
+  "umbral": 0.4606367905142532,
+  "global": {
+    "aprendices": 1544,
+    "desertores": 493,
+    "alertas": 702,
+    "verdaderos_positivos": 338,
+    "falsos_positivos": 364,
+    "falsos_negativos": 155,
+    "verdaderos_negativos": 687,
+    "tasa_desercion": 0.31930051813471505,
+    "tasa_alerta": 0.45466321243523317,
+    "recall": 0.6855983772819473,
+    "precision": 0.48148148148148145,
+    "alertas_por_acierto": 2.076923076923077,
+    "detectados_azar": 224.14896373056996,
+    "mejora_sobre_azar": 1.5079257756742543
+  },
+  "modalidad": {
+    "mixta": {
+      "aprendices": 307,
+      "desertores": 90,
+      "alertas": 140,
+      "verdaderos_positivos": 68,
+      "falsos_positivos": 72,
+      "falsos_negativos": 22,
+      "verdaderos_negativos": 145,
+      "tasa_desercion": 0.2931596091205212,
+      "tasa_alerta": 0.4560260586319218,
+      "recall": 0.7555555555555555,
+      "precision": 0.4857142857142857,
+      "alertas_por_acierto": 2.0588235294117645,
+      "detectados_azar": 41.042345276872965,
+      "mejora_sobre_azar": 1.6568253968253968
+    },
+    "presencial": {
+      "aprendices": 463,
+      "desertores": 101,
+      "alertas": 122,
+      "verdaderos_positivos": 53,
+      "falsos_positivos": 69,
+      "falsos_negativos": 48,
+      "verdaderos_negativos": 293,
+      "tasa_desercion": 0.21814254859611232,
+      "tasa_alerta": 0.2634989200863931,
+      "recall": 0.5247524752475248,
+      "precision": 0.4344262295081967,
+      "alertas_por_acierto": 2.30188679245283,
+      "detectados_azar": 26.6133909287257,
+      "mejora_sobre_azar": 1.9914786560623277
+    },
+    "virtual": {
+      "aprendices": 774,
+      "desertores": 302,
+      "alertas": 440,
+      "verdaderos_positivos": 217,
+      "falsos_positivos": 223,
+      "falsos_negativos": 85,
+      "verdaderos_negativos": 249,
+      "tasa_desercion": 0.39018087855297157,
+      "tasa_alerta": 0.5684754521963824,
+      "recall": 0.7185430463576159,
+      "precision": 0.49318181818181817,
+      "alertas_por_acierto": 2.0276497695852536,
+      "detectados_azar": 171.67958656330748,
+      "mejora_sobre_azar": 1.26398254063817
+    }
+  }
+}

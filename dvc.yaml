@@ -33,6 +33,30 @@ stages:
       - src/desercion/modelado.py
     params:
       - config/model/logistic.yaml:
+    outs:
+      - models/modelo.skops
     metrics:
       - reports/metricas_modelo_base.json:
+          cache: false
+  evaluate:
+    cmd: uv run python -m desercion.evaluate
+    deps:
+      - models/modelo.skops
+      - data/features/test.parquet
+      - reports/metricas_modelo_base.json
+      - src/desercion/evaluate.py
+      - src/desercion/modelado.py
+    metrics:
+      - reports/evaluacion.json:
+          cache: false
+  explain:
+    cmd: uv run python -m desercion.explain
+    deps:
+      - models/modelo.skops
+      - data/features/train.parquet
+      - data/features/test.parquet
+      - src/desercion/explain.py
+      - src/desercion/modelado.py
+    outs:
+      - reports/importancia_variables.json:
           cache: false

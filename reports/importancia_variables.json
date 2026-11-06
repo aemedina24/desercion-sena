@@ -1,0 +1,158 @@
+{
+  "porcentaje_actividades_aprobadas": {
+    "importancia": 0.6023,
+    "sube_riesgo": 0.476
+  },
+  "porcentaje_actividades_entregadas": {
+    "importancia": 0.2516,
+    "sube_riesgo": 0.5376
+  },
+  "promedio_calificaciones": {
+    "importancia": 0.1478,
+    "sube_riesgo": 0.4605
+  },
+  "evaluaciones_no_presentadas": {
+    "importancia": 0.1471,
+    "sube_riesgo": 0.318
+  },
+  "ingresos_plataforma_ultimos_7d": {
+    "importancia": 0.147,
+    "sube_riesgo": 0.4845
+  },
+  "asistencia_porcentaje": {
+    "importancia": 0.1437,
+    "sube_riesgo": 0.669
+  },
+  "modalidad": {
+    "importancia": 0.1127,
+    "sube_riesgo": 0.7001
+  },
+  "nivel_educativo": {
+    "importancia": 0.1028,
+    "sube_riesgo": 0.3569
+  },
+  "tasa_aprobacion_entregas": {
+    "importancia": 0.0902,
+    "sube_riesgo": 0.5751
+  },
+  "progreso_programa": {
+    "importancia": 0.0736,
+    "sube_riesgo": 0.4333
+  },
+  "dias_sin_ingreso": {
+    "importancia": 0.068,
+    "sube_riesgo": 0.3679
+  },
+  "experiencia_virtual_previa": {
+    "importancia": 0.0644,
+    "sube_riesgo": 0.388
+  },
+  "area_formacion": {
+    "importancia": 0.0616,
+    "sube_riesgo": 0.6017
+  },
+  "horas_disponibles_estudio": {
+    "importancia": 0.0558,
+    "sube_riesgo": 0.5317
+  },
+  "abandono_ultimo_curso": {
+    "importancia": 0.0542,
+    "sube_riesgo": 0.2306
+  },
+  "actividades_pendientes": {
+    "importancia": 0.0541,
+    "sube_riesgo": 0.5907
+  },
+  "horas_trabajo_semana": {
+    "importancia": 0.0516,
+    "sube_riesgo": 0.522
+  },
+  "dispositivo_principal": {
+    "importancia": 0.0514,
+    "sube_riesgo": 0.3238
+  },
+  "calidad_internet": {
+    "importancia": 0.0509,
+    "sube_riesgo": 0.3083
+  },
+  "dias_desde_inicio": {
+    "importancia": 0.0498,
+    "sube_riesgo": 0.5039
+  },
+  "situacion_laboral": {
+    "importancia": 0.0484,
+    "sube_riesgo": 0.285
+  },
+  "n_cursos_previos": {
+    "importancia": 0.0469,
+    "sube_riesgo": 0.647
+  },
+  "dificultad_economica_reportada": {
+    "importancia": 0.0463,
+    "sube_riesgo": 0.2902
+  },
+  "tasa_finalizacion_previa": {
+    "importancia": 0.046,
+    "sube_riesgo": 0.2617
+  },
+  "tipo_conexion": {
+    "importancia": 0.0418,
+    "sube_riesgo": 0.6244
+  },
+  "nivel_formacion": {
+    "importancia": 0.0388,
+    "sube_riesgo": 0.8504
+  },
+  "n_cursos_abandonados": {
+    "importancia": 0.0378,
+    "sube_riesgo": 0.274
+  },
+  "disponibilidad_equipo": {
+    "importancia": 0.0339,
+    "sube_riesgo": 0.1418
+  },
+  "duracion_programa_meses": {
+    "importancia": 0.0329,
+    "sube_riesgo": 0.3685
+  },
+  "tipo_plan_internet": {
+    "importancia": 0.0323,
+    "sube_riesgo": 0.0583
+  },
+  "jornada": {
+    "importancia": 0.0314,
+    "sube_riesgo": 0.8472
+  },
+  "responsabilidades_cuidado": {
+    "importancia": 0.0285,
+    "sube_riesgo": 0.3167
+  },
+  "solicito_apoyo": {
+    "importancia": 0.0178,
+    "sube_riesgo": 0.1289
+  },
+  "edad": {
+    "importancia": 0.014,
+    "sube_riesgo": 0.5706
+  },
+  "comparte_dispositivo": {
+    "importancia": 0.0126,
+    "sube_riesgo": 0.726
+  },
+  "meses_desde_ultimo_curso": {
+    "importancia": 0.0121,
+    "sube_riesgo": 0.5939
+  },
+  "n_cursos_completados": {
+    "importancia": 0.012,
+    "sube_riesgo": 0.4501
+  },
+  "es_primer_curso": {
+    "importancia": 0.0062,
+    "sube_riesgo": 0.2649
+  },
+  "sin_ingreso_reciente": {
+    "importancia": 0.0003,
+    "sube_riesgo": 0.9715
+  }
+}
