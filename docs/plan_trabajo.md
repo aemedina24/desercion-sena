@@ -30,7 +30,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 - [x] A: Andrés · R: David · `features.py`, `config/features/seguimiento.yaml` y etapa `features`
 - [x] A: David · R: Andrés · `tests/test_features.py`: sin fuga temporal en las variables
 - [x] A: David · R: Andrés · `.github/workflows/ci.yaml`: Ruff y pytest en cada push y PR
-- [ ] A: David · Regla de protección de `main`: exigir 1 aprobación y CI en verde
+- [x] A: David · Regla de protección de `main`: exigir 1 aprobación y CI en verde (ruleset `proteger-main`, configurado por Andrés)
 
 ## 3–4 nov · Entrenamiento y experimentos
 
