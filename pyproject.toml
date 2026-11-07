@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.162.0",
     "lightgbm>=4.7.0",
     "mlflow-skinny>=3.18.0",
     "numpy>=2.4.6",
@@ -19,6 +20,7 @@ dependencies = [
     "pyyaml>=6.0.3",
     "scikit-learn>=1.9.1",
     "skops>=0.16.0",
+    "uvicorn>=0.54.0",
 ]
 
 [project.scripts]
@@ -31,6 +33,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "dvc>=3.67.1",
+    "httpx2>=2.16.0",
     "ipykernel>=7.4.0",
     "matplotlib>=3.11.2",
     "pytest>=9.2.0",
