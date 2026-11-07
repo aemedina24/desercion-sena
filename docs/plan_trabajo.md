@@ -43,7 +43,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 
 - [x] A: Andrés · R: David · `evaluate.py` y `explain.py` (métricas por modalidad y coeficientes)
 - [x] A: Andrés · R: David · `notebooks/03_comparacion_modelos.ipynb` (lee los experimentos de MLflow)
-- [ ] A: David · R: Andrés · `notebooks/04_evaluacion_y_equidad.ipynb` (subgrupos con la tabla de auditoría)
+- [x] A: David · R: Andrés · `notebooks/04_evaluacion_y_equidad.ipynb` (subgrupos con la tabla de auditoría)
 - [x] A: David · R: Andrés · `api/schemas.py` y endpoint `/health`
 
 ## 7–8 nov · Recomendaciones, API y Docker
