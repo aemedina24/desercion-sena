@@ -103,15 +103,28 @@ cd desercion-sena
 uv sync
 ```
 
-### Datos
+### Datos y modelo (DVC en DagsHub)
 
-El archivo de datos no se incluye en el repositorio: se versiona con DVC y se comparte por fuera de Git. Una vez recibido, se ubica en `data/raw/aprendices.parquet` y se verifica que coincide con la versión registrada:
+Los datos y el modelo no están en Git: se versionan con DVC y se guardan en el remoto de DagsHub. Requiere acceso al repositorio en DagsHub y un token personal (DagsHub → *Your settings* → *Tokens*).
+
+Configure sus credenciales una sola vez. Quedan en `.dvc/config.local`, que no se sube a Git. El token se escribe oculto para que no quede en pantalla ni en el historial de la terminal:
 
 ```powershell
+uv run dvc remote modify origin --local auth basic
+uv run dvc remote modify origin --local user SU_USUARIO_DAGSHUB
+$t = Read-Host "Token DagsHub" -AsSecureString
+uv run dvc remote modify origin --local password ([System.Net.NetworkCredential]::new('', $t).Password)
+Remove-Variable t
+```
+
+Descargue los datos y el modelo, y verifique:
+
+```powershell
+uv run dvc pull
 uv run dvc status
 ```
 
-Debe responder *"Data and pipelines are up to date"*.
+`dvc status` debe responder *"Data and pipelines are up to date"*. Repita `uv run dvc pull` después de cada `git pull`.
 
 ### Credenciales de MLflow (DagsHub)
 
@@ -121,7 +134,7 @@ La etapa `train` registra cada experimento en el MLflow de DagsHub. Requiere acc
 Copy-Item .env.example .env
 ```
 
-`.env` está en `.gitignore`: nunca se sube a Git. Cada integrante usa su propio token.
+Ábralo con `notepad .env` y pegue ahí el token; nunca lo escriba en la terminal. `.env` está en `.gitignore`: nunca se sube a Git. Cada integrante usa su propio token.
 
 ---
 
