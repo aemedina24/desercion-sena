@@ -179,6 +179,25 @@ def test_documentacion_incluye_los_endpoints(cliente):
     } <= set(rutas)
 
 
+@pytest.mark.parametrize(
+    "ruta",
+    ["/health", "/aprendices/{id_aprendiz}/riesgo", "/cohortes/{id_cohorte}/riesgo"],
+)
+def test_documentacion_incluye_el_503(cliente, ruta):
+    # Quien integre la API debe saber que puede recibir un 503 y qué significa.
+    respuestas = cliente.get("/openapi.json").json()["paths"][ruta]["get"]["responses"]
+    assert "503" in respuestas
+    assert respuestas["503"]["description"].startswith("Modelo o datos no cargados")
+
+
+def test_el_503_de_health_documenta_el_esquema_salud(cliente):
+    esquema = cliente.get("/openapi.json").json()["paths"]["/health"]["get"][
+        "responses"
+    ]
+    referencia = esquema["503"]["content"]["application/json"]["schema"]["$ref"]
+    assert referencia.endswith("/Salud")
+
+
 # --- /aprendices/{id}/riesgo ----------------------------------------------------
 def test_riesgo_de_un_aprendiz(cliente):
     respuesta = cliente.get("/aprendices/A-000019/riesgo")

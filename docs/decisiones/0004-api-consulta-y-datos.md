@@ -51,6 +51,12 @@ abiertas:
 
 ## Consecuencias
 
+- **La API no tiene autenticación.** En la demo, cualquiera que llegue a la API
+  puede consultar cualquier aprendiz y cualquier cohorte. Antes el README decía
+  que cada instructor solo vería sus fichas; eso ya no se cumple. En producción
+  habría que autenticar a cada instructor y restringir sus consultas a sus
+  grupos (por ejemplo, con un filtro obligatorio según su asignación), además de
+  servir la API solo por HTTPS. Por eso la demo usa datos sintéticos.
 - **La etiqueta nunca sale de la API.** `test.parquet` incluye `deserto`; la API
   solo expone las columnas de filtro y las de riesgo. Una prueba lo verifica en
   todas las respuestas.

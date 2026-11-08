@@ -64,3 +64,9 @@ class RiesgoCohorte(BaseModel):
     total_aprendices: int = Field(ge=0)
     total_alertas: int = Field(ge=0)
     aprendices: list[RiesgoAprendiz]
+
+
+class Error(BaseModel):
+    """Cuerpo de los errores 404 y 503 de los endpoints de riesgo."""
+
+    detail: str
