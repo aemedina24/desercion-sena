@@ -49,7 +49,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 ## 7–8 nov · Recomendaciones, API y Docker
 
 - [ ] A: Andrés · R: David · `medidas.yaml`, `recomendaciones.py` y función de predicción para la API
-- [ ] A: David · R: Andrés · Endpoints `/aprendices/{id}/riesgo` y `/fichas/{id}/riesgo`
+- [ ] A: David · R: Andrés · Endpoints `/aprendices/{id}/riesgo` y `/cohortes/{id}/riesgo` con filtros (ADR 0004)
 - [ ] A: David · R: Andrés · `tests/test_api.py` y `Dockerfile`
 
 ## 9 nov · Monitoreo y documentación
