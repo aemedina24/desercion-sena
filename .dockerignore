@@ -1,0 +1,19 @@
+# Lista blanca: se ignora todo y solo se deja pasar lo que la imagen necesita.
+# Así nunca entran .env, .dvc/config.local (credenciales de DagsHub), .venv,
+# .git, los datos de entrenamiento ni los cuadernos.
+*
+
+# Para instalar el paquete
+!pyproject.toml
+!uv.lock
+!.python-version
+!README.md
+!src/
+src/**/__pycache__
+
+# Lo que la API lee al arrancar (los artefactos llegan con `uv run dvc pull`)
+!config/recomendaciones/medidas.yaml
+!models/modelo.skops
+!models/referencia.json
+!reports/metricas_modelo_base.json
+!data/features/test.parquet

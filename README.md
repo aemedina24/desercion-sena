@@ -147,6 +147,18 @@ uv run ruff check .    # revisa la calidad del código
 uv run pytest          # ejecuta las pruebas
 ```
 
+### API con Docker
+
+La imagen copia el modelo y los datos que versiona DVC, así que primero hay que descargarlos. Requiere Docker Desktop.
+
+```powershell
+uv run dvc pull
+docker build -t desercion-api .
+docker run --rm -d -p 8000:8000 --name api desercion-api
+```
+
+Compruebe que responde en <http://127.0.0.1:8000/health> (`"estado": "ok"`) y explore los endpoints en <http://127.0.0.1:8000/docs>. Para detenerla: `docker stop api`. Sin Docker, la misma API se levanta con `uv run uvicorn desercion.api.main:app --reload`.
+
 ---
 
 ## Problemas comunes
