@@ -140,13 +140,17 @@ stages:
       size: 331741
     - path: src/desercion/explain.py
       hash: md5
-      md5: 151dabf703973df0518e425d42f72d71
-      size: 6103
+      md5: 6fe6a54b86aa35e20274415fe93fcb32
+      size: 7361
     - path: src/desercion/modelado.py
       hash: md5
       md5: 6c182c49a9349b043a2d650e56e883d2
       size: 3284
     outs:
+    - path: models/referencia.json
+      hash: md5
+      md5: 2685137491cf97f7a6124d2547b1f848
+      size: 5297
     - path: reports/importancia_variables.json
       hash: md5
       md5: fa2f91777a79ebfcb6bfbb8cb8974c2d
