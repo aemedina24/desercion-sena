@@ -29,6 +29,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - **Equidad:** criterio principal igualdad de oportunidades, medida con la regla de los cuatro quintos (recall mínimo / máximo ≥ 0.80) y siempre con IC por bootstrap. `sexo` solo se audita. Umbral global en la v1; umbral por modalidad como siguiente versión ([ADR 0003](docs/decisiones/0003-umbral-y-equidad.md)).
 - **Sin Hydra:** configuración en YAML simple dentro de `config/`.
 - **Ética:** Ley 1581 de 2012. No se usan datos sensibles (etnia, religión, orientación sexual, biométricos).
+- **API:** consulta por aprendiz y por cohorte con filtros (modalidad, área, nivel, solo alertas, límite); no hay `id_ficha` en los datos. Al arrancar carga los aprendices activos (`data/features/test.parquet` en la demo) y precalcula su riesgo ([ADR 0004](docs/decisiones/0004-api-consulta-y-datos.md)).
 - **Explicación:** aporte = coef × (valor − media de train), agrupado por variable original (`explain.py`). Es SHAP exacto para un modelo lineal; no se usa la librería `shap`.
 
 ## Datos y pipeline
@@ -67,7 +68,9 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - DVC "attempt to write a readonly database": `uv run dvc config --local core.site_cache_dir "$env:LOCALAPPDATA\iterative\dvc\site_cache"`.
 - DVC detecta cambios falsos por saltos de línea CRLF: resuelto con `.gitattributes`. Comprobar con `git ls-files --eol <archivo>` (debe decir `w/lf`).
 - **Regla:** si `dvc repro` o `dvc status` modifican `dvc.lock` sin que nadie haya cambiado código ni datos, no hacer commit; primero investigar la causa. Un `dvc.lock` con hashes equivocados se propaga a todo el equipo.
-- Tras `dvc repro` en Windows, `dvc.lock` puede aparecer modificado solo porque DVC lo reescribe con CRLF. Comprobar con `git diff --ignore-cr-at-eol dvc.lock` (debe salir vacío) y descartar con `git restore dvc.lock`.
+- Tras `dvc repro` en Windows, `dvc.lock` puede aparecer modificado solo porque DVC lo reescribe con CRLF. Comprobar con `git diff --ignore-cr-at-eol dvc.lock`:
+  - **Sale vacío:** el cambio es solo de saltos de línea; descartarlo con `git restore dvc.lock`.
+  - **Muestra cambios:** **no restaurar**. Son cambios reales (por ejemplo, cambió el código o los parámetros de una etapa); revisar el diff y, si corresponden a lo que se cambió, hacer commit de `dvc.lock`.
 - Los archivos que escribe Python (JSON de `reports/`) deben usar `write_text(..., newline="\n")`: en Windows, `write_text` convierte `\n` en CRLF y `dvc.lock` queda con un hash que nadie más reproduce. Ojo: `tests/test_dvc_lock.py` solo revisa las dependencias de código (`src/`, `config/`), no estas salidas.
 - `models/modelo.skops` no es idéntico byte a byte al reentrenar (skops nombra sus archivos internos con identificadores de memoria), aunque las predicciones sí lo son. Si `train` se vuelve a ejecutar, `dvc.lock` cambia sin cambio real: el modelo se compara por sus métricas, no por su hash. Para no reentrenar, hacer `uv run dvc pull` antes de `dvc repro`.
 

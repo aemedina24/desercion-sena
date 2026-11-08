@@ -33,7 +33,7 @@ Detalle de tareas en [`docs/plan_trabajo.md`](docs/plan_trabajo.md).
 | **Métrica principal** | Recall de la clase "deserta", acompañado de F1 y ROC-AUC |
 | **Exclusiones** | Los traslados y las cancelaciones no se consideran deserción y se excluyen |
 
-**Criterios éticos:** no se usan datos sensibles (etnia, religión, orientación sexual, biométricos). El sexo se guarda aparte y solo se usa para auditar la equidad del modelo. Cada instructor consulta únicamente sus fichas.
+**Criterios éticos:** no se usan datos sensibles (etnia, religión, orientación sexual, biométricos). El sexo se guarda aparte y solo se usa para auditar la equidad del modelo. La API no tiene un id de ficha (no existe en los datos): el instructor consulta su cohorte y la acota con filtros por modalidad, área y nivel (ADR 0004).
 
 ---
 
