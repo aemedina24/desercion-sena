@@ -52,7 +52,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 - [x] A: David · R: Andrés · Endpoints `/aprendices/{id}/riesgo` y `/cohortes/{id}/riesgo` con filtros (ADR 0004, PR #26 y #27)
 - [x] A: David · R: Andrés · `tests/test_api.py`
 - [x] A: Andrés · R: David · `Dockerfile` y `.dockerignore` (imagen de la API)
-- [ ] A: David · R: Andrés · Conectar `predecir_riesgo` en `crear_app` (factores y medidas en la API)
+- [x] A: David · R: Andrés · Conectar `predecir_riesgo` en `crear_app` (factores y medidas en la API)
 
 ## 9 nov · Monitoreo y documentación
 

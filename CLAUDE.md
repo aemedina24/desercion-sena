@@ -73,6 +73,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
   - **Sale vacío:** el cambio es solo de saltos de línea; descartarlo con `git restore dvc.lock`.
   - **Muestra cambios:** **no restaurar**. Son cambios reales (por ejemplo, cambió el código o los parámetros de una etapa); revisar el diff y, si corresponden a lo que se cambió, hacer commit de `dvc.lock`.
 - Los archivos que escribe Python (JSON de `reports/`) deben usar `write_text(..., newline="\n")`: en Windows, `write_text` convierte `\n` en CRLF y `dvc.lock` queda con un hash que nadie más reproduce. Ojo: `tests/test_dvc_lock.py` solo revisa las dependencias de código (`src/`, `config/`), no estas salidas.
+- `porcentaje_actividades_entregadas` sale como factor de riesgo en quienes entregan **más** que el promedio (colinealidad con `porcentaje_actividades_aprobadas` y `tasa_aprobacion_entregas`): en test, 623 aprendices con una media de 91 % frente a 75 %. Se muestra como factor, pero está en `sin_medida` de `medidas.yaml` para no sugerir "entregar las pendientes" a quien ya entregó. La solución de fondo (agrupar los factores por tema) queda para la v2.
 - `models/modelo.skops` no es idéntico byte a byte al reentrenar (skops nombra sus archivos internos con identificadores de memoria), aunque las predicciones sí lo son. Si `train` se vuelve a ejecutar, `dvc.lock` cambia sin cambio real: el modelo se compara por sus métricas, no por su hash. Para no reentrenar, hacer `uv run dvc pull` antes de `dvc repro`.
 
 ## Cómo debe ayudar Claude
