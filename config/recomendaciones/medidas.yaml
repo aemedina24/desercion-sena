@@ -1,0 +1,123 @@
+# Medidas sugeridas al instructor según los factores que suben el riesgo.
+#
+# Cómo se usa (recomendaciones.py):
+# - Solo se sugieren medidas a los aprendices con alerta.
+# - Se recorren sus factores de mayor a menor aporte; cada factor activa la
+#   medida a la que pertenece su variable. Sin repetir, hasta `max_medidas`.
+# - Si ningún factor tiene medida (por ejemplo, solo pesa la modalidad), se
+#   sugiere la medida `general`.
+#
+# Cada variable del modelo va en exactamente un lugar: en una medida o en
+# `sin_medida`. Una prueba lo verifica contra reports/importancia_variables.json,
+# así que una variable nueva obliga a decidir aquí qué hacer con ella.
+
+max_medidas: 3
+
+general: >-
+  Contactar al aprendiz esta semana para conocer su situación y registrar el
+  seguimiento.
+
+medidas:
+  ponerse_al_dia:
+    texto: >-
+      Acordar con el aprendiz un calendario para entregar las actividades y
+      evaluaciones pendientes.
+    variables:
+      - porcentaje_actividades_entregadas
+      - actividades_pendientes
+      - evaluaciones_no_presentadas
+
+  plan_de_mejoramiento:
+    texto: >-
+      Revisar con el aprendiz las actividades reprobadas y ofrecer un plan de
+      mejoramiento o una tutoría.
+    variables:
+      - porcentaje_actividades_aprobadas
+      - tasa_aprobacion_entregas
+      - promedio_calificaciones
+
+  contacto_por_inactividad:
+    texto: >-
+      Llamar o escribir al aprendiz: no está entrando a la plataforma. Preguntar
+      qué se lo impide.
+    variables:
+      - ingresos_plataforma_ultimos_7d
+      - dias_sin_ingreso
+      - sin_ingreso_reciente
+
+  inasistencia:
+    texto: >-
+      Hablar con el aprendiz sobre sus inasistencias y registrar la causa en el
+      seguimiento.
+    variables:
+      - asistencia_porcentaje
+
+  conectividad_y_equipo:
+    texto: >-
+      Remitir a Bienestar al Aprendiz para apoyo de conectividad o préstamo de
+      equipo.
+    variables:
+      - calidad_internet
+      - tipo_conexion
+      - tipo_plan_internet
+      - disponibilidad_equipo
+      - comparte_dispositivo
+      - dispositivo_principal
+
+  apoyo_economico:
+    texto: >-
+      Informar al aprendiz sobre los apoyos de sostenimiento de Bienestar al
+      Aprendiz.
+    variables:
+      - dificultad_economica_reportada
+
+  tiempo_disponible:
+    texto: >-
+      Acordar un plan de estudio realista según su tiempo disponible (fechas
+      flexibles, actividades asincrónicas).
+    variables:
+      - horas_disponibles_estudio
+      - horas_trabajo_semana
+      - situacion_laboral
+      - responsabilidades_cuidado
+
+  induccion_virtual:
+    texto: >-
+      Ofrecer una inducción al manejo de la plataforma y a cómo estudiar en
+      formación virtual.
+    variables:
+      - experiencia_virtual_previa
+      - es_primer_curso
+
+  antecedentes_de_abandono:
+    texto: >-
+      Hacer seguimiento cercano desde ya: el aprendiz abandonó o no terminó
+      cursos anteriores.
+    variables:
+      - abandono_ultimo_curso
+      - n_cursos_abandonados
+      - tasa_finalizacion_previa
+
+  solicitud_de_apoyo:
+    texto: >-
+      Dar respuesta a la solicitud de apoyo que registró el aprendiz.
+    variables:
+      - solicito_apoyo
+
+# Variables que explican el riesgo pero no se cambian con una acción del
+# instructor (características del programa o del aprendiz). Se muestran como
+# factores, pero no generan una medida propia. Nunca se sugiere una medida por
+# edad, nivel educativo u otra característica personal.
+sin_medida:
+  - modalidad
+  - area_formacion
+  - nivel_formacion
+  - jornada
+  - duracion_programa_meses
+  - dias_desde_inicio
+  - progreso_programa
+  - nivel_educativo
+  - edad
+  - n_cursos_previos
+  - n_cursos_completados
+  - meses_desde_ultimo_curso

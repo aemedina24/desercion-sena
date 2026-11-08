@@ -17,8 +17,9 @@ agrupan por la variable original.
 
 Entradas:
     models/modelo.skops, data/features/train.parquet, data/features/test.parquet
-Salida:
+Salidas:
     reports/importancia_variables.json   (importancia global en test)
+    models/referencia.json               (aprendiz promedio de train, para la API)
 
 Uso (desde la raíz del repositorio):
     uv run python -m desercion.explain
@@ -38,6 +39,9 @@ from desercion.modelado import RUTA_TEST, RUTA_TRAIN, cargar_modelo, separar_x_y
 
 # --- Rutas -----------------------------------------------------------------
 RUTA_IMPORTANCIA = Path("reports/importancia_variables.json")
+# El "aprendiz promedio" de train contra el que se calculan los factores. Lo
+# escribe esta etapa y lo versiona DVC, para que la API no cargue train (ADR 0004).
+RUTA_REFERENCIA = Path("models/referencia.json")
 
 # --- Parámetros ------------------------------------------------------------
 # Prefijos que ColumnTransformer y SimpleImputer ponen a los nombres de columna.
@@ -92,6 +96,25 @@ def referencia_train(pipeline: Pipeline, x_train: pd.DataFrame) -> pd.Series:
     return matriz_transformada(pipeline, x_train).mean()
 
 
+def guardar_referencia(referencia: pd.Series, ruta: Path = RUTA_REFERENCIA) -> None:
+    """Guarda la referencia como {columna transformada: media en train}.
+
+    Con LF (`newline="\\n"`) para que el hash de dvc.lock sea el mismo en Windows
+    y en Linux. `json` escribe los float sin perder precisión.
+    """
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    ruta.write_text(
+        json.dumps({k: float(v) for k, v in referencia.items()}, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def cargar_referencia(ruta: Path = RUTA_REFERENCIA) -> pd.Series:
+    """Lee la referencia que escribió esta etapa (la usa la API)."""
+    return pd.Series(json.loads(ruta.read_text(encoding="utf-8")), dtype="float64")
+
+
 def log_odds_base(pipeline: Pipeline, referencia: pd.Series) -> float:
     """Log-odds del aprendiz promedio: base + Σ aportes = log-odds del aprendiz."""
     modelo = pipeline.named_steps["modelo"]
@@ -136,6 +159,12 @@ def main() -> None:
     reconstruido = log_odds_base(modelo, referencia) + tabla.sum(axis=1)
     if not np.allclose(reconstruido, modelo.decision_function(x_test)):
         raise RuntimeError("Los aportes no reconstruyen la predicción del modelo")
+
+    # La API calcula los factores contra esta misma referencia (ADR 0004).
+    guardar_referencia(referencia)
+    logger.info(
+        "Referencia guardada en %s (%d columnas)", RUTA_REFERENCIA, len(referencia)
+    )
 
     importancia = importancia_global(tabla)
     RUTA_IMPORTANCIA.parent.mkdir(parents=True, exist_ok=True)
