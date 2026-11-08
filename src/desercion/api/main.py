@@ -30,7 +30,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Response, status
 from fastapi import Path as RutaParam
 
-from desercion.api.schemas import RiesgoAprendiz, RiesgoCohorte, Salud
+from desercion.api.schemas import Error, RiesgoAprendiz, RiesgoCohorte, Salud
 from desercion.modelado import (
     RUTA_METRICAS,
     RUTA_MODELO,
@@ -57,6 +57,7 @@ COLUMNAS_FILTRO = [
 ]
 LIMITE_POR_DEFECTO = 50
 LIMITE_MAXIMO = 500
+DESCRIPCION_503 = "Modelo o datos no cargados: la API arrancó, pero no puede responder"
 
 # Valores permitidos en los filtros: los mismos del contrato de datos (validate.py).
 # Un valor fuera de la lista responde 422 y /docs los muestra como desplegable.
@@ -190,7 +191,12 @@ def crear_app(
             )
         return app.state.riesgo
 
-    @app.get("/health", response_model=Salud, tags=["operación"])
+    @app.get(
+        "/health",
+        response_model=Salud,
+        tags=["operación"],
+        responses={503: {"model": Salud, "description": DESCRIPCION_503}},
+    )
     def salud(response: Response) -> Salud:
         """Estado del servicio: 200 si puede responder, 503 si no."""
         if app.state.riesgo is None:
@@ -215,7 +221,13 @@ def crear_app(
         "/aprendices/{id_aprendiz}/riesgo",
         response_model=RiesgoAprendiz,
         tags=["riesgo"],
-        responses={404: {"description": "El aprendiz no está entre los activos"}},
+        responses={
+            404: {
+                "model": Error,
+                "description": "El aprendiz no está entre los activos",
+            },
+            503: {"model": Error, "description": DESCRIPCION_503},
+        },
     )
     def riesgo_aprendiz(
         id_aprendiz: Annotated[str, RutaParam(pattern=r"^A-\d{6}$")],
@@ -234,7 +246,13 @@ def crear_app(
         "/cohortes/{id_cohorte}/riesgo",
         response_model=RiesgoCohorte,
         tags=["riesgo"],
-        responses={404: {"description": "La cohorte no tiene aprendices activos"}},
+        responses={
+            404: {
+                "model": Error,
+                "description": "La cohorte no tiene aprendices activos",
+            },
+            503: {"model": Error, "description": DESCRIPCION_503},
+        },
     )
     def riesgo_cohorte(
         id_cohorte: Annotated[str, RutaParam(pattern=r"^\d{4}-T[1-4]$")],
