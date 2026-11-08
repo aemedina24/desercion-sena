@@ -30,6 +30,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - **Sin Hydra:** configuración en YAML simple dentro de `config/`.
 - **Ética:** Ley 1581 de 2012. No se usan datos sensibles (etnia, religión, orientación sexual, biométricos).
 - **Explicación:** aporte = coef × (valor − media de train), agrupado por variable original (`explain.py`). Es SHAP exacto para un modelo lineal; no se usa la librería `shap`.
+- **Predicción para la API:** `prediccion.predecir_riesgo(aprendices, *, modelo, referencia, umbral)` no carga nada; la API carga modelo, umbral y referencia al arrancar. Factores con aporte ≥ 0.05; medidas solo con alerta, definidas en `config/recomendaciones/medidas.yaml` (cada variable del modelo tiene medida o está en `sin_medida`; nunca medidas por características personales).
 
 ## Datos y pipeline
 
@@ -40,7 +41,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
   - `features` → `data/features/train.parquet` y `test.parquet`.
   - `train` → `models/modelo.skops` (el modelo que usan `evaluate`, `explain` y la API) y `reports/metricas_modelo_base.json` (incluye el `umbral`). Registra el run en MLflow de DagsHub: requiere `.env`.
   - `evaluate` → `reports/evaluacion.json` (métricas por modalidad).
-  - `explain` → `reports/importancia_variables.json`.
+  - `explain` → `reports/importancia_variables.json` y `models/referencia.json` (aprendiz promedio de train; la API calcula los factores contra él).
 - El pipeline se ejecuta con `uv run dvc repro`. Cada etapa nueva se declara en `dvc.yaml`. Después de `git pull`, ejecutar `uv run dvc pull` para tener los datos y el modelo de esa versión.
 
 ## Convenciones de código

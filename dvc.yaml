@@ -58,5 +58,6 @@ stages:
       - src/desercion/explain.py
       - src/desercion/modelado.py
     outs:
+      - models/referencia.json
       - reports/importancia_variables.json:
           cache: false
