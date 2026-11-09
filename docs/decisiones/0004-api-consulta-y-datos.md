@@ -56,7 +56,8 @@ abiertas:
   que cada instructor solo vería sus fichas; eso ya no se cumple. En producción
   habría que autenticar a cada instructor y restringir sus consultas a sus
   grupos (por ejemplo, con un filtro obligatorio según su asignación), además de
-  servir la API solo por HTTPS. Por eso la demo usa datos sintéticos.
+  servir la API solo por HTTPS. Es aceptable en la demo solo porque los datos
+  son sintéticos.
 - **La etiqueta nunca sale de la API.** `test.parquet` incluye `deserto`; la API
   solo expone las columnas de filtro y las de riesgo. Una prueba lo verifica en
   todas las respuestas.
@@ -69,7 +70,8 @@ abiertas:
   referencia y aprendices activos.
 - **`/health` distingue el motivo:** `sin_modelo` (no cargó el modelo o el
   umbral) o `sin_datos` (el modelo cargó, pero no los aprendices o su riesgo).
-- **Mientras llega `predecir_riesgo`**, la API usa un predictor provisional con
-  probabilidad y alerta, sin factores ni medidas.
+- **Factores y medidas:** la API usa `prediccion.predecir_riesgo` con el modelo,
+  el umbral y `models/referencia.json` cargados al arrancar. Si falta la
+  referencia o es de otro modelo, `/health` responde `sin_datos`.
 - **Equidad:** el umbral es global (ADR 0003); la brecha por modalidad sigue
   siendo una limitación conocida.

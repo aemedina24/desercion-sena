@@ -4,10 +4,11 @@ No usan models/modelo.skops ni data/features (los versiona DVC y el CI no los
 tiene). Cada prueba crea en una carpeta temporal:
 
 - un modelo pequeño entrenado con datos sintéticos (mismo camino de carga que la
-  API real),
+  API real) y su referencia (como la escribe `explain`),
 - 60 aprendices activos en dos cohortes, con modalidad, área y nivel conocidos,
 - y usa un predictor falso con probabilidades conocidas, para comprobar filtros
-  y orden sin depender del modelo. El predictor provisional se prueba aparte.
+  y orden sin depender del modelo. El predictor real (`predecir_riesgo`) se
+  prueba aparte, al final.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from desercion.api.main import (
     md5_archivo,
 )
 from desercion.api.schemas import Factor, RiesgoAprendiz, RiesgoCohorte, Salud
+from desercion.explain import guardar_referencia, referencia_train
 from desercion.features import agregar_variables, quitar_columnas
 from desercion.modelado import guardar_modelo, separar_x_y, tipos_de_columnas
 from desercion.train_model import cargar_config, construir_pipeline
@@ -55,7 +57,7 @@ def aprendices(procesados) -> pd.DataFrame:
 
 @pytest.fixture
 def archivos(aprendices, tmp_path) -> dict:
-    """Modelo, métricas y aprendices guardados como los usaría la API."""
+    """Modelo, métricas, aprendices y referencia guardados como los usaría la API."""
     x, y = separar_x_y(aprendices)
     numericas, categoricas = tipos_de_columnas(x)
     pipeline = construir_pipeline(numericas, categoricas, cargar_config())
@@ -64,8 +66,11 @@ def archivos(aprendices, tmp_path) -> dict:
         "ruta_modelo": tmp_path / "modelo.skops",
         "ruta_metricas": tmp_path / "metricas.json",
         "ruta_aprendices": tmp_path / "aprendices.parquet",
+        "ruta_referencia": tmp_path / "referencia.json",
     }
-    guardar_modelo(pipeline.fit(x, y), rutas["ruta_modelo"])
+    pipeline.fit(x, y)
+    guardar_modelo(pipeline, rutas["ruta_modelo"])
+    guardar_referencia(referencia_train(pipeline, x), rutas["ruta_referencia"])
     rutas["ruta_metricas"].write_text(json.dumps({"umbral": UMBRAL}), encoding="utf-8")
     aprendices.to_parquet(rutas["ruta_aprendices"], index=False)
     return rutas
@@ -340,18 +345,57 @@ def test_ninguna_respuesta_expone_la_etiqueta(cliente):
         assert "deserto" not in respuesta.text
 
 
-# --- Predictor provisional (sin factores ni medidas todavía) ----------------------
-def test_predictor_provisional_con_el_modelo_cargado(archivos):
+# --- Predictor real: predecir_riesgo (factores y medidas) ---------------------------
+def test_predictor_real_entrega_factores_y_medidas(archivos):
     with TestClient(crear_app(**archivos)) as c:
-        assert c.get("/health").status_code == 200
+        assert c.get("/health").json()["estado"] == "ok"
         cuerpo = c.get("/cohortes/2025-T3/riesgo", params={"limite": 100}).json()
 
     assert cuerpo["total_aprendices"] == N_APRENDICES // 2
+    con_alerta = [a for a in cuerpo["aprendices"] if a["alerta"]]
+    sin_alerta = [a for a in cuerpo["aprendices"] if not a["alerta"]]
+    assert con_alerta and sin_alerta  # el caso sintético tiene de los dos
+
     for aprendiz in cuerpo["aprendices"]:
-        assert 0 <= aprendiz["probabilidad"] <= 1
         assert aprendiz["alerta"] is (aprendiz["probabilidad"] >= UMBRAL)
-        assert aprendiz["factores"] == []
-        assert aprendiz["medidas"] == []
+    # Quien tiene alerta llega con sus factores y al menos una medida; sin alerta,
+    # no hay medidas (recomendaciones.py).
+    for aprendiz in con_alerta:
+        assert aprendiz["factores"]
+        assert aprendiz["medidas"]
+    assert all(a["medidas"] == [] for a in sin_alerta)
+
+
+def test_quien_menos_aprueba_tiene_ese_factor_primero(archivos):
+    # En los datos sintéticos la deserción depende de las actividades aprobadas, y
+    # A-000001 es quien menos aprueba.
+    with TestClient(crear_app(**archivos)) as c:
+        cuerpo = c.get("/aprendices/A-000001/riesgo").json()
+    assert cuerpo["alerta"] is True
+    assert cuerpo["factores"][0]["variable"] == "porcentaje_actividades_aprobadas"
+
+
+def test_health_503_sin_datos_si_falta_la_referencia(archivos, tmp_path):
+    respuesta = _salud(
+        {**archivos, "ruta_referencia": tmp_path / "no_existe.json"}, None
+    )
+    assert respuesta.status_code == 503
+    cuerpo = respuesta.json()
+    assert cuerpo["estado"] == "sin_datos"
+    assert cuerpo["modelo_cargado"] is True
+    assert "FileNotFoundError" in cuerpo["detalle"]
+
+
+def test_health_503_si_la_referencia_es_de_otro_modelo(archivos):
+    ruta = archivos["ruta_referencia"]
+    referencia = json.loads(ruta.read_text(encoding="utf-8"))
+    referencia.pop(next(iter(referencia)))
+    ruta.write_text(json.dumps(referencia), encoding="utf-8")
+
+    respuesta = _salud(archivos, None)
+    assert respuesta.status_code == 503
+    assert respuesta.json()["estado"] == "sin_datos"
+    assert "dvc repro explain" in respuesta.json()["detalle"]
 
 
 # --- Esquemas -------------------------------------------------------------------

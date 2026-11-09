@@ -23,7 +23,6 @@ medidas:
       Acordar con el aprendiz un calendario para entregar las actividades y
       evaluaciones pendientes.
     variables:
-      - porcentaje_actividades_entregadas
       - actividades_pendientes
       - evaluaciones_no_presentadas
 
@@ -109,6 +108,12 @@ medidas:
 # factores, pero no generan una medida propia. Nunca se sugiere una medida por
 # edad, nivel educativo u otra característica personal.
 sin_medida:
+  # Por la colinealidad con porcentaje_actividades_aprobadas y
+  # tasa_aprobacion_entregas, el modelo la marca como factor en quienes entregan
+  # MÁS que el promedio (623 aprendices de test, media 91 % frente a 75 %). Con
+  # medida, 42 aprendices con alerta recibían "entregar las pendientes" aunque
+  # habían entregado entre 80 % y 100 %. Ver "Problemas conocidos" en CLAUDE.md.
+  - porcentaje_actividades_entregadas
   - modalidad
   - area_formacion
   - nivel_formacion
