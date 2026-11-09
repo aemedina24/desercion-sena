@@ -39,7 +39,7 @@ final.
 |---|---|---|
 | LightGBM (tuneado con Optuna, 50 trials) | 0.581 | 0.578 · 0.590 · 0.519 · 0.598 · 0.620 |
 | Regresión logística (sin tunear, C = 1.0) | 0.574 | 0.563 · 0.587 · 0.504 · 0.607 · 0.610 |
-| Red neuronal (`MLPClassifier`, capas 32-16) | 0.557 | 0.542 · 0.584 · 0.509 · 0.577 · 0.571 |
+| Red neuronal (`MLPClassifier`, capas 32-16) | 0.558 | 0.542 · 0.584 · 0.509 · 0.578 · 0.577 |
 | Referencia: azar (proporción de desertores) | 0.31 | — |
 
 - **LightGBM** supera a la logística en 4 de 5 folds, por entre 0.003 y 0.015, y pierde
