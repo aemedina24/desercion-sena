@@ -1,0 +1,676 @@
+{
+  "criterios": {
+    "n_bins": 10,
+    "psi_moderado": 0.1,
+    "psi_drift": 0.2,
+    "recall_objetivo": 0.7
+  },
+  "referencia": {
+    "datos": "data/features/train.parquet",
+    "aprendices": 7974
+  },
+  "cohortes": {
+    "2025-T3": {
+      "drift": {
+        "aprendices": 765,
+        "estado": "estable",
+        "variables_con_drift": [],
+        "variables_moderadas": [],
+        "categorias_nuevas": {},
+        "variables": {
+          "progreso_programa": {
+            "tipo": "numerica",
+            "psi": 0.021998,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.244682,
+            "categorias_nuevas": []
+          },
+          "meses_desde_ultimo_curso": {
+            "tipo": "numerica",
+            "psi": 0.020985,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.290478,
+            "categorias_nuevas": []
+          },
+          "edad": {
+            "tipo": "numerica",
+            "psi": 0.0193,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.083083,
+            "categorias_nuevas": []
+          },
+          "ingresos_plataforma_ultimos_7d": {
+            "tipo": "numerica",
+            "psi": 0.018212,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.882956,
+            "categorias_nuevas": []
+          },
+          "porcentaje_actividades_aprobadas": {
+            "tipo": "numerica",
+            "psi": 0.018207,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.280395,
+            "categorias_nuevas": []
+          },
+          "dias_desde_inicio": {
+            "tipo": "numerica",
+            "psi": 0.015535,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.113879,
+            "categorias_nuevas": []
+          },
+          "horas_trabajo_semana": {
+            "tipo": "numerica",
+            "psi": 0.013417,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.205461,
+            "categorias_nuevas": []
+          },
+          "area_formacion": {
+            "tipo": "categorica",
+            "psi": 0.012121,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.136991,
+            "categorias_nuevas": []
+          },
+          "asistencia_porcentaje": {
+            "tipo": "numerica",
+            "psi": 0.011132,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.230379,
+            "categorias_nuevas": []
+          },
+          "porcentaje_actividades_entregadas": {
+            "tipo": "numerica",
+            "psi": 0.009839,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.962477,
+            "categorias_nuevas": []
+          },
+          "horas_disponibles_estudio": {
+            "tipo": "numerica",
+            "psi": 0.009645,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.718107,
+            "categorias_nuevas": []
+          },
+          "tasa_aprobacion_entregas": {
+            "tipo": "numerica",
+            "psi": 0.008869,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.435755,
+            "categorias_nuevas": []
+          },
+          "situacion_laboral": {
+            "tipo": "categorica",
+            "psi": 0.008465,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.112436,
+            "categorias_nuevas": []
+          },
+          "promedio_calificaciones": {
+            "tipo": "numerica",
+            "psi": 0.007738,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.998147,
+            "categorias_nuevas": []
+          },
+          "nivel_formacion": {
+            "tipo": "categorica",
+            "psi": 0.005943,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.388779,
+            "categorias_nuevas": []
+          },
+          "n_cursos_completados": {
+            "tipo": "discreta",
+            "psi": 0.005094,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.810122,
+            "categorias_nuevas": []
+          },
+          "n_cursos_previos": {
+            "tipo": "discreta",
+            "psi": 0.004615,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.869311,
+            "categorias_nuevas": []
+          },
+          "n_cursos_abandonados": {
+            "tipo": "discreta",
+            "psi": 0.004492,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.415597,
+            "categorias_nuevas": []
+          },
+          "nivel_educativo": {
+            "tipo": "categorica",
+            "psi": 0.004479,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.661146,
+            "categorias_nuevas": []
+          },
+          "dispositivo_principal": {
+            "tipo": "categorica",
+            "psi": 0.003941,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.399095,
+            "categorias_nuevas": []
+          },
+          "abandono_ultimo_curso": {
+            "tipo": "discreta",
+            "psi": 0.0038,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.26587,
+            "categorias_nuevas": []
+          },
+          "actividades_pendientes": {
+            "tipo": "discreta",
+            "psi": 0.003657,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.975653,
+            "categorias_nuevas": []
+          },
+          "dias_sin_ingreso": {
+            "tipo": "numerica",
+            "psi": 0.00364,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.989286,
+            "categorias_nuevas": []
+          },
+          "jornada": {
+            "tipo": "categorica",
+            "psi": 0.003558,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.461843,
+            "categorias_nuevas": []
+          },
+          "evaluaciones_no_presentadas": {
+            "tipo": "discreta",
+            "psi": 0.003143,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.33594,
+            "categorias_nuevas": []
+          },
+          "tipo_conexion": {
+            "tipo": "categorica",
+            "psi": 0.002914,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.561591,
+            "categorias_nuevas": []
+          },
+          "tasa_finalizacion_previa": {
+            "tipo": "numerica",
+            "psi": 0.002848,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.919682,
+            "categorias_nuevas": []
+          },
+          "dificultad_economica_reportada": {
+            "tipo": "categorica",
+            "psi": 0.002797,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.586006,
+            "categorias_nuevas": []
+          },
+          "solicito_apoyo": {
+            "tipo": "discreta",
+            "psi": 0.002742,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.197128,
+            "categorias_nuevas": []
+          },
+          "sin_ingreso_reciente": {
+            "tipo": "discreta",
+            "psi": 0.001913,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.273275,
+            "categorias_nuevas": []
+          },
+          "tipo_plan_internet": {
+            "tipo": "categorica",
+            "psi": 0.001896,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.522717,
+            "categorias_nuevas": []
+          },
+          "es_primer_curso": {
+            "tipo": "discreta",
+            "psi": 0.001392,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.349257,
+            "categorias_nuevas": []
+          },
+          "experiencia_virtual_previa": {
+            "tipo": "discreta",
+            "psi": 0.001349,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.353322,
+            "categorias_nuevas": []
+          },
+          "duracion_programa_meses": {
+            "tipo": "discreta",
+            "psi": 0.001291,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.645755,
+            "categorias_nuevas": []
+          },
+          "modalidad": {
+            "tipo": "categorica",
+            "psi": 0.001214,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.653787,
+            "categorias_nuevas": []
+          },
+          "calidad_internet": {
+            "tipo": "categorica",
+            "psi": 0.001052,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.86442,
+            "categorias_nuevas": []
+          },
+          "comparte_dispositivo": {
+            "tipo": "discreta",
+            "psi": 0.000714,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.509098,
+            "categorias_nuevas": []
+          },
+          "responsabilidades_cuidado": {
+            "tipo": "discreta",
+            "psi": 0.000276,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.689645,
+            "categorias_nuevas": []
+          },
+          "disponibilidad_equipo": {
+            "tipo": "discreta",
+            "psi": 1.6e-05,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.958064,
+            "categorias_nuevas": []
+          }
+        }
+      },
+      "rendimiento": {
+        "recall": 0.668016,
+        "ic_inferior": 0.608527,
+        "ic_superior": 0.726562,
+        "desertores": 247,
+        "alertas": 340,
+        "estado": "revisar"
+      }
+    },
+    "2025-T4": {
+      "drift": {
+        "aprendices": 779,
+        "estado": "estable",
+        "variables_con_drift": [],
+        "variables_moderadas": [],
+        "categorias_nuevas": {},
+        "variables": {
+          "progreso_programa": {
+            "tipo": "numerica",
+            "psi": 0.01665,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.061335,
+            "categorias_nuevas": []
+          },
+          "dias_desde_inicio": {
+            "tipo": "numerica",
+            "psi": 0.01643,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.86308,
+            "categorias_nuevas": []
+          },
+          "promedio_calificaciones": {
+            "tipo": "numerica",
+            "psi": 0.016313,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.937887,
+            "categorias_nuevas": []
+          },
+          "tasa_aprobacion_entregas": {
+            "tipo": "numerica",
+            "psi": 0.015813,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.10483,
+            "categorias_nuevas": []
+          },
+          "porcentaje_actividades_entregadas": {
+            "tipo": "numerica",
+            "psi": 0.01563,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.447217,
+            "categorias_nuevas": []
+          },
+          "n_cursos_completados": {
+            "tipo": "discreta",
+            "psi": 0.014308,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.493298,
+            "categorias_nuevas": []
+          },
+          "meses_desde_ultimo_curso": {
+            "tipo": "numerica",
+            "psi": 0.012715,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.116469,
+            "categorias_nuevas": []
+          },
+          "porcentaje_actividades_aprobadas": {
+            "tipo": "numerica",
+            "psi": 0.012174,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.810362,
+            "categorias_nuevas": []
+          },
+          "jornada": {
+            "tipo": "categorica",
+            "psi": 0.011591,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.037765,
+            "categorias_nuevas": []
+          },
+          "asistencia_porcentaje": {
+            "tipo": "numerica",
+            "psi": 0.010804,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.985382,
+            "categorias_nuevas": []
+          },
+          "n_cursos_previos": {
+            "tipo": "discreta",
+            "psi": 0.010215,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.402081,
+            "categorias_nuevas": []
+          },
+          "actividades_pendientes": {
+            "tipo": "discreta",
+            "psi": 0.009517,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.703715,
+            "categorias_nuevas": []
+          },
+          "horas_disponibles_estudio": {
+            "tipo": "numerica",
+            "psi": 0.00915,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.3995,
+            "categorias_nuevas": []
+          },
+          "edad": {
+            "tipo": "numerica",
+            "psi": 0.008479,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.2662,
+            "categorias_nuevas": []
+          },
+          "dias_sin_ingreso": {
+            "tipo": "numerica",
+            "psi": 0.0076,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.65451,
+            "categorias_nuevas": []
+          },
+          "solicito_apoyo": {
+            "tipo": "discreta",
+            "psi": 0.007113,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.022927,
+            "categorias_nuevas": []
+          },
+          "nivel_educativo": {
+            "tipo": "categorica",
+            "psi": 0.006976,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.428734,
+            "categorias_nuevas": []
+          },
+          "abandono_ultimo_curso": {
+            "tipo": "discreta",
+            "psi": 0.006239,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.099898,
+            "categorias_nuevas": []
+          },
+          "area_formacion": {
+            "tipo": "categorica",
+            "psi": 0.006139,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.50295,
+            "categorias_nuevas": []
+          },
+          "evaluaciones_no_presentadas": {
+            "tipo": "discreta",
+            "psi": 0.004588,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.164634,
+            "categorias_nuevas": []
+          },
+          "nivel_formacion": {
+            "tipo": "categorica",
+            "psi": 0.004515,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.529427,
+            "categorias_nuevas": []
+          },
+          "duracion_programa_meses": {
+            "tipo": "discreta",
+            "psi": 0.004236,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.227393,
+            "categorias_nuevas": []
+          },
+          "calidad_internet": {
+            "tipo": "categorica",
+            "psi": 0.003417,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.484287,
+            "categorias_nuevas": []
+          },
+          "modalidad": {
+            "tipo": "categorica",
+            "psi": 0.003221,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.326464,
+            "categorias_nuevas": []
+          },
+          "tipo_plan_internet": {
+            "tipo": "categorica",
+            "psi": 0.002583,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.407941,
+            "categorias_nuevas": []
+          },
+          "ingresos_plataforma_ultimos_7d": {
+            "tipo": "numerica",
+            "psi": 0.002334,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.991358,
+            "categorias_nuevas": []
+          },
+          "dificultad_economica_reportada": {
+            "tipo": "categorica",
+            "psi": 0.001963,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.712881,
+            "categorias_nuevas": []
+          },
+          "tasa_finalizacion_previa": {
+            "tipo": "numerica",
+            "psi": 0.001902,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.999984,
+            "categorias_nuevas": []
+          },
+          "horas_trabajo_semana": {
+            "tipo": "numerica",
+            "psi": 0.001771,
+            "nivel": "estable",
+            "prueba": "ks",
+            "p_valor": 0.99308,
+            "categorias_nuevas": []
+          },
+          "dispositivo_principal": {
+            "tipo": "categorica",
+            "psi": 0.00176,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.743424,
+            "categorias_nuevas": []
+          },
+          "n_cursos_abandonados": {
+            "tipo": "discreta",
+            "psi": 0.001736,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.873002,
+            "categorias_nuevas": []
+          },
+          "responsabilidades_cuidado": {
+            "tipo": "discreta",
+            "psi": 0.001219,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.370958,
+            "categorias_nuevas": []
+          },
+          "es_primer_curso": {
+            "tipo": "discreta",
+            "psi": 0.001124,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.39809,
+            "categorias_nuevas": []
+          },
+          "situacion_laboral": {
+            "tipo": "categorica",
+            "psi": 0.001088,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.863265,
+            "categorias_nuevas": []
+          },
+          "tipo_conexion": {
+            "tipo": "categorica",
+            "psi": 0.000464,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.956215,
+            "categorias_nuevas": []
+          },
+          "comparte_dispositivo": {
+            "tipo": "discreta",
+            "psi": 0.000138,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.787197,
+            "categorias_nuevas": []
+          },
+          "sin_ingreso_reciente": {
+            "tipo": "discreta",
+            "psi": 8.9e-05,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.894679,
+            "categorias_nuevas": []
+          },
+          "experiencia_virtual_previa": {
+            "tipo": "discreta",
+            "psi": 2.2e-05,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 0.931384,
+            "categorias_nuevas": []
+          },
+          "disponibilidad_equipo": {
+            "tipo": "discreta",
+            "psi": 0.0,
+            "nivel": "estable",
+            "prueba": "chi_cuadrado",
+            "p_valor": 1.0,
+            "categorias_nuevas": []
+          }
+        }
+      },
+      "rendimiento": {
+        "recall": 0.703252,
+        "ic_inferior": 0.643192,
+        "ic_superior": 0.759657,
+        "desertores": 246,
+        "alertas": 362,
+        "estado": "ok"
+      }
+    }
+  }
+}
