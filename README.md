@@ -116,6 +116,7 @@ Los cuadernos muestran y explican los resultados; la lógica vive en `src/deserc
 | [Model card](docs/model_card.md) | Uso previsto, rendimiento, equidad y limitaciones del modelo |
 | [Datos](docs/datos.md) | Diccionario de variables, roles y reglas de limpieza |
 | [Decisiones (ADR)](docs/decisiones/) | uv, elección del modelo, umbral y equidad, diseño de la API, monitoreo |
+| [Guía de desarrollo](docs/guia_desarrollo.md) | Decisiones, convenciones de código, flujo de trabajo y problemas conocidos |
 | [Plan de trabajo](docs/plan_trabajo.md) | Tareas con autor y revisor |
 
 ---

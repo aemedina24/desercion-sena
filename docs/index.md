@@ -14,6 +14,7 @@ sugeridas. La presentación general y la instalación están en el
 | Saber qué tan bueno es el modelo y cuándo no confiar en él | [Model card](model_card.md) |
 | Consultar la API | [API](api.md) |
 | Conocer cada variable y cómo se limpió | [Datos](datos.md) |
+| Trabajar en el repositorio: decisiones, convenciones y problemas conocidos | [Guía de desarrollo](guia_desarrollo.md) |
 | Ver quién hizo cada tarea | [Plan de trabajo](plan_trabajo.md) |
 
 ## Decisiones (ADR)
