@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Monitoreo del modelo</title>
+<style>body{font-family:sans-serif;margin:2rem;max-width:960px}table{border-collapse:collapse;margin:.5rem 0 1.5rem}td,th{border:1px solid #ccc;padding:.25rem .6rem;text-align:right}th{background:#f2f2f2}.drift{background:#f8d7da}.moderado{background:#fff3cd}.revisar{background:#fff3cd}</style>
+</head><body>
+<h1>Monitoreo del modelo: drift y recall por cohorte</h1>
+<p>Referencia: data/features/train.parquet (7974 aprendices). PSI &gt; 0.2 = drift; 0.1–0.2 = moderado. KS y chi-cuadrado son informativos. Recall objetivo: 0.7.</p>
+<h2>Cohorte 2025-T3 (765 aprendices)</h2>
+<p class="revisar">Recall 0.668 (IC 95 %: 0.609–0.727), 247 desertores, 340 alertas. Estado: <b>revisar</b>.</p>
+<p>Drift: <b>estable</b>. Con drift: ninguna. Moderadas: ninguna. Categorías nuevas: {}.</p>
+<table><tr><th>variable</th><th>tipo</th><th>PSI</th><th>nivel</th><th>prueba</th><th>p-valor</th></tr>
+<tr class="estable"><td style="text-align:left">progreso_programa</td><td>numerica</td><td>0.0220</td><td>estable</td><td>ks</td><td>0.245</td></tr>
+<tr class="estable"><td style="text-align:left">meses_desde_ultimo_curso</td><td>numerica</td><td>0.0210</td><td>estable</td><td>ks</td><td>0.29</td></tr>
+<tr class="estable"><td style="text-align:left">edad</td><td>numerica</td><td>0.0193</td><td>estable</td><td>ks</td><td>0.0831</td></tr>
+<tr class="estable"><td style="text-align:left">ingresos_plataforma_ultimos_7d</td><td>numerica</td><td>0.0182</td><td>estable</td><td>ks</td><td>0.883</td></tr>
+<tr class="estable"><td style="text-align:left">porcentaje_actividades_aprobadas</td><td>numerica</td><td>0.0182</td><td>estable</td><td>ks</td><td>0.28</td></tr>
+<tr class="estable"><td style="text-align:left">dias_desde_inicio</td><td>numerica</td><td>0.0155</td><td>estable</td><td>ks</td><td>0.114</td></tr>
+<tr class="estable"><td style="text-align:left">horas_trabajo_semana</td><td>numerica</td><td>0.0134</td><td>estable</td><td>ks</td><td>0.205</td></tr>
+<tr class="estable"><td style="text-align:left">area_formacion</td><td>categorica</td><td>0.0121</td><td>estable</td><td>chi_cuadrado</td><td>0.137</td></tr>
+<tr class="estable"><td style="text-align:left">asistencia_porcentaje</td><td>numerica</td><td>0.0111</td><td>estable</td><td>ks</td><td>0.23</td></tr>
+<tr class="estable"><td style="text-align:left">porcentaje_actividades_entregadas</td><td>numerica</td><td>0.0098</td><td>estable</td><td>ks</td><td>0.962</td></tr>
+<tr class="estable"><td style="text-align:left">horas_disponibles_estudio</td><td>numerica</td><td>0.0096</td><td>estable</td><td>ks</td><td>0.718</td></tr>
+<tr class="estable"><td style="text-align:left">tasa_aprobacion_entregas</td><td>numerica</td><td>0.0089</td><td>estable</td><td>ks</td><td>0.436</td></tr>
+<tr class="estable"><td style="text-align:left">situacion_laboral</td><td>categorica</td><td>0.0085</td><td>estable</td><td>chi_cuadrado</td><td>0.112</td></tr>
+<tr class="estable"><td style="text-align:left">promedio_calificaciones</td><td>numerica</td><td>0.0077</td><td>estable</td><td>ks</td><td>0.998</td></tr>
+<tr class="estable"><td style="text-align:left">nivel_formacion</td><td>categorica</td><td>0.0059</td><td>estable</td><td>chi_cuadrado</td><td>0.389</td></tr>
+<tr class="estable"><td style="text-align:left">n_cursos_completados</td><td>discreta</td><td>0.0051</td><td>estable</td><td>chi_cuadrado</td><td>0.81</td></tr>
+<tr class="estable"><td style="text-align:left">n_cursos_previos</td><td>discreta</td><td>0.0046</td><td>estable</td><td>chi_cuadrado</td><td>0.869</td></tr>
+<tr class="estable"><td style="text-align:left">n_cursos_abandonados</td><td>discreta</td><td>0.0045</td><td>estable</td><td>chi_cuadrado</td><td>0.416</td></tr>
+<tr class="estable"><td style="text-align:left">nivel_educativo</td><td>categorica</td><td>0.0045</td><td>estable</td><td>chi_cuadrado</td><td>0.661</td></tr>
+<tr class="estable"><td style="text-align:left">dispositivo_principal</td><td>categorica</td><td>0.0039</td><td>estable</td><td>chi_cuadrado</td><td>0.399</td></tr>
+<tr class="estable"><td style="text-align:left">abandono_ultimo_curso</td><td>discreta</td><td>0.0038</td><td>estable</td><td>chi_cuadrado</td><td>0.266</td></tr>
+<tr class="estable"><td style="text-align:left">actividades_pendientes</td><td>discreta</td><td>0.0037</td><td>estable</td><td>chi_cuadrado</td><td>0.976</td></tr>
+<tr class="estable"><td style="text-align:left">dias_sin_ingreso</td><td>numerica</td><td>0.0036</td><td>estable</td><td>ks</td><td>0.989</td></tr>
+<tr class="estable"><td style="text-align:left">jornada</td><td>categorica</td><td>0.0036</td><td>estable</td><td>chi_cuadrado</td><td>0.462</td></tr>
+<tr class="estable"><td style="text-align:left">evaluaciones_no_presentadas</td><td>discreta</td><td>0.0031</td><td>estable</td><td>chi_cuadrado</td><td>0.336</td></tr>
+<tr class="estable"><td style="text-align:left">tipo_conexion</td><td>categorica</td><td>0.0029</td><td>estable</td><td>chi_cuadrado</td><td>0.562</td></tr>
+<tr class="estable"><td style="text-align:left">tasa_finalizacion_previa</td><td>numerica</td><td>0.0028</td><td>estable</td><td>ks</td><td>0.92</td></tr>
+<tr class="estable"><td style="text-align:left">dificultad_economica_reportada</td><td>categorica</td><td>0.0028</td><td>estable</td><td>chi_cuadrado</td><td>0.586</td></tr>
+<tr class="estable"><td style="text-align:left">solicito_apoyo</td><td>discreta</td><td>0.0027</td><td>estable</td><td>chi_cuadrado</td><td>0.197</td></tr>
+<tr class="estable"><td style="text-align:left">sin_ingreso_reciente</td><td>discreta</td><td>0.0019</td><td>estable</td><td>chi_cuadrado</td><td>0.273</td></tr>
+<tr class="estable"><td style="text-align:left">tipo_plan_internet</td><td>categorica</td><td>0.0019</td><td>estable</td><td>chi_cuadrado</td><td>0.523</td></tr>
+<tr class="estable"><td style="text-align:left">es_primer_curso</td><td>discreta</td><td>0.0014</td><td>estable</td><td>chi_cuadrado</td><td>0.349</td></tr>
+<tr class="estable"><td style="text-align:left">experiencia_virtual_previa</td><td>discreta</td><td>0.0013</td><td>estable</td><td>chi_cuadrado</td><td>0.353</td></tr>
+<tr class="estable"><td style="text-align:left">duracion_programa_meses</td><td>discreta</td><td>0.0013</td><td>estable</td><td>chi_cuadrado</td><td>0.646</td></tr>
+<tr class="estable"><td style="text-align:left">modalidad</td><td>categorica</td><td>0.0012</td><td>estable</td><td>chi_cuadrado</td><td>0.654</td></tr>
+<tr class="estable"><td style="text-align:left">calidad_internet</td><td>categorica</td><td>0.0011</td><td>estable</td><td>chi_cuadrado</td><td>0.864</td></tr>
+<tr class="estable"><td style="text-align:left">comparte_dispositivo</td><td>discreta</td><td>0.0007</td><td>estable</td><td>chi_cuadrado</td><td>0.509</td></tr>
+<tr class="estable"><td style="text-align:left">responsabilidades_cuidado</td><td>discreta</td><td>0.0003</td><td>estable</td><td>chi_cuadrado</td><td>0.69</td></tr>
+<tr class="estable"><td style="text-align:left">disponibilidad_equipo</td><td>discreta</td><td>0.0000</td><td>estable</td><td>chi_cuadrado</td><td>0.958</td></tr>
+</table>
+<h2>Cohorte 2025-T4 (779 aprendices)</h2>
+<p class="ok">Recall 0.703 (IC 95 %: 0.643–0.760), 246 desertores, 362 alertas. Estado: <b>ok</b>.</p>
+<p>Drift: <b>estable</b>. Con drift: ninguna. Moderadas: ninguna. Categorías nuevas: {}.</p>
+<table><tr><th>variable</th><th>tipo</th><th>PSI</th><th>nivel</th><th>prueba</th><th>p-valor</th></tr>
+<tr class="estable"><td style="text-align:left">progreso_programa</td><td>numerica</td><td>0.0166</td><td>estable</td><td>ks</td><td>0.0613</td></tr>
+<tr class="estable"><td style="text-align:left">dias_desde_inicio</td><td>numerica</td><td>0.0164</td><td>estable</td><td>ks</td><td>0.863</td></tr>
+<tr class="estable"><td style="text-align:left">promedio_calificaciones</td><td>numerica</td><td>0.0163</td><td>estable</td><td>ks</td><td>0.938</td></tr>
+<tr class="estable"><td style="text-align:left">tasa_aprobacion_entregas</td><td>numerica</td><td>0.0158</td><td>estable</td><td>ks</td><td>0.105</td></tr>
+<tr class="estable"><td style="text-align:left">porcentaje_actividades_entregadas</td><td>numerica</td><td>0.0156</td><td>estable</td><td>ks</td><td>0.447</td></tr>
+<tr class="estable"><td style="text-align:left">n_cursos_completados</td><td>discreta</td><td>0.0143</td><td>estable</td><td>chi_cuadrado</td><td>0.493</td></tr>
+<tr class="estable"><td style="text-align:left">meses_desde_ultimo_curso</td><td>numerica</td><td>0.0127</td><td>estable</td><td>ks</td><td>0.116</td></tr>
+<tr class="estable"><td style="text-align:left">porcentaje_actividades_aprobadas</td><td>numerica</td><td>0.0122</td><td>estable</td><td>ks</td><td>0.81</td></tr>
+<tr class="estable"><td style="text-align:left">jornada</td><td>categorica</td><td>0.0116</td><td>estable</td><td>chi_cuadrado</td><td>0.0378</td></tr>
+<tr class="estable"><td style="text-align:left">asistencia_porcentaje</td><td>numerica</td><td>0.0108</td><td>estable</td><td>ks</td><td>0.985</td></tr>
+<tr class="estable"><td style="text-align:left">n_cursos_previos</td><td>discreta</td><td>0.0102</td><td>estable</td><td>chi_cuadrado</td><td>0.402</td></tr>
+<tr class="estable"><td style="text-align:left">actividades_pendientes</td><td>discreta</td><td>0.0095</td><td>estable</td><td>chi_cuadrado</td><td>0.704</td></tr>
+<tr class="estable"><td style="text-align:left">horas_disponibles_estudio</td><td>numerica</td><td>0.0091</td><td>estable</td><td>ks</td><td>0.4</td></tr>
+<tr class="estable"><td style="text-align:left">edad</td><td>numerica</td><td>0.0085</td><td>estable</td><td>ks</td><td>0.266</td></tr>
+<tr class="estable"><td style="text-align:left">dias_sin_ingreso</td><td>numerica</td><td>0.0076</td><td>estable</td><td>ks</td><td>0.655</td></tr>
+<tr class="estable"><td style="text-align:left">solicito_apoyo</td><td>discreta</td><td>0.0071</td><td>estable</td><td>chi_cuadrado</td><td>0.0229</td></tr>
+<tr class="estable"><td style="text-align:left">nivel_educativo</td><td>categorica</td><td>0.0070</td><td>estable</td><td>chi_cuadrado</td><td>0.429</td></tr>
+<tr class="estable"><td style="text-align:left">abandono_ultimo_curso</td><td>discreta</td><td>0.0062</td><td>estable</td><td>chi_cuadrado</td><td>0.0999</td></tr>
+<tr class="estable"><td style="text-align:left">area_formacion</td><td>categorica</td><td>0.0061</td><td>estable</td><td>chi_cuadrado</td><td>0.503</td></tr>
+<tr class="estable"><td style="text-align:left">evaluaciones_no_presentadas</td><td>discreta</td><td>0.0046</td><td>estable</td><td>chi_cuadrado</td><td>0.165</td></tr>
+<tr class="estable"><td style="text-align:left">nivel_formacion</td><td>categorica</td><td>0.0045</td><td>estable</td><td>chi_cuadrado</td><td>0.529</td></tr>
+<tr class="estable"><td style="text-align:left">duracion_programa_meses</td><td>discreta</td><td>0.0042</td><td>estable</td><td>chi_cuadrado</td><td>0.227</td></tr>
+<tr class="estable"><td style="text-align:left">calidad_internet</td><td>categorica</td><td>0.0034</td><td>estable</td><td>chi_cuadrado</td><td>0.484</td></tr>
+<tr class="estable"><td style="text-align:left">modalidad</td><td>categorica</td><td>0.0032</td><td>estable</td><td>chi_cuadrado</td><td>0.326</td></tr>
+<tr class="estable"><td style="text-align:left">tipo_plan_internet</td><td>categorica</td><td>0.0026</td><td>estable</td><td>chi_cuadrado</td><td>0.408</td></tr>
+<tr class="estable"><td style="text-align:left">ingresos_plataforma_ultimos_7d</td><td>numerica</td><td>0.0023</td><td>estable</td><td>ks</td><td>0.991</td></tr>
+<tr class="estable"><td style="text-align:left">dificultad_economica_reportada</td><td>categorica</td><td>0.0020</td><td>estable</td><td>chi_cuadrado</td><td>0.713</td></tr>
+<tr class="estable"><td style="text-align:left">tasa_finalizacion_previa</td><td>numerica</td><td>0.0019</td><td>estable</td><td>ks</td><td>1</td></tr>
+<tr class="estable"><td style="text-align:left">horas_trabajo_semana</td><td>numerica</td><td>0.0018</td><td>estable</td><td>ks</td><td>0.993</td></tr>
+<tr class="estable"><td style="text-align:left">dispositivo_principal</td><td>categorica</td><td>0.0018</td><td>estable</td><td>chi_cuadrado</td><td>0.743</td></tr>
+<tr class="estable"><td style="text-align:left">n_cursos_abandonados</td><td>discreta</td><td>0.0017</td><td>estable</td><td>chi_cuadrado</td><td>0.873</td></tr>
+<tr class="estable"><td style="text-align:left">responsabilidades_cuidado</td><td>discreta</td><td>0.0012</td><td>estable</td><td>chi_cuadrado</td><td>0.371</td></tr>
+<tr class="estable"><td style="text-align:left">es_primer_curso</td><td>discreta</td><td>0.0011</td><td>estable</td><td>chi_cuadrado</td><td>0.398</td></tr>
+<tr class="estable"><td style="text-align:left">situacion_laboral</td><td>categorica</td><td>0.0011</td><td>estable</td><td>chi_cuadrado</td><td>0.863</td></tr>
+<tr class="estable"><td style="text-align:left">tipo_conexion</td><td>categorica</td><td>0.0005</td><td>estable</td><td>chi_cuadrado</td><td>0.956</td></tr>
+<tr class="estable"><td style="text-align:left">comparte_dispositivo</td><td>discreta</td><td>0.0001</td><td>estable</td><td>chi_cuadrado</td><td>0.787</td></tr>
+<tr class="estable"><td style="text-align:left">sin_ingreso_reciente</td><td>discreta</td><td>0.0001</td><td>estable</td><td>chi_cuadrado</td><td>0.895</td></tr>
+<tr class="estable"><td style="text-align:left">experiencia_virtual_previa</td><td>discreta</td><td>0.0000</td><td>estable</td><td>chi_cuadrado</td><td>0.931</td></tr>
+<tr class="estable"><td style="text-align:left">disponibilidad_equipo</td><td>discreta</td><td>0.0000</td><td>estable</td><td>chi_cuadrado</td><td>1</td></tr>
+</table>
+</body></html>

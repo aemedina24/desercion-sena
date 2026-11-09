@@ -155,3 +155,47 @@ stages:
       hash: md5
       md5: fa2f91777a79ebfcb6bfbb8cb8974c2d
       size: 3338
+  monitor:
+    cmd: uv run python -m desercion.monitor
+    deps:
+    - path: data/features/test.parquet
+      hash: md5
+      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
+      size: 83810
+    - path: data/features/train.parquet
+      hash: md5
+      md5: f246b383a15b410ddbe185518d6bb6d0
+      size: 286979
+    - path: models/modelo.skops
+      hash: md5
+      md5: f0dd9683c0396c196eb6cd409b605c29
+      size: 331741
+    - path: reports/metricas_modelo_base.json
+      hash: md5
+      md5: d95bfc978f701e8b1ea2838a90005d7f
+      size: 392
+    - path: src/desercion/equidad.py
+      hash: md5
+      md5: 18a4d7239594f03cb942ee1567fd3b4a
+      size: 5277
+    - path: src/desercion/evaluate.py
+      hash: md5
+      md5: dbe047143cdf62ec63acef557066215d
+      size: 4503
+    - path: src/desercion/modelado.py
+      hash: md5
+      md5: 6c182c49a9349b043a2d650e56e883d2
+      size: 3284
+    - path: src/desercion/monitor.py
+      hash: md5
+      md5: 8fef769695d41b31bf5b8c0ffa2c552e
+      size: 14517
+    outs:
+    - path: reports/drift/drift.html
+      hash: md5
+      md5: 20eee396084041adfd2ed1de164f8cb7
+      size: 13744
+    - path: reports/drift/drift.json
+      hash: md5
+      md5: 378cf23de54ab505f01733d2e695b87f
+      size: 20250

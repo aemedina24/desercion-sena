@@ -43,6 +43,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
   - `train` → `models/modelo.skops` (el modelo que usan `evaluate`, `explain` y la API) y `reports/metricas_modelo_base.json` (incluye el `umbral`). Registra el run en MLflow de DagsHub: requiere `.env`.
   - `evaluate` → `reports/evaluacion.json` (métricas por modalidad).
   - `explain` → `reports/importancia_variables.json` y `models/referencia.json` (aprendiz promedio de train; la API calcula los factores contra él).
+  - `monitor` → `reports/drift/drift.json` y `drift.html`: PSI por variable de cada cohorte de test frente a train (> 0.20 = drift) y recall por cohorte con IC bootstrap (< 0.70 = "revisar", sin hacer fallar el repro). Sin Evidently: no funciona con pandas 3 ([ADR 0005](docs/decisiones/0005-monitoreo-sin-evidently.md)).
 - El pipeline se ejecuta con `uv run dvc repro`. Cada etapa nueva se declara en `dvc.yaml`. Después de `git pull`, ejecutar `uv run dvc pull` para tener los datos y el modelo de esa versión.
 
 ## Convenciones de código

@@ -61,3 +61,19 @@ stages:
       - models/referencia.json
       - reports/importancia_variables.json:
           cache: false
+  monitor:
+    cmd: uv run python -m desercion.monitor
+    deps:
+      - data/features/train.parquet
+      - data/features/test.parquet
+      - models/modelo.skops
+      - reports/metricas_modelo_base.json
+      - src/desercion/monitor.py
+      - src/desercion/equidad.py
+      - src/desercion/evaluate.py
+      - src/desercion/modelado.py
+    outs:
+      - reports/drift/drift.json:
+          cache: false
+      - reports/drift/drift.html:
+          cache: false

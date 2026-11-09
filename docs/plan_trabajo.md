@@ -56,7 +56,7 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 
 ## 9 nov · Monitoreo y documentación
 
-- [ ] A: David · R: Andrés · `monitor.py`: reporte de drift con Evidently
+- [x] A: David · R: Andrés · `monitor.py`: drift con PSI y recall por cohorte (sin Evidently: no es compatible con pandas 3, [ADR 0005](decisiones/0005-monitoreo-sin-evidently.md))
 - [ ] A: Andrés · R: David · `docs/model_card.md`
 - [ ] A: Juntos · Completar el README
 
