@@ -57,8 +57,8 @@ Cada tarea tiene un **autor** (A) y un **revisor** (R). El autor la hace en su p
 ## 9 nov · Monitoreo y documentación
 
 - [x] A: David · R: Andrés · `monitor.py`: drift con PSI y recall por cohorte (sin Evidently: no es compatible con pandas 3, [ADR 0005](decisiones/0005-monitoreo-sin-evidently.md))
-- [ ] A: Andrés · R: David · `docs/model_card.md`
-- [ ] A: Juntos · Completar el README
+- [x] A: Andrés · R: David · `docs/model_card.md` (equidad, explicación, monitoreo y limitaciones)
+- [x] A: Andrés · R: David · Completar el README y escribir `docs/index.md`, `arquitectura.md`, `api.md` y el ADR 0001
 
 ## 10–11 nov · Cierre
 

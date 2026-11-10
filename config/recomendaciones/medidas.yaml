@@ -112,7 +112,7 @@ sin_medida:
   # tasa_aprobacion_entregas, el modelo la marca como factor en quienes entregan
   # MÁS que el promedio (623 aprendices de test, media 91 % frente a 75 %). Con
   # medida, 42 aprendices con alerta recibían "entregar las pendientes" aunque
-  # habían entregado entre 80 % y 100 %. Ver "Problemas conocidos" en CLAUDE.md.
+  # habían entregado entre 80 % y 100 %. Ver "Problemas conocidos" en docs/guia_desarrollo.md.
   - porcentaje_actividades_entregadas
   - modalidad
   - area_formacion

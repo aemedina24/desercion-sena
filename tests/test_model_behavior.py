@@ -48,7 +48,7 @@ PR_AUC_MINIMO = 0.50
 RECALL_MINIMO = 0.60
 RECALL_MINIMO_POR_MODALIDAD = 0.45
 
-# Columnas que nunca deben llegar al modelo (CLAUDE.md).
+# Columnas que nunca deben llegar al modelo (docs/guia_desarrollo.md).
 COLUMNAS_PROHIBIDAS = {
     "deserto",
     "estado_final",

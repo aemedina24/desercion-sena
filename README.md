@@ -14,12 +14,31 @@ Detalle de tareas en [`docs/plan_trabajo.md`](docs/plan_trabajo.md).
 
 - [x] **1. Definición del problema:** variable objetivo, métricas y criterios éticos
 - [x] **2. Preparación del entorno:** repositorio, uv, Ruff y DVC
-- [ ] **3. Carga y validación de datos:** limpieza, esquema con Pandera y versionado con DVC
-- [ ] **4. Exploración y construcción de variables**
-- [ ] **5. Entrenamiento y evaluación:** LightGBM, Optuna, MLflow, SHAP y métricas por modalidad
-- [ ] **6. Pruebas y automatización:** pytest y GitHub Actions
-- [ ] **7. Despliegue:** API con FastAPI y Docker
-- [ ] **8. Monitoreo:** detección de drift con Evidently
+- [x] **3. Carga y validación de datos:** limpieza, contrato con Pandera y versionado con DVC
+- [x] **4. Exploración y construcción de variables**
+- [x] **5. Entrenamiento y evaluación:** regresión logística comparada con LightGBM (Optuna) y una red neuronal, experimentos en MLflow, métricas por modalidad y auditoría de equidad
+- [x] **6. Pruebas y automatización:** pytest y GitHub Actions
+- [x] **7. Despliegue:** API con FastAPI y Docker, con factores y medidas por aprendiz
+- [x] **8. Monitoreo:** drift con PSI y recall por cohorte
+
+---
+
+## Resultados
+
+Regresión logística con umbral 0.461, evaluada en las dos cohortes más recientes (2025-T3 y 2025-T4, 1.544 aprendices), que el modelo nunca vio:
+
+| Métrica | Valor |
+|---|---|
+| Recall (desertores detectados) | **0.686**: 338 de 493 |
+| Precisión | 0.481 (al azar, 0.319) |
+| ROC-AUC · PR-AUC | 0.735 · 0.576 |
+| Recall por modalidad | mixta 0.756 · virtual 0.719 · presencial 0.525 |
+
+- Tres modelos distintos (logística, LightGBM y red neuronal) llegan al mismo techo de PR-AUC (0.56 a 0.58); se eligió la logística por ser igual de buena, más simple y explicable ([ADR 0002](docs/decisiones/0002-eleccion-modelo.md)).
+- Por sexo el modelo cumple la regla de los cuatro quintos (0.96); por modalidad no (0.69), por la brecha en presencial ([ADR 0003](docs/decisiones/0003-umbral-y-equidad.md)).
+- El monitoreo no encuentra drift en las cohortes de prueba (PSI máximo 0.02).
+
+Detalle, limitaciones y uso previsto en la [model card](docs/model_card.md).
 
 ---
 
@@ -42,11 +61,13 @@ Detalle de tareas en [`docs/plan_trabajo.md`](docs/plan_trabajo.md).
 | Etapa | Herramientas |
 |---|---|
 | Entorno y calidad de código | VS Code, uv, Python 3.11, Ruff (PEP 8) |
-| Versionado | Git y GitHub (código), DVC (datos), MLflow Model Registry (modelos) |
+| Versionado | Git y GitHub (código), DVC con remoto en DagsHub (datos y modelo) |
 | Datos | pandas, Pandera |
-| Modelado | scikit-learn, LightGBM, Optuna, SHAP, MLflow Tracking |
+| Modelado | scikit-learn (modelo final), LightGBM y Optuna (comparación), skops (guardar el modelo), MLflow Tracking en DagsHub (experimentos) |
+| Explicación | Aportes por coeficientes de la logística (equivalentes a SHAP en un modelo lineal, sin la librería `shap`) |
 | Pruebas y CI | pytest, GitHub Actions |
-| Despliegue y monitoreo | FastAPI, Docker, Evidently |
+| Despliegue | FastAPI, Pydantic, uvicorn, Docker |
+| Monitoreo | PSI y pruebas estadísticas con scipy (Evidently no es compatible con pandas 3: [ADR 0005](docs/decisiones/0005-monitoreo-sin-evidently.md)) |
 
 ---
 
@@ -54,17 +75,18 @@ Detalle de tareas en [`docs/plan_trabajo.md`](docs/plan_trabajo.md).
 
 ```
 desercion-sena/
-├── config/           # configuración: variables, modelo, tuning y medidas
+├── config/           # configuración: datos, variables, modelos, tuning y medidas
 ├── data/             # datos (versionados con DVC, no con Git)
 │   ├── raw/          # datos originales
-│   ├── processed/    # datos limpios
-│   └── final/        # variables listas para entrenar
-├── docs/             # diccionario de datos, arquitectura, model card y plan
-├── models/           # modelos entrenados
-├── notebooks/        # solo exploración
-├── reports/          # figuras y reportes de drift
-├── src/desercion/    # código del proyecto (un módulo por etapa) y la API
+│   ├── processed/    # datos limpios y tabla de auditoría
+│   └── features/     # train y test listos para el modelo
+├── docs/             # documentación y decisiones (ADR)
+├── models/           # modelo y referencia para los factores (DVC)
+├── notebooks/        # cuadernos que muestran los resultados
+├── reports/          # métricas, importancia de variables y monitoreo (drift/)
+├── src/desercion/    # código del proyecto (un módulo por etapa) y la API (api/)
 ├── tests/            # pruebas con pytest
+├── Dockerfile        # imagen de la API
 ├── dvc.yaml          # etapas del pipeline
 ├── pyproject.toml    # dependencias
 └── uv.lock           # versiones exactas
@@ -79,9 +101,23 @@ Los cuadernos muestran y explican los resultados; la lógica vive en `src/deserc
 | Cuaderno | Contenido |
 |---|---|
 | `notebooks/01_eda.ipynb` | Exploración de los datos y conclusiones para construir las variables |
-| `notebooks/02_modelo_base.ipynb` | Primer experimento: regresión logística |
-| `notebooks/03_comparacion_modelos.ipynb` | Comparación de experimentos registrados en MLflow (modelo base, LightGBM y Optuna) |
-| `notebooks/04_evaluacion_y_equidad.ipynb` | Métricas por modalidad y subgrupo, y factores de riesgo con SHAP |
+| `notebooks/02_modelo_base.ipynb` | Modelo base: regresión logística, elección del umbral y métricas en test |
+| `notebooks/03_comparacion_modelos.ipynb` | Comparación en los mismos folds, leída de MLflow: logística, LightGBM tuneado con Optuna y red neuronal |
+| `notebooks/04_evaluacion_y_equidad.ipynb` | Métricas por modalidad, equidad por modalidad y sexo con intervalos bootstrap, y efecto de un umbral por modalidad |
+
+---
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [Arquitectura](docs/arquitectura.md) | Pipeline, dónde vive cada artefacto, API, calidad y monitoreo |
+| [API](docs/api.md) | Endpoints, parámetros, ejemplos de respuesta y errores |
+| [Model card](docs/model_card.md) | Uso previsto, rendimiento, equidad y limitaciones del modelo |
+| [Datos](docs/datos.md) | Diccionario de variables, roles y reglas de limpieza |
+| [Decisiones (ADR)](docs/decisiones/) | uv, elección del modelo, umbral y equidad, diseño de la API, monitoreo |
+| [Guía de desarrollo](docs/guia_desarrollo.md) | Decisiones, convenciones de código, flujo de trabajo y problemas conocidos |
+| [Plan de trabajo](docs/plan_trabajo.md) | Tareas con autor y revisor |
 
 ---
 
@@ -157,7 +193,7 @@ docker build -t desercion-api .
 docker run --rm -d -p 8000:8000 --name api desercion-api
 ```
 
-Compruebe que responde en <http://127.0.0.1:8000/health> (`"estado": "ok"`) y explore los endpoints en <http://127.0.0.1:8000/docs>. Para detenerla: `docker stop api`. Sin Docker, la misma API se levanta con `uv run uvicorn desercion.api.main:app --reload`.
+Espere unos segundos a que cargue el modelo. Compruebe que responde en <http://127.0.0.1:8000/health> (`"estado": "ok"`) y explore los endpoints en <http://127.0.0.1:8000/docs>; la [documentación de la API](docs/api.md) explica cada uno. Para detenerla: `docker stop api`. Sin Docker, la misma API se levanta con `uv run uvicorn desercion.api.main:app --reload`.
 
 ---
 
@@ -168,6 +204,17 @@ Compruebe que responde en <http://127.0.0.1:8000/health> (`"estado": "ok"`) y ex
 ```powershell
 uv run dvc config --local core.site_cache_dir "$env:LOCALAPPDATA\iterative\dvc\site_cache"
 ```
+
+**`dvc pull` deja `data/raw/aprendices.parquet` fuera de la carpeta.** El archivo sigue en la caché local de DVC. Restáurelo y revise el estado antes de ejecutar el pipeline:
+
+```powershell
+uv run dvc checkout data/raw/aprendices.parquet.dvc
+uv run dvc status
+```
+
+Si `dvc status` muestra otras etapas como cambiadas porque faltan sus salidas, use `uv run dvc checkout <etapa>` en lugar de `dvc repro`, para no volver a ejecutarlas.
+
+**`docker run`: "port is already allocated" o "Empty reply from server".** Otro contenedor o programa usa el puerto 8000 (véalo con `docker ps`), o la API todavía está arrancando: espere unos segundos y repita la consulta.
 
 **La terminal muestra `(base)`.** Hay un entorno de Conda activo. Ejecute `conda deactivate` antes de trabajar en el proyecto.
 

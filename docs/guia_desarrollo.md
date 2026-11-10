@@ -1,6 +1,6 @@
-# Contexto del proyecto para Claude
+# Guía de desarrollo
 
-Este archivo resume el proyecto para que cualquier sesión de Claude (de Andrés o de David) trabaje con el mismo contexto. Si cambia una decisión, actualízalo en un PR.
+Resume el proyecto, las decisiones tomadas y la forma de trabajar del equipo, para que cualquier persona que trabaje en el repositorio (o el asistente de código que use) parta del mismo contexto. Si cambia una decisión, se actualiza aquí en un PR.
 
 ## Qué es
 
@@ -8,7 +8,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 
 - **Entrega:** 11 de noviembre de 2026.
 - **Equipo:** Andrés (`aemedina24`, datos y modelo) · David (ingeniería y calidad).
-- **Plan, tareas y responsables:** `docs/plan_trabajo.md`.
+- **Plan, tareas y responsables:** [plan de trabajo](plan_trabajo.md).
 
 ## Entorno
 
@@ -25,17 +25,17 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - **Columnas que nunca entran al modelo:** `estado_final` y `fecha_desercion` (fuga de datos); `sexo` solo va en `data/processed/auditoria.parquet` para auditar equidad; identificadores y fechas solo para agrupar y dividir.
 - **Columnas descartadas:** `nombre_programa`, `barrio_residencia`, `municipio_nacimiento`, `tasa_abandono_previa`.
 - **Validación:** entrenar con las cohortes antiguas y evaluar con las dos más recientes, 2025-T3 y 2025-T4 (`COHORTES_TEST` en `features.py`), para tener más casos por modalidad. La validación cruzada usa `GroupKFold` por `id_cohorte`: hay una fila por aprendiz, así que agrupar por `id_aprendiz` no aportaba nada.
-- **Modelo final:** regresión logística con umbral elegido con predicciones out-of-fold en train (recall ≥ 0.70 con la mayor precisión). LightGBM y la red neuronal no la superaban de forma significativa ([ADR 0002](docs/decisiones/0002-eleccion-modelo.md)).
-- **Equidad:** criterio principal igualdad de oportunidades, medida con la regla de los cuatro quintos (recall mínimo / máximo ≥ 0.80) y siempre con IC por bootstrap. `sexo` solo se audita. Umbral global en la v1; umbral por modalidad como siguiente versión ([ADR 0003](docs/decisiones/0003-umbral-y-equidad.md)).
+- **Modelo final:** regresión logística con umbral elegido con predicciones out-of-fold en train (recall ≥ 0.70 con la mayor precisión). LightGBM y la red neuronal no la superaban de forma significativa ([ADR 0002](decisiones/0002-eleccion-modelo.md)).
+- **Equidad:** criterio principal igualdad de oportunidades, medida con la regla de los cuatro quintos (recall mínimo / máximo ≥ 0.80) y siempre con IC por bootstrap. `sexo` solo se audita. Umbral global en la v1; umbral por modalidad como siguiente versión ([ADR 0003](decisiones/0003-umbral-y-equidad.md)).
 - **Sin Hydra:** configuración en YAML simple dentro de `config/`.
 - **Ética:** Ley 1581 de 2012. No se usan datos sensibles (etnia, religión, orientación sexual, biométricos).
-- **API:** consulta por aprendiz y por cohorte con filtros (modalidad, área, nivel, solo alertas, límite); no hay `id_ficha` en los datos. Al arrancar carga los aprendices activos (`data/features/test.parquet` en la demo) y precalcula su riesgo ([ADR 0004](docs/decisiones/0004-api-consulta-y-datos.md)).
+- **API:** consulta por aprendiz y por cohorte con filtros (modalidad, área, nivel, solo alertas, límite); no hay `id_ficha` en los datos. Al arrancar carga los aprendices activos (`data/features/test.parquet` en la demo) y precalcula su riesgo ([ADR 0004](decisiones/0004-api-consulta-y-datos.md)).
 - **Explicación:** aporte = coef × (valor − media de train), agrupado por variable original (`explain.py`). Es SHAP exacto para un modelo lineal; no se usa la librería `shap`.
 - **Predicción para la API:** `prediccion.predecir_riesgo(aprendices, *, modelo, referencia, umbral)` no carga nada; la API carga modelo, umbral y referencia al arrancar. Factores con aporte ≥ 0.05; medidas solo con alerta, definidas en `config/recomendaciones/medidas.yaml` (cada variable del modelo tiene medida o está en `sin_medida`; nunca medidas por características personales).
 
 ## Datos y pipeline
 
-- `data/raw/aprendices.parquet`: 10.000 × 50, versionado con DVC. No está en Git: se descarga del remoto de DagsHub con `uv run dvc pull` (credenciales en `.dvc/config.local`, ver README).
+- `data/raw/aprendices.parquet`: 10.000 × 50, versionado con DVC. No está en Git: se descarga del remoto de DagsHub con `uv run dvc pull` (credenciales en `.dvc/config.local`, ver el [README](../README.md)).
 - Etapas de `dvc.yaml`, en orden:
   - `process` → `data/processed/aprendices.parquet` (9.518 × 43) y `auditoria.parquet`.
   - `validate` → `reports/validacion.json` (contrato de Pandera).
@@ -43,7 +43,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
   - `train` → `models/modelo.skops` (el modelo que usan `evaluate`, `explain` y la API) y `reports/metricas_modelo_base.json` (incluye el `umbral`). Registra el run en MLflow de DagsHub: requiere `.env`.
   - `evaluate` → `reports/evaluacion.json` (métricas por modalidad).
   - `explain` → `reports/importancia_variables.json` y `models/referencia.json` (aprendiz promedio de train; la API calcula los factores contra él).
-  - `monitor` → `reports/drift/drift.json` y `drift.html`: PSI por variable de cada cohorte de test frente a train (> 0.20 = drift) y recall por cohorte con IC bootstrap (< 0.70 = "revisar", sin hacer fallar el repro). Sin Evidently: no funciona con pandas 3 ([ADR 0005](docs/decisiones/0005-monitoreo-sin-evidently.md)).
+  - `monitor` → `reports/drift/drift.json` y `drift.html`: PSI por variable de cada cohorte de test frente a train (> 0.20 = drift) y recall por cohorte con IC bootstrap (< 0.70 = "revisar", sin hacer fallar el repro). Sin Evidently: no funciona con pandas 3 ([ADR 0005](decisiones/0005-monitoreo-sin-evidently.md)).
 - El pipeline se ejecuta con `uv run dvc repro`. Cada etapa nueva se declara en `dvc.yaml`. Después de `git pull`, ejecutar `uv run dvc pull` para tener los datos y el modelo de esa versión.
 
 ## Convenciones de código
@@ -77,6 +77,6 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 - `porcentaje_actividades_entregadas` sale como factor de riesgo en quienes entregan **más** que el promedio (colinealidad con `porcentaje_actividades_aprobadas` y `tasa_aprobacion_entregas`): en test, 623 aprendices con una media de 91 % frente a 75 %. Se muestra como factor, pero está en `sin_medida` de `medidas.yaml` para no sugerir "entregar las pendientes" a quien ya entregó. La solución de fondo (agrupar los factores por tema) queda para la v2.
 - `models/modelo.skops` no es idéntico byte a byte al reentrenar (skops nombra sus archivos internos con identificadores de memoria), aunque las predicciones sí lo son. Si `train` se vuelve a ejecutar, `dvc.lock` cambia sin cambio real: el modelo se compara por sus métricas, no por su hash. Para no reentrenar, hacer `uv run dvc pull` antes de `dvc repro`.
 
-## Cómo debe ayudar Claude
+## Uso de asistentes de IA
 
-Actuar como mentor senior de MLOps: explicar el concepto y el porqué antes del código; dar código funcional indicando archivo, comando para ejecutarlo y cómo verificar el resultado; ante un error, diagnosticar primero (qué significa, hipótesis, comando para comprobarla) y luego proponer la solución; distinguir entre "funciona" y "es buena práctica"; evitar sobreingeniería; nunca inventar resultados. Respetar el reparto de tareas de `docs/plan_trabajo.md` y las decisiones de este archivo.
+El equipo usó Claude (Anthropic) como asistente de código y de revisión. Esta guía es el contexto que se le da al iniciar cada sesión, y estas son las instrucciones de cómo debe ayudar: actuar como mentor senior de MLOps: explicar el concepto y el porqué antes del código; dar código funcional indicando archivo, comando para ejecutarlo y cómo verificar el resultado; ante un error, diagnosticar primero (qué significa, hipótesis, comando para comprobarla) y luego proponer la solución; distinguir entre "funciona" y "es buena práctica"; evitar sobreingeniería; nunca inventar resultados. Respetar el reparto de tareas del plan de trabajo y las decisiones de esta guía. Todo cambio, venga de una persona o del asistente, entra por Pull Request con la revisión del otro integrante.
