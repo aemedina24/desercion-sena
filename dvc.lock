@@ -5,8 +5,8 @@ stages:
     deps:
     - path: data/raw/aprendices.parquet
       hash: md5
-      md5: b87b3fd6c3a6800daa5e6f10b499f4f1
-      size: 329351
+      md5: 3ca6dc2ecee5579a3c7001661dae7c82
+      size: 329103
     - path: src/desercion/process.py
       hash: md5
       md5: 6f0af232f9caead93e16b46586e81698
@@ -14,19 +14,19 @@ stages:
     outs:
     - path: data/processed/aprendices.parquet
       hash: md5
-      md5: 56c7d3a39ce1eea9ea5bc4ac5a23eab2
-      size: 271272
+      md5: 4ede78f8c34c608761ccd4d26d02eac8
+      size: 270809
     - path: data/processed/auditoria.parquet
       hash: md5
-      md5: b78176879f97280f64792ac9f93db632
-      size: 68654
+      md5: 3e919135751cfd171726f4392d856e3c
+      size: 68227
   validate:
     cmd: uv run python -m desercion.validate
     deps:
     - path: data/processed/aprendices.parquet
       hash: md5
-      md5: 56c7d3a39ce1eea9ea5bc4ac5a23eab2
-      size: 271272
+      md5: 4ede78f8c34c608761ccd4d26d02eac8
+      size: 270809
     - path: src/desercion/validate.py
       hash: md5
       md5: 75ced9b211a1b195c3341ea81f572838
@@ -34,18 +34,18 @@ stages:
     outs:
     - path: reports/validacion.json
       hash: md5
-      md5: dc442a5b5beaa12dc2b173e5ff5b7110
+      md5: 0b55e860a9f3e316a6cd9573002c20d2
       size: 66
   features:
     cmd: uv run python -m desercion.features
     deps:
     - path: data/processed/aprendices.parquet
       hash: md5
-      md5: 56c7d3a39ce1eea9ea5bc4ac5a23eab2
-      size: 271272
+      md5: 4ede78f8c34c608761ccd4d26d02eac8
+      size: 270809
     - path: reports/validacion.json
       hash: md5
-      md5: dc442a5b5beaa12dc2b173e5ff5b7110
+      md5: 0b55e860a9f3e316a6cd9573002c20d2
       size: 66
     - path: src/desercion/features.py
       hash: md5
@@ -54,23 +54,23 @@ stages:
     outs:
     - path: data/features/test.parquet
       hash: md5
-      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
-      size: 83810
+      md5: d3bf0661955cfa892368c2c8d50e2841
+      size: 84890
     - path: data/features/train.parquet
       hash: md5
-      md5: f246b383a15b410ddbe185518d6bb6d0
-      size: 286979
+      md5: ea90fc294f90a1efda8166c80c10a3b5
+      size: 284680
   train:
     cmd: uv run python -m desercion.train_model
     deps:
     - path: data/features/test.parquet
       hash: md5
-      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
-      size: 83810
+      md5: d3bf0661955cfa892368c2c8d50e2841
+      size: 84890
     - path: data/features/train.parquet
       hash: md5
-      md5: f246b383a15b410ddbe185518d6bb6d0
-      size: 286979
+      md5: ea90fc294f90a1efda8166c80c10a3b5
+      size: 284680
     - path: src/desercion/modelado.py
       hash: md5
       md5: 6c182c49a9349b043a2d650e56e883d2
@@ -89,27 +89,27 @@ stages:
     outs:
     - path: models/modelo.skops
       hash: md5
-      md5: f0dd9683c0396c196eb6cd409b605c29
-      size: 331741
+      md5: 9b58e3fead5766bcb03c85931f27a882
+      size: 331701
     - path: reports/metricas_modelo_base.json
       hash: md5
-      md5: d95bfc978f701e8b1ea2838a90005d7f
-      size: 392
+      md5: 7996ef3ef59eaf8cef2d42b90d0404a5
+      size: 390
   evaluate:
     cmd: uv run python -m desercion.evaluate
     deps:
     - path: data/features/test.parquet
       hash: md5
-      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
-      size: 83810
+      md5: d3bf0661955cfa892368c2c8d50e2841
+      size: 84890
     - path: models/modelo.skops
       hash: md5
-      md5: f0dd9683c0396c196eb6cd409b605c29
-      size: 331741
+      md5: 9b58e3fead5766bcb03c85931f27a882
+      size: 331701
     - path: reports/metricas_modelo_base.json
       hash: md5
-      md5: d95bfc978f701e8b1ea2838a90005d7f
-      size: 392
+      md5: 7996ef3ef59eaf8cef2d42b90d0404a5
+      size: 390
     - path: src/desercion/evaluate.py
       hash: md5
       md5: dbe047143cdf62ec63acef557066215d
@@ -121,23 +121,23 @@ stages:
     outs:
     - path: reports/evaluacion.json
       hash: md5
-      md5: 21f8f1a4badd648c4b14ce14ccbceb19
-      size: 2128
+      md5: abb557a158c37fa6dca50df7b2c836f8
+      size: 2103
   explain:
     cmd: uv run python -m desercion.explain
     deps:
     - path: data/features/test.parquet
       hash: md5
-      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
-      size: 83810
+      md5: d3bf0661955cfa892368c2c8d50e2841
+      size: 84890
     - path: data/features/train.parquet
       hash: md5
-      md5: f246b383a15b410ddbe185518d6bb6d0
-      size: 286979
+      md5: ea90fc294f90a1efda8166c80c10a3b5
+      size: 284680
     - path: models/modelo.skops
       hash: md5
-      md5: f0dd9683c0396c196eb6cd409b605c29
-      size: 331741
+      md5: 9b58e3fead5766bcb03c85931f27a882
+      size: 331701
     - path: src/desercion/explain.py
       hash: md5
       md5: 6fe6a54b86aa35e20274415fe93fcb32
@@ -149,31 +149,31 @@ stages:
     outs:
     - path: models/referencia.json
       hash: md5
-      md5: 2685137491cf97f7a6124d2547b1f848
-      size: 5297
+      md5: a463cc9a5e19741e293d9cfe2ec44561
+      size: 5209
     - path: reports/importancia_variables.json
       hash: md5
-      md5: fa2f91777a79ebfcb6bfbb8cb8974c2d
-      size: 3338
+      md5: cc734c2c7e1e43a546efe135479827a1
+      size: 3343
   monitor:
     cmd: uv run python -m desercion.monitor
     deps:
     - path: data/features/test.parquet
       hash: md5
-      md5: f09cbdf55e3713a14c3ef95eaba7bf2b
-      size: 83810
+      md5: d3bf0661955cfa892368c2c8d50e2841
+      size: 84890
     - path: data/features/train.parquet
       hash: md5
-      md5: f246b383a15b410ddbe185518d6bb6d0
-      size: 286979
+      md5: ea90fc294f90a1efda8166c80c10a3b5
+      size: 284680
     - path: models/modelo.skops
       hash: md5
-      md5: f0dd9683c0396c196eb6cd409b605c29
-      size: 331741
+      md5: 9b58e3fead5766bcb03c85931f27a882
+      size: 331701
     - path: reports/metricas_modelo_base.json
       hash: md5
-      md5: d95bfc978f701e8b1ea2838a90005d7f
-      size: 392
+      md5: 7996ef3ef59eaf8cef2d42b90d0404a5
+      size: 390
     - path: src/desercion/equidad.py
       hash: md5
       md5: 18a4d7239594f03cb942ee1567fd3b4a
@@ -193,9 +193,50 @@ stages:
     outs:
     - path: reports/drift/drift.html
       hash: md5
-      md5: 20eee396084041adfd2ed1de164f8cb7
-      size: 13744
+      md5: 3d5099e41ef5b2e49c9f4ceca99aacaa
+      size: 13757
     - path: reports/drift/drift.json
       hash: md5
-      md5: 378cf23de54ab505f01733d2e695b87f
-      size: 20250
+      md5: b2d274aa7b75e93285409b058c3c3d98
+      size: 20262
+  generate:
+    cmd: uv run python -m desercion.generar_datos
+    deps:
+    - path: src/desercion/generar_datos.py
+      hash: md5
+      md5: a6a5126a20929bd2940e36157af58ccc
+      size: 23119
+    params:
+      config/data/generador.yaml:
+        compromiso:
+          constancia: 0.45
+          horas_disponibles_estudio: 0.25
+          dificultad_economica_alta: -0.2
+          calidad_internet_baja: -0.15
+          sin_equipo_disponible: -0.25
+          experiencia_virtual_previa: 0.15
+          ruido: 0.85
+        desercion:
+          intercepto: -1.75
+          compromiso: -1.05
+          constancia: -0.25
+          modalidad_virtual: 0.5
+          modalidad_presencial: -0.3
+          programa_de_24_meses: 0.2
+          horas_trabajo_por_10: 0.08
+          responsabilidades_cuidado: 0.15
+          dificultad_economica_alta: 0.2
+        n_aprendices: 10000
+        otros_estados:
+          traslado: 0.03
+          cancelado: 0.038
+        semilla: 2026
+    outs:
+    - path: data/raw/aprendices.parquet
+      hash: md5
+      md5: 3ca6dc2ecee5579a3c7001661dae7c82
+      size: 329103
+    - path: data/raw/verdad.parquet
+      hash: md5
+      md5: 54b02e54fa739b875fba60f94cd328cd
+      size: 361608

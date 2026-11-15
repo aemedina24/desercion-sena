@@ -150,12 +150,12 @@ def test_medidas_sin_repetir_y_en_orden_de_aporte():
     factores = [
         {"variable": "dias_sin_ingreso", "aporte": 0.5},
         {"variable": "ingresos_plataforma_ultimos_7d", "aporte": 0.4},  # misma medida
-        {"variable": "porcentaje_actividades_aprobadas", "aporte": 0.3},
+        {"variable": "promedio_calificaciones", "aporte": 0.3},
     ]
     medidas = medidas_para(factores, alerta=True)
     assert medidas == [
         config["por_variable"]["dias_sin_ingreso"],
-        config["por_variable"]["porcentaje_actividades_aprobadas"],
+        config["por_variable"]["promedio_calificaciones"],
     ]
 
 

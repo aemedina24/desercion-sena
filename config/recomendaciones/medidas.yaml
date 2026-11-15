@@ -23,6 +23,7 @@ medidas:
       Acordar con el aprendiz un calendario para entregar las actividades y
       evaluaciones pendientes.
     variables:
+      - porcentaje_actividades_entregadas
       - actividades_pendientes
       - evaluaciones_no_presentadas
 
@@ -31,7 +32,6 @@ medidas:
       Revisar con el aprendiz las actividades reprobadas y ofrecer un plan de
       mejoramiento o una tutoría.
     variables:
-      - porcentaje_actividades_aprobadas
       - tasa_aprobacion_entregas
       - promedio_calificaciones
 
@@ -108,12 +108,14 @@ medidas:
 # factores, pero no generan una medida propia. Nunca se sugiere una medida por
 # edad, nivel educativo u otra característica personal.
 sin_medida:
-  # Por la colinealidad con porcentaje_actividades_aprobadas y
-  # tasa_aprobacion_entregas, el modelo la marca como factor en quienes entregan
-  # MÁS que el promedio (623 aprendices de test, media 91 % frente a 75 %). Con
-  # medida, 42 aprendices con alerta recibían "entregar las pendientes" aunque
-  # habían entregado entre 80 % y 100 %. Ver "Problemas conocidos" en docs/guia_desarrollo.md.
-  - porcentaje_actividades_entregadas
+  # Por la colinealidad con porcentaje_actividades_entregadas y
+  # tasa_aprobacion_entregas, el modelo la marca como factor en quienes aprueban
+  # MÁS que el promedio (277 aprendices de test, media 92 % frente a 64 %). Con
+  # medida, se sugeriría "revisar las reprobadas" a quien aprobó casi todo.
+  # Con los datos de la v1 pasaba lo mismo con porcentaje_actividades_entregadas:
+  # cuál de las dos sale con el signo invertido depende de los datos.
+  # Ver "Problemas conocidos" en docs/guia_desarrollo.md.
+  - porcentaje_actividades_aprobadas
   - modalidad
   - area_formacion
   - nivel_formacion
