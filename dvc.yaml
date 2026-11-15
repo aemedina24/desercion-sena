@@ -1,4 +1,15 @@
 stages:
+  # Datos sintéticos v2: la semilla y las fórmulas están en el YAML de params.
+  # verdad.parquet no es dependencia de ninguna otra etapa: el modelo nunca la ve.
+  generate:
+    cmd: uv run python -m desercion.generar_datos
+    deps:
+      - src/desercion/generar_datos.py
+    params:
+      - config/data/generador.yaml:
+    outs:
+      - data/raw/aprendices.parquet
+      - data/raw/verdad.parquet
   process:
     cmd: uv run python -m desercion.process
     deps:

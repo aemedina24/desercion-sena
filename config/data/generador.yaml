@@ -1,0 +1,57 @@
+# Generador de los datos sintéticos (v2): src/desercion/generar_datos.py.
+# DVC declara este archivo como params de la etapa generate: si cambias un
+# valor, `dvc repro` vuelve a generar los datos y todo lo que depende de ellos.
+#
+# Aquí están la semilla y las dos fórmulas que deciden quién deserta. Las
+# distribuciones del perfil (edad, conexión, programa...) están en el código.
+
+# Misma semilla, mismos datos.
+semilla: 2026
+n_aprendices: 10000
+
+# --- Fórmula 1: compromiso --------------------------------------------------
+# Variable oculta (no queda en aprendices.parquet). De ella salen las variables
+# de seguimiento de la semana 4: entregas, aprobadas, notas, asistencia e
+# ingresos a la plataforma.
+#
+#   compromiso = suma(coeficiente × variable) + ruido normal(0, ruido)
+compromiso:
+  # Rasgo oculto del aprendiz, normal(0, 1). También decide su historial:
+  # cuántos cursos previos terminó o abandonó.
+  constancia: 0.45
+  # Horas disponibles para estudiar, estandarizadas (media 0, desviación 1).
+  horas_disponibles_estudio: 0.25
+  dificultad_economica_alta: -0.20
+  # Los tres siguientes solo cuentan fuera de la modalidad presencial.
+  calidad_internet_baja: -0.15
+  sin_equipo_disponible: -0.25
+  # Solo cuenta en modalidad virtual.
+  experiencia_virtual_previa: 0.15
+  ruido: 0.85
+
+# --- Fórmula 2: deserción ---------------------------------------------------
+#   log-odds = suma(coeficiente × variable)
+#   probabilidad = 1 / (1 + exp(-log-odds))
+#   deserto = 1 con esa probabilidad (un sorteo por aprendiz)
+#
+# El sorteo representa lo que pasa después de la semana 4 y nadie puede saber
+# en la fecha de corte. Por eso ningún modelo puede acertar siempre: el techo
+# es el de un modelo que conociera esta probabilidad (data/raw/verdad.parquet).
+desercion:
+  intercepto: -1.75
+  compromiso: -1.05
+  constancia: -0.25
+  # Frente a la modalidad mixta.
+  modalidad_virtual: 0.50
+  modalidad_presencial: -0.30
+  programa_de_24_meses: 0.20
+  # Por cada 10 horas de trabajo a la semana.
+  horas_trabajo_por_10: 0.08
+  responsabilidades_cuidado: 0.15
+  dificultad_economica_alta: 0.20
+
+# --- Otros estados finales --------------------------------------------------
+# Solo entre quienes no desertan, y al azar: process.py los excluye del estudio.
+otros_estados:
+  traslado: 0.030
+  cancelado: 0.038

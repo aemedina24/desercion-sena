@@ -25,6 +25,40 @@ Reglas que aplica `src/desercion/process.py`:
 | `municipio_nacimiento` | Puede revelar desplazamiento (dato sensible) |
 | `tasa_abandono_previa` | Es `1 - tasa_finalizacion_previa` (redundante) |
 
+## Generador de datos sintéticos (v2)
+
+> **Rama `datos-v2`.** Las cifras del resto de este documento (filas, nulos, rangos) son las de la v1 hasta que se ejecute el pipeline oficial con los datos nuevos.
+
+**Origen de la v1.** `data/raw/aprendices.parquet` de la v1 se recibió ya generado con un modelo de lenguaje (ChatGPT) y sin el código que lo produjo. Está versionado con DVC, así que el archivo exacto se puede recuperar desde la etiqueta `v1.0.0`, pero no se puede volver a generar ni saber con qué fórmula se asignó la deserción.
+
+**Qué cambia en la v2.** Los datos los produce la etapa `generate` de DVC (`src/desercion/generar_datos.py`) con la semilla y las fórmulas de `config/data/generador.yaml`. Tiene las mismas 50 columnas, en el mismo orden, y cumple el mismo contrato de `validate.py`.
+
+| Salida | Contenido | Quién la usa |
+|---|---|---|
+| `data/raw/aprendices.parquet` | 10.000 aprendices × 50 columnas | Etapa `process` |
+| `data/raw/verdad.parquet` | `id_aprendiz`, `constancia`, `compromiso`, `probabilidad_desercion` | Solo análisis: ninguna etapa del pipeline la lee |
+
+**Cómo se generan:**
+
+1. **Programa, cohorte y perfil:** cada variable se sortea de una distribución fija (en el código). Algunas dependen de otras: el nivel educativo del nivel del programa, la calidad de internet del tipo de conexión, las horas de estudio de las horas de trabajo.
+2. **Constancia:** rasgo oculto del aprendiz, normal(0, 1). Decide cuántos cursos previos terminó o abandonó.
+3. **Compromiso:** variable oculta. Es una suma con pesos de la constancia y del perfil (horas para estudiar, dificultad económica, conexión y equipo fuera de presencial), más ruido.
+4. **Seguimiento de la semana 4:** entregas, aprobadas, notas, asistencia e ingresos a la plataforma son el compromiso más un ruido propio de cada variable. Por eso están correlacionadas entre sí.
+5. **Deserción:** una fórmula logística convierte el compromiso, la constancia, la modalidad, la duración del programa, el trabajo, el cuidado y la dificultad económica en una probabilidad. Con esa probabilidad se hace un sorteo por aprendiz.
+6. **Estado final:** entre quienes no desertan, una parte al azar queda como traslado o cancelado. La fecha de deserción cae después de la fecha de corte y antes del 80 % del programa.
+
+El sorteo del paso 5 representa lo que ocurre después de la semana 4 y nadie puede saber en la fecha de corte. Por eso ningún modelo acierta siempre: el techo es el de un modelo que conociera `probabilidad_desercion`.
+
+`sexo` no interviene en ninguna fórmula. No hay cambios entre cohortes: todas salen de las mismas distribuciones.
+
+**Diferencias deliberadas con la v1** (incoherencias que se vieron en la muestra de la v1):
+
+- Si `dias_sin_ingreso` es 7 o más, `ingresos_plataforma_ultimos_7d` es 0. En la v1 había aprendices con 8 días sin entrar y 9 ingresos en la última semana.
+- `abandono_ultimo_curso` solo es verdadero si `n_cursos_abandonados` es al menos 1.
+- El programa `P-201` no aparecía en la muestra de la v1; su nombre y área se completaron.
+
+**Reproducir:** `uv run dvc repro generate`. Con la misma semilla y las mismas versiones de `uv.lock`, el resultado es idéntico.
+
 ## Roles
 
 | Rol | Significado |
