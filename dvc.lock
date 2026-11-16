@@ -240,3 +240,39 @@ stages:
       hash: md5
       md5: 54b02e54fa739b875fba60f94cd328cd
       size: 361608
+  calibrate:
+    cmd: uv run python -m desercion.calibracion
+    deps:
+    - path: data/features/test.parquet
+      hash: md5
+      md5: d3bf0661955cfa892368c2c8d50e2841
+      size: 84890
+    - path: data/features/train.parquet
+      hash: md5
+      md5: ea90fc294f90a1efda8166c80c10a3b5
+      size: 284680
+    - path: models/modelo.skops
+      hash: md5
+      md5: 9b58e3fead5766bcb03c85931f27a882
+      size: 331701
+    - path: reports/metricas_modelo_base.json
+      hash: md5
+      md5: 7996ef3ef59eaf8cef2d42b90d0404a5
+      size: 390
+    - path: src/desercion/calibracion.py
+      hash: md5
+      md5: 9a04213807e7b45b348d92a2922d99ef
+      size: 11972
+    - path: src/desercion/modelado.py
+      hash: md5
+      md5: 6c182c49a9349b043a2d650e56e883d2
+      size: 3284
+    outs:
+    - path: reports/calibracion.json
+      hash: md5
+      md5: 1fea839fbf0e9cb8ae41ed268de2d412
+      size: 5549
+    - path: reports/figures/calibracion.png
+      hash: md5
+      md5: 579236d66d6bf37ba06bff9333854e91
+      size: 99912

@@ -37,4 +37,5 @@ consecuencias.
 | `reports/evaluacion.json` | Métricas en test, globales y por modalidad |
 | `reports/importancia_variables.json` | Importancia media de cada variable |
 | `reports/drift/drift.json` y `drift.html` | Drift por variable y recall por cohorte |
+| `reports/calibracion.json` y `figures/calibracion.png` | Qué tan creíble es la probabilidad que muestra la API |
 | `notebooks/01` a `04` | Exploración, modelo base, comparación de modelos y equidad |
