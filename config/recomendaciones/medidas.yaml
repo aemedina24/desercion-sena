@@ -7,6 +7,19 @@
 # - Si ningún factor tiene medida (por ejemplo, solo pesa la modalidad), se
 #   sugiere la medida `general`.
 #
+# Plan de acción (recomendaciones.plan_para): cada medida trae, además del texto
+# corto, qué debe hacer y decir el instructor. Mismos campos en todas:
+#   accion            qué hacer y por qué canal
+#   plazo_dias        en cuántos días hacerlo
+#   decir             guion corto: apertura, pregunta abierta y propuesta
+#   evitar            lo que no se debe decir o hacer
+#   si_no_responde    segundo intento y a quién acudir
+#   registrar         qué anotar en el seguimiento
+#   seguimiento_dias  en cuántos días volver a revisar
+# Las frases de `decir` nunca le dicen al aprendiz que tiene una alerta ni que
+# podría desertar (una prueba lo verifica). Son una propuesta del equipo: el
+# instructor las adapta, y falta validarlas con instructores y con Bienestar.
+#
 # Cada variable del modelo va en exactamente un lugar: en una medida o en
 # `sin_medida`. Una prueba lo verifica contra reports/importancia_variables.json,
 # así que una variable nueva obliga a decidir aquí qué hacer con ella.
@@ -17,6 +30,26 @@ general: >-
   Contactar al aprendiz esta semana para conocer su situación y registrar el
   seguimiento.
 
+# Plan de acción cuando se sugiere la medida general.
+plan_general:
+  accion: >-
+    Contactar al aprendiz para conocer cómo va y si necesita algún apoyo.
+  plazo_dias: 5
+  decir:
+    - >-
+      Quiero saber cómo te has sentido en la formación.
+    - >-
+      ¿Hay algo que te esté dificultando seguir el ritmo?
+    - >-
+      Cuenta conmigo; si te parece, volvemos a hablar en dos semanas.
+  evitar: >-
+    Suponer una causa sin haberlo escuchado.
+  si_no_responde: >-
+    Segundo intento por otro canal a los 3 días y revisar su actividad en la plataforma.
+  registrar: >-
+    Situación que contó el aprendiz y apoyo que pidió.
+  seguimiento_dias: 14
+
 medidas:
   ponerse_al_dia:
     texto: >-
@@ -26,6 +59,27 @@ medidas:
       - porcentaje_actividades_entregadas
       - actividades_pendientes
       - evaluaciones_no_presentadas
+    plan:
+      accion: >-
+        Revisar con el aprendiz qué actividades y evaluaciones tiene pendientes y
+        acordar una fecha para cada una.
+      plazo_dias: 3
+      decir:
+        - >-
+          Vi que tienes algunas actividades sin entregar y quiero ayudarte a ponerte al
+          día.
+        - >-
+          ¿Qué ha sido lo más difícil para entregarlas?
+        - >-
+          ¿Con cuál empezamos? Pongámosle fecha a esa primero.
+      evitar: >-
+        Reclamar por el atraso o exigir que entregue todo de una vez.
+      si_no_responde: >-
+        Enviarle por escrito las actividades pendientes con una fecha sugerida y volver
+        a buscarlo a los 3 días.
+      registrar: >-
+        Actividades pendientes, fechas acordadas y motivo del atraso.
+      seguimiento_dias: 7
 
   plan_de_mejoramiento:
     texto: >-
@@ -34,6 +88,26 @@ medidas:
     variables:
       - tasa_aprobacion_entregas
       - promedio_calificaciones
+    plan:
+      accion: >-
+        Revisar con el aprendiz una actividad reprobada, mostrarle qué faltó y acordar
+        un plan de mejoramiento o una tutoría.
+      plazo_dias: 5
+      decir:
+        - >-
+          Quiero que revisemos juntos una de tus entregas para ver cómo mejorarla.
+        - >-
+          ¿Qué parte del tema sientes que no te ha quedado clara?
+        - >-
+          ¿Te sirve una tutoría esta semana? Te propongo dos horarios.
+      evitar: >-
+        Compararlo con sus compañeros o dar a entender que no es capaz.
+      si_no_responde: >-
+        Dejarle la retroalimentación por escrito con un ejemplo resuelto y ofrecerle dos
+        horarios de tutoría.
+      registrar: >-
+        Temas con dificultad, plan o tutoría acordada y fecha de la nueva entrega.
+      seguimiento_dias: 14
 
   contacto_por_inactividad:
     texto: >-
@@ -43,6 +117,27 @@ medidas:
       - ingresos_plataforma_ultimos_7d
       - dias_sin_ingreso
       - sin_ingreso_reciente
+    plan:
+      accion: >-
+        Llamar al aprendiz; si no contesta, escribirle por mensaje o correo.
+      plazo_dias: 2
+      decir:
+        - >-
+          Te llamo porque noté que no has podido entrar a la plataforma estos días y
+          quería saber cómo estás.
+        - >-
+          ¿Qué te ha impedido conectarte?
+        - >-
+          ¿Qué te parece si acordamos qué actividad retomas primero y hablamos de nuevo
+          en unos días?
+      evitar: >-
+        Empezar por las actividades atrasadas o por las consecuencias de no ingresar.
+      si_no_responde: >-
+        Segundo intento a los 3 días por otro canal; si sigue sin responder, remitir a
+        Bienestar al Aprendiz.
+      registrar: >-
+        Fecha, canal, causa que dio el aprendiz y compromiso acordado.
+      seguimiento_dias: 7
 
   inasistencia:
     texto: >-
@@ -50,6 +145,27 @@ medidas:
       seguimiento.
     variables:
       - asistencia_porcentaje
+    plan:
+      accion: >-
+        Hablar con el aprendiz, en privado, sobre sus inasistencias y lo que las causa.
+      plazo_dias: 3
+      decir:
+        - >-
+          Te he echado de menos en las últimas sesiones y quería saber cómo estás.
+        - >-
+          ¿Qué te ha impedido venir?
+        - >-
+          ¿Qué podríamos ajustar para que puedas asistir? Te cuento cómo ponerte al día
+          con lo que vimos.
+      evitar: >-
+        Llamarle la atención delante del grupo o empezar por las consecuencias de
+        faltar.
+      si_no_responde: >-
+        Contactarlo por teléfono o mensaje; si sigue sin asistir ni responder, informar
+        a coordinación académica.
+      registrar: >-
+        Causa de las inasistencias, acuerdo y sesiones por recuperar.
+      seguimiento_dias: 7
 
   conectividad_y_equipo:
     texto: >-
@@ -62,6 +178,27 @@ medidas:
       - disponibilidad_equipo
       - comparte_dispositivo
       - dispositivo_principal
+    plan:
+      accion: >-
+        Preguntar al aprendiz con qué conexión y equipo cuenta para estudiar y remitirlo
+        a Bienestar al Aprendiz.
+      plazo_dias: 5
+      decir:
+        - >-
+          Quiero asegurarme de que tengas con qué conectarte y hacer las actividades.
+        - >-
+          ¿Cómo te estás conectando y con qué equipo estás trabajando?
+        - >-
+          En Bienestar al Aprendiz pueden orientarte; si quieres, te ayudo a hacer la
+          consulta. Mientras tanto te dejo el material para descargar.
+      evitar: >-
+        Prometer un equipo o una conexión que no depende del instructor.
+      si_no_responde: >-
+        Enviarle el contacto de Bienestar al Aprendiz y el material en un formato
+        liviano que pueda abrir desde el celular.
+      registrar: >-
+        Conexión y equipo con que cuenta, remisión hecha y respuesta de Bienestar.
+      seguimiento_dias: 14
 
   apoyo_economico:
     texto: >-
@@ -69,6 +206,28 @@ medidas:
       Aprendiz.
     variables:
       - dificultad_economica_reportada
+    plan:
+      accion: >-
+        Informar al aprendiz, en privado, sobre los apoyos de sostenimiento y cómo
+        consultarlos en Bienestar al Aprendiz.
+      plazo_dias: 5
+      decir:
+        - >-
+          Quiero contarte de unos apoyos que tiene el SENA y que quizá te sirvan.
+        - >-
+          ¿Hay algo que te esté dificultando seguir con la formación?
+        - >-
+          Si quieres, te acompaño a hacer la consulta en Bienestar al Aprendiz.
+      evitar: >-
+        Pedirle detalles de su situación económica o tocar el tema delante de otras
+        personas.
+      si_no_responde: >-
+        Enviarle por escrito la información de los apoyos y el contacto de Bienestar al
+        Aprendiz.
+      registrar: >-
+        Información entregada y si se hizo la remisión. No registrar detalles económicos
+        del aprendiz.
+      seguimiento_dias: 14
 
   tiempo_disponible:
     texto: >-
@@ -79,6 +238,29 @@ medidas:
       - horas_trabajo_semana
       - situacion_laboral
       - responsabilidades_cuidado
+    plan:
+      accion: >-
+        Revisar con el aprendiz cuánto tiempo real tiene a la semana y acordar un plan
+        de estudio que le quepa.
+      plazo_dias: 5
+      decir:
+        - >-
+          Sé que además de estudiar tienes otras responsabilidades y quiero que el plan
+          te funcione.
+        - >-
+          ¿En qué momentos de la semana te queda más fácil estudiar?
+        - >-
+          Armemos un plan con esas horas: te digo qué actividades van primero y cuáles
+          puedes hacer a tu ritmo.
+      evitar: >-
+        Pedirle que deje de trabajar o restarle importancia a sus otras
+        responsabilidades.
+      si_no_responde: >-
+        Enviarle una propuesta de plan semanal con las actividades prioritarias y
+        pedirle que la ajuste.
+      registrar: >-
+        Horas disponibles, plan acordado y fechas flexibles concedidas.
+      seguimiento_dias: 14
 
   induccion_virtual:
     texto: >-
@@ -87,6 +269,26 @@ medidas:
     variables:
       - experiencia_virtual_previa
       - es_primer_curso
+    plan:
+      accion: >-
+        Ofrecer al aprendiz un recorrido corto por la plataforma y recomendaciones para
+        organizarse en formación virtual.
+      plazo_dias: 5
+      decir:
+        - >-
+          Quiero mostrarte cómo sacarle provecho a la plataforma.
+        - >-
+          ¿Qué es lo que más te ha costado encontrar o usar hasta ahora?
+        - >-
+          Hagamos un recorrido de 20 minutos; ¿cuándo te queda bien?
+      evitar: >-
+        Dar por hecho que ya sabe usar la plataforma o hacerlo sentir mal por no saber.
+      si_no_responde: >-
+        Enviarle una guía corta o un video del recorrido y preguntarle por una duda
+        concreta.
+      registrar: >-
+        Dificultades con la plataforma y si recibió la inducción.
+      seguimiento_dias: 7
 
   antecedentes_de_abandono:
     texto: >-
@@ -96,12 +298,52 @@ medidas:
       - abandono_ultimo_curso
       - n_cursos_abandonados
       - tasa_finalizacion_previa
+    plan:
+      accion: >-
+        Tener una conversación breve con el aprendiz sobre cómo va y acordar un contacto
+        periódico durante las primeras semanas.
+      plazo_dias: 5
+      decir:
+        - >-
+          Quiero saber cómo te has sentido en estas primeras semanas.
+        - >-
+          ¿Qué necesitas para que esta formación te funcione?
+        - >-
+          Si te parece, hablamos cada dos semanas para ver cómo vas.
+      evitar: >-
+        Mencionar los cursos que no terminó o tratarlo como si fuera a retirarse.
+      si_no_responde: >-
+        Mantener el contacto periódico por mensaje y estar atento a sus entregas y a su
+        asistencia.
+      registrar: >-
+        Cómo se siente, apoyos que pidió y fecha del próximo contacto.
+      seguimiento_dias: 14
 
   solicitud_de_apoyo:
     texto: >-
       Dar respuesta a la solicitud de apoyo que registró el aprendiz.
     variables:
       - solicito_apoyo
+    plan:
+      accion: >-
+        Revisar la solicitud de apoyo que registró el aprendiz, darle respuesta y
+        decirle en qué estado está.
+      plazo_dias: 2
+      decir:
+        - >-
+          Vi tu solicitud de apoyo y quiero contarte en qué va.
+        - >-
+          ¿Sigue siendo eso lo que necesitas o cambió algo?
+        - >-
+          Este es el siguiente paso y la fecha en que te vuelvo a escribir.
+      evitar: >-
+        Dejar la solicitud sin respuesta o remitirla sin avisarle al aprendiz.
+      si_no_responde: >-
+        Dejarle la respuesta por escrito y confirmar con Bienestar al Aprendiz que la
+        solicitud está en trámite.
+      registrar: >-
+        Respuesta dada, dependencia que la atiende y fecha de la siguiente novedad.
+      seguimiento_dias: 7
 
 # Variables que explican el riesgo pero no se cambian con una acción del
 # instructor (características del programa o del aprendiz). Se muestran como

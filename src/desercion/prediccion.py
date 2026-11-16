@@ -1,9 +1,9 @@
 """Riesgo de deserción de los aprendices activos, listo para la API.
 
 `predecir_riesgo` junta el modelo, la explicación y las medidas, y devuelve una
-fila por aprendiz con las columnas que exige la API (ADR 0004):
+fila por aprendiz con las columnas que exige la API (ADR 0004 y ADR 0006):
 
-    id_aprendiz, probabilidad, alerta, factores, medidas
+    id_aprendiz, probabilidad, alerta, factores, medidas, plan_de_accion
 
 No carga nada por su cuenta: recibe el modelo, la referencia y el umbral, que la
 API carga una sola vez al arrancar. Así `/health` refleja lo que realmente está
@@ -23,9 +23,16 @@ from sklearn.pipeline import Pipeline
 
 from desercion.explain import aportes, principales_factores
 from desercion.modelado import ETIQUETA, separar_x_y
-from desercion.recomendaciones import medidas_para
+from desercion.recomendaciones import medidas_para, plan_para
 
-COLUMNAS_PREDICCION = ["id_aprendiz", "probabilidad", "alerta", "factores", "medidas"]
+COLUMNAS_PREDICCION = [
+    "id_aprendiz",
+    "probabilidad",
+    "alerta",
+    "factores",
+    "medidas",
+    "plan_de_accion",
+]
 # Tope del esquema RiesgoAprendiz (factores: max_length=5).
 MAX_FACTORES = 5
 # Aporte mínimo (en log-odds) para mostrar un factor y sugerir su medida. Por
@@ -43,7 +50,7 @@ def predecir_riesgo(
     umbral: float,
     n_factores: int = 3,
 ) -> pd.DataFrame:
-    """Probabilidad, alerta, factores y medidas de cada aprendiz.
+    """Probabilidad, alerta, factores, medidas y plan de acción de cada aprendiz.
 
     - `aprendices`: con `id_aprendiz` y las variables del modelo. Puede traer o
       no `deserto`: se ignora y nunca sale en el resultado.
@@ -51,6 +58,7 @@ def predecir_riesgo(
     - `factores`: los `n_factores` que más suben el riesgo frente al aprendiz
       promedio de train, con aporte de al menos APORTE_MINIMO.
     - `medidas`: solo para quienes tienen alerta (recomendaciones.py).
+    - `plan_de_accion`: qué hacer y qué decir por cada medida, en el mismo orden.
     """
     if not 1 <= n_factores <= MAX_FACTORES:
         raise ValueError(f"n_factores debe estar entre 1 y {MAX_FACTORES}")
@@ -66,6 +74,7 @@ def predecir_riesgo(
         for _, fila in tabla_aportes.iterrows()
     ]
     medidas = [medidas_para(f, bool(a)) for f, a in zip(factores, alerta, strict=True)]
+    planes = [plan_para(f, bool(a)) for f, a in zip(factores, alerta, strict=True)]
 
     return pd.DataFrame(
         {
@@ -74,6 +83,7 @@ def predecir_riesgo(
             "alerta": alerta,
             "factores": factores,
             "medidas": medidas,
+            "plan_de_accion": planes,
         },
         columns=COLUMNAS_PREDICCION,
     )

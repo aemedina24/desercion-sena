@@ -30,7 +30,13 @@ from desercion.modelado import (
     tipos_de_columnas,
 )
 from desercion.prediccion import APORTE_MINIMO, COLUMNAS_PREDICCION, predecir_riesgo
-from desercion.recomendaciones import cargar_medidas, medidas_para
+from desercion.recomendaciones import (
+    CAMPOS_PLAN,
+    MEDIDA_GENERAL,
+    cargar_medidas,
+    medidas_para,
+    plan_para,
+)
 from desercion.train_model import cargar_config, construir_pipeline
 
 UMBRAL = 0.4606
@@ -209,6 +215,98 @@ def test_referencia_de_otro_modelo_falla_con_mensaje_claro(
         predecir_riesgo(aprendices, modelo=modelo, referencia=incompleta, umbral=UMBRAL)
 
 
+# --- Plan de acción -----------------------------------------------------------------
+# Lo que el guion nunca le dice al aprendiz: que hay una alerta, un modelo o una
+# predicción, ni que podría desertar o ser sancionado (ADR 0006).
+PALABRAS_PROHIBIDAS = [
+    "riesgo",
+    "alerta",
+    "desert",
+    "abandon",
+    "modelo",
+    "predic",
+    "sanci",
+]
+
+
+def test_cada_medida_tiene_un_plan_completo():
+    config = cargar_medidas()
+    assert set(config["planes"]) == set(config["textos"])
+    assert MEDIDA_GENERAL in config["planes"]
+    for nombre, plan in config["planes"].items():
+        assert set(plan) == {"medida", *CAMPOS_PLAN}, nombre
+        assert plan["medida"] == nombre
+        # Guion corto: apertura, pregunta abierta y propuesta.
+        assert len(plan["decir"]) == 3, nombre
+        assert any("¿" in frase for frase in plan["decir"]), nombre
+        assert 1 <= plan["plazo_dias"] <= 7, nombre
+        assert plan["plazo_dias"] < plan["seguimiento_dias"] <= 30, nombre
+
+
+def test_el_guion_no_menciona_la_alerta_ni_la_desercion():
+    for nombre, plan in cargar_medidas()["planes"].items():
+        for frase in plan["decir"]:
+            usadas = [p for p in PALABRAS_PROHIBIDAS if p in frase.lower()]
+            assert not usadas, f"{nombre}: '{frase}' usa {usadas}"
+
+
+def test_plan_va_en_el_mismo_orden_que_las_medidas():
+    config = cargar_medidas()
+    factores = [
+        {"variable": "dias_sin_ingreso", "aporte": 0.5},
+        {"variable": "ingresos_plataforma_ultimos_7d", "aporte": 0.4},  # misma medida
+        {"variable": "promedio_calificaciones", "aporte": 0.3},
+    ]
+    plan = plan_para(factores, alerta=True)
+    assert [p["medida"] for p in plan] == [
+        "contacto_por_inactividad",
+        "plan_de_mejoramiento",
+    ]
+    assert [config["textos"][p["medida"]] for p in plan] == medidas_para(
+        factores, alerta=True
+    )
+
+
+def test_plan_general_si_ningun_factor_tiene_medida():
+    plan = plan_para([{"variable": "modalidad", "aporte": 0.4}], alerta=True)
+    assert [p["medida"] for p in plan] == [MEDIDA_GENERAL]
+    assert plan_para([], alerta=True) == plan
+
+
+def test_sin_alerta_no_hay_plan():
+    factores = [{"variable": "dias_sin_ingreso", "aporte": 0.5}]
+    assert plan_para(factores, alerta=False) == []
+
+
+def test_modificar_un_plan_no_cambia_la_configuracion():
+    factores = [{"variable": "dias_sin_ingreso", "aporte": 0.5}]
+    plan = plan_para(factores, alerta=True)
+    plan[0]["decir"].append("otra frase")
+    plan[0]["accion"] = "otra acción"
+    assert plan_para(factores, alerta=True) != plan
+
+
+def test_medidas_yaml_sin_plan_falla_con_mensaje_claro(tmp_path):
+    ruta = tmp_path / "medidas.yaml"
+    ruta.write_text(
+        "max_medidas: 3\n"
+        "general: Contactar al aprendiz\n"
+        "plan_general:\n"
+        "  accion: Contactar al aprendiz\n"
+        "medidas: {}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="faltan los campos"):
+        cargar_medidas(ruta)
+
+
+def test_el_riesgo_trae_un_plan_por_medida(riesgo):
+    assert riesgo["alerta"].any()
+    for _, fila in riesgo.iterrows():
+        assert len(fila["plan_de_accion"]) == len(fila["medidas"])
+        assert bool(fila["plan_de_accion"]) == bool(fila["alerta"])
+
+
 # --- Con el modelo y los datos reales ------------------------------------------------
 requiere_artefactos = pytest.mark.skipif(
     not (RUTA_MODELO.exists() and RUTA_TEST.exists() and RUTA_REFERENCIA.exists()),
@@ -231,4 +329,6 @@ def test_reproduce_las_alertas_de_evaluate():
     )
     assert int(riesgo["alerta"].sum()) == esperadas
     for fila in riesgo.to_dict(orient="records"):
-        RiesgoAprendiz(**fila, umbral=umbral)
+        respuesta = RiesgoAprendiz(**fila, umbral=umbral)
+        # Toda alerta llega con entre 1 y 3 acciones para el instructor.
+        assert (1 <= len(respuesta.plan_de_accion) <= 3) == respuesta.alerta
