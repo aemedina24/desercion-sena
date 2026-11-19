@@ -29,6 +29,7 @@ consecuencias.
 | [003](decisiones/0003-umbral-y-equidad.md) | Umbral global en la v1; equidad medida con la regla de los cuatro quintos y umbral por modalidad como siguiente versión |
 | [004](decisiones/0004-api-consulta-y-datos.md) | API por aprendiz y por cohorte con filtros, con el riesgo calculado al arrancar |
 | [005](decisiones/0005-monitoreo-sin-evidently.md) | Monitoreo con PSI y recall por cohorte, sin Evidently |
+| [006](decisiones/0006-plan-de-accion.md) | Plan de acción para el instructor: qué hacer y qué decir por cada medida (propuesta) |
 
 ## Resultados
 

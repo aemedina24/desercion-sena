@@ -145,9 +145,49 @@ cohorte no tiene aprendices activos.
 - **`medidas`:** solo cuando hay alerta. Hasta 3, en orden de aporte y sin repetir (dos
   factores pueden compartir medida). Se definen en `config/recomendaciones/medidas.yaml`
   y nunca se sugieren por características personales como la edad o el nivel
-  educativo. `porcentaje_actividades_entregadas` tampoco genera medida: por
-  colinealidad sale como factor en aprendices que entregan más que el promedio (ver la
-  [model card](model_card.md)).
+  educativo. Tampoco generan medida las variables a las que la colinealidad les invierte
+  el signo (con los datos v2: `porcentaje_actividades_aprobadas`,
+  `tasa_finalizacion_previa` y `abandono_ultimo_curso`), porque salen como factor en
+  aprendices que están mejor que el promedio (ver la [model card](model_card.md)). Un
+  factor cuyo dato está vacío se muestra en `factores`, pero no genera medida: la
+  asistencia de los virtuales es nula porque no tienen sesiones, y sin ese filtro les
+  llegaba el guion de inasistencia.
+- **`plan_de_accion`:** un plan por cada medida, en el mismo orden; vacío si no hay
+  alerta ([ADR 006](decisiones/0006-plan-de-accion.md)). Cada plan trae:
+
+  | Campo | Significado |
+  |---|---|
+  | `medida` | Nombre de la medida en `medidas.yaml` |
+  | `accion` | Qué hacer y por qué canal |
+  | `plazo_dias` | En cuántos días hacerlo |
+  | `decir` | Guion de tres frases: apertura, pregunta abierta y propuesta |
+  | `evitar` | Lo que no se debe decir o hacer |
+  | `si_no_responde` | Segundo intento y a quién acudir |
+  | `registrar` | Qué anotar en el seguimiento |
+  | `seguimiento_dias` | En cuántos días volver a revisar |
+
+  Ejemplo de un plan:
+
+  ```json
+  {
+    "medida": "contacto_por_inactividad",
+    "accion": "Llamar al aprendiz; si no contesta, escribirle por mensaje o correo.",
+    "plazo_dias": 2,
+    "decir": [
+      "Te llamo porque noté que no has podido entrar a la plataforma estos días y quería saber cómo estás.",
+      "¿Qué te ha impedido conectarte?",
+      "¿Qué te parece si acordamos qué actividad retomas primero y hablamos de nuevo en unos días?"
+    ],
+    "evitar": "Empezar por las actividades atrasadas o por las consecuencias de no ingresar.",
+    "si_no_responde": "Segundo intento a los 3 días por otro canal; si sigue sin responder, remitir a Bienestar al Aprendiz.",
+    "registrar": "Fecha, canal, causa que dio el aprendiz y compromiso acordado.",
+    "seguimiento_dias": 7
+  }
+  ```
+
+  El guion nunca menciona la alerta ni la deserción, y es una guía que el instructor
+  adapta. Los textos son una propuesta del equipo que falta validar con instructores y
+  con Bienestar al Aprendiz.
 - **Lo que nunca sale:** la etiqueta `deserto` (si el aprendiz desertó) no aparece en
   ninguna respuesta; una prueba automática lo verifica.
 
@@ -167,4 +207,6 @@ cohorte no tiene aprendices activos.
 - **Datos fijos al arrancar:** para tomar una cohorte nueva o un modelo reentrenado hay
   que reiniciar la API (o reconstruir la imagen). Para todo el SENA, el cálculo se haría
   en lote y se guardaría en una base de datos que la API consulte.
-- **Las medidas son sugerencias** para el instructor, no decisiones automáticas.
+- **Las medidas y el plan de acción son sugerencias** para el instructor, no decisiones
+  automáticas. Un factor indica qué explica la alerta del modelo, no la causa de la
+  deserción.

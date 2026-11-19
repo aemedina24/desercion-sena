@@ -113,6 +113,12 @@ alerta, hasta 3 medidas de `config/recomendaciones/medidas.yaml`. Las 10 medidas
 26 variables; las otras 13 explican el riesgo, pero no generan medida. Nunca se sugiere
 una medida por características personales (edad, nivel educativo, modalidad).
 
+Cada medida trae además un plan de acción para el instructor (qué hacer, en qué plazo,
+qué decir, qué evitar, qué hacer si el aprendiz no responde, qué registrar y cuándo volver
+a revisar; [ADR 0006](decisiones/0006-plan-de-accion.md)). Los guiones son una propuesta
+del equipo: no están validados con instructores ni con Bienestar al Aprendiz, y nada
+demuestra que reduzcan la deserción.
+
 Importancia media en test (|aporte| en log-odds): actividades aprobadas 0.60,
 actividades entregadas 0.25, promedio de calificaciones 0.15, evaluaciones no
 presentadas 0.15, ingresos a la plataforma en 7 días 0.15, asistencia 0.14.
