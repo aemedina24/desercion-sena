@@ -37,7 +37,7 @@ Proyecto académico de MLOps (Universidad de Medellín). Sistema de alerta tempr
 
 - `data/raw/aprendices.parquet`: 10.000 × 50, versionado con DVC. No está en Git: se descarga del remoto de DagsHub con `uv run dvc pull` (credenciales en `.dvc/config.local`, ver el [README](../README.md)).
 - Etapas de `dvc.yaml`, en orden:
-  - `process` → `data/processed/aprendices.parquet` (9.518 × 43) y `auditoria.parquet`.
+  - `process` → `data/processed/aprendices.parquet` (9.475 × 43) y `auditoria.parquet`.
   - `validate` → `reports/validacion.json` (contrato de Pandera).
   - `features` → `data/features/train.parquet` y `test.parquet`.
   - `train` → `models/modelo.skops` (el modelo que usan `evaluate`, `explain` y la API) y `reports/metricas_modelo_base.json` (incluye el `umbral`). Registra el run en MLflow de DagsHub: requiere `.env`.

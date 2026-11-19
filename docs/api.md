@@ -35,7 +35,7 @@ aprendices antes de aceptar consultas. Luego responde en <http://127.0.0.1:8000>
 | Archivo | Para qué | Lo genera |
 |---|---|---|
 | `models/modelo.skops` | El modelo (regresión logística) | etapa `train` |
-| `reports/metricas_modelo_base.json` | El umbral de alerta (0.461) | etapa `train` |
+| `reports/metricas_modelo_base.json` | El umbral de alerta (0.491) | etapa `train` |
 | `models/referencia.json` | El aprendiz promedio de train, para calcular los factores | etapa `explain` |
 | `data/features/test.parquet` | Los aprendices activos (en la demo, las cohortes 2025-T3 y 2025-T4) | etapa `features` |
 | `config/recomendaciones/medidas.yaml` | Las medidas sugeridas | se edita a mano |
@@ -59,9 +59,9 @@ Para tomar datos o un modelo nuevos hay que reiniciarla.
 {
   "estado": "ok",
   "modelo_cargado": true,
-  "version_modelo": "f0dd9683c0396c196eb6cd409b605c29",
-  "umbral": 0.4606367905142532,
-  "aprendices": 1544,
+  "version_modelo": "9b58e3fead5766bcb03c85931f27a882",
+  "umbral": 0.4910441072721096,
+  "aprendices": 1583,
   "detalle": null
 }
 ```
@@ -78,22 +78,26 @@ Si el estado no es `ok`, responde con código 503 y el mismo formato.
 ### `GET /aprendices/{id_aprendiz}/riesgo`
 
 `id_aprendiz` tiene la forma `A-` y seis dígitos. Ejemplo:
-`GET /aprendices/A-007925/riesgo`
+`GET /aprendices/A-005693/riesgo`
 
 ```json
 {
-  "id_aprendiz": "A-007925",
-  "probabilidad": 0.868141321837692,
+  "id_aprendiz": "A-005693",
+  "probabilidad": 0.8758127287801957,
   "alerta": true,
-  "umbral": 0.4606367905142532,
+  "umbral": 0.4910441072721096,
   "factores": [
-    {"variable": "porcentaje_actividades_aprobadas", "aporte": 0.852154256192562},
-    {"variable": "asistencia_porcentaje", "aporte": 0.526702669891089},
-    {"variable": "promedio_calificaciones", "aporte": 0.32414265930411534}
+    {"variable": "porcentaje_actividades_entregadas", "aporte": 1.4711291358811265},
+    {"variable": "promedio_calificaciones", "aporte": 0.889264713040094},
+    {"variable": "tasa_aprobacion_entregas", "aporte": 0.1856946887722884}
   ],
   "medidas": [
-    "Revisar con el aprendiz las actividades reprobadas y ofrecer un plan de mejoramiento o una tutoría.",
-    "Hablar con el aprendiz sobre sus inasistencias y registrar la causa en el seguimiento."
+    "Acordar con el aprendiz un calendario para entregar las actividades y evaluaciones pendientes.",
+    "Revisar con el aprendiz las actividades reprobadas y ofrecer un plan de mejoramiento o una tutoría."
+  ],
+  "plan_de_accion": [
+    {"medida": "ponerse_al_dia", "...": "..."},
+    {"medida": "plan_de_mejoramiento", "...": "..."}
   ]
 }
 ```
@@ -121,10 +125,10 @@ responde 422. Ejemplo:
 ```json
 {
   "id_cohorte": "2025-T3",
-  "total_aprendices": 66,
-  "total_alertas": 66,
+  "total_aprendices": 51,
+  "total_alertas": 51,
   "aprendices": [
-    {"id_aprendiz": "A-007925", "probabilidad": 0.868141321837692, "alerta": true, "...": "..."}
+    {"id_aprendiz": "A-005693", "probabilidad": 0.8758127287801957, "alerta": true, "...": "..."}
   ]
 }
 ```
@@ -139,7 +143,7 @@ cohorte no tiene aprendices activos.
   a los aprendices, no como porcentaje: el balanceo de clases la infla (una alerta de
   0.68 corresponde a unos 48 desertores de cada 100). Ver
   [calibración](model_card.md#calibración-la-probabilidad-está-inflada).
-- **`alerta`:** `true` si la probabilidad es mayor o igual al umbral (0.461). El umbral
+- **`alerta`:** `true` si la probabilidad es mayor o igual al umbral (0.491). El umbral
   se eligió para detectar al menos el 70 % de los desertores
   ([ADR 003](decisiones/0003-umbral-y-equidad.md)).
 - **`factores`:** hasta 3 variables que más suben el riesgo de ese aprendiz frente al

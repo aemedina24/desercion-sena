@@ -25,18 +25,22 @@ Detalle de tareas en [`docs/plan_trabajo.md`](docs/plan_trabajo.md).
 
 ## Resultados
 
-Regresión logística con umbral 0.461, evaluada en las dos cohortes más recientes (2025-T3 y 2025-T4, 1.544 aprendices), que el modelo nunca vio:
+Datos sintéticos de un generador propio con semilla y fórmulas conocidas (v2, [datos.md](docs/datos.md)). Regresión logística con umbral 0.491, evaluada en las dos cohortes más recientes (2025-T3 y 2025-T4, 1.583 aprendices), que el modelo nunca vio:
 
 | Métrica | Valor |
 |---|---|
-| Recall (desertores detectados) | **0.686**: 338 de 493 |
-| Precisión | 0.481 (al azar, 0.319) |
-| ROC-AUC · PR-AUC | 0.735 · 0.576 |
-| Recall por modalidad | mixta 0.756 · virtual 0.719 · presencial 0.525 |
+| Recall (desertores detectados) | **0.694**: 344 de 496 |
+| Precisión | 0.480 (al azar, 0.313) |
+| ROC-AUC · PR-AUC | 0.742 · 0.564 |
+| Recall por modalidad | virtual 0.743 · mixta 0.657 · presencial 0.560 |
 
-- Tres modelos distintos (logística, LightGBM y red neuronal) llegan al mismo techo de PR-AUC (0.56 a 0.58); se eligió la logística por ser igual de buena, más simple y explicable ([ADR 0002](docs/decisiones/0002-eleccion-modelo.md)).
+- El modelo está cerca del techo: uno que conociera la probabilidad real de cada aprendiz llegaría a ROC-AUC 0.762 y PR-AUC 0.613. Mejorar exige otras variables, no otro modelo.
+- En validación cruzada la logística (PR-AUC 0.595) queda por encima de LightGBM con Optuna (0.589) y de una red neuronal (0.571); se eligió por ser igual de buena o mejor, más simple y explicable ([ADR 0002](docs/decisiones/0002-eleccion-modelo.md)).
 - Por sexo el modelo cumple la regla de los cuatro quintos (0.96); por modalidad no (0.69), por la brecha en presencial ([ADR 0003](docs/decisiones/0003-umbral-y-equidad.md)).
 - El monitoreo no encuentra drift en las cohortes de prueba (PSI máximo 0.02).
+- La probabilidad sale inflada por `class_weight="balanced"` (media 0.46 con 31 % de deserción); sirve para ordenar, no como porcentaje. Una corrección sin reentrenar la calibra sin cambiar las alertas (model card).
+- Por cada medida sugerida, la API trae un plan de acción para el instructor: qué hacer, qué decir y qué evitar ([ADR 0006](docs/decisiones/0006-plan-de-accion.md)).
+- La versión entregada el 11 de noviembre, con los datos v1, está en la etiqueta `v1.0.0`.
 
 Detalle, limitaciones y uso previsto en la [model card](docs/model_card.md).
 
@@ -77,7 +81,7 @@ Detalle, limitaciones y uso previsto en la [model card](docs/model_card.md).
 desercion-sena/
 ├── config/           # configuración: datos, variables, modelos, tuning y medidas
 ├── data/             # datos (versionados con DVC, no con Git)
-│   ├── raw/          # datos originales
+│   ├── raw/          # datos generados (etapa generate) y su verdad oculta
 │   ├── processed/    # datos limpios y tabla de auditoría
 │   └── features/     # train y test listos para el modelo
 ├── docs/             # documentación y decisiones (ADR)
@@ -208,8 +212,14 @@ uv run dvc config --local core.site_cache_dir "$env:LOCALAPPDATA\iterative\dvc\s
 **`dvc pull` deja `data/raw/aprendices.parquet` fuera de la carpeta.** El archivo sigue en la caché local de DVC. Restáurelo y revise el estado antes de ejecutar el pipeline:
 
 ```powershell
-uv run dvc checkout data/raw/aprendices.parquet.dvc
+uv run dvc checkout generate
 uv run dvc status
+```
+
+**`dvc pull` se detiene con "Can't remove unsaved files: data/raw/aprendices.parquet".** Pasa al cambiar entre la etiqueta `v1.0.0` y la versión actual: en la v1 el crudo lo controlaba `data/raw/aprendices.parquet.dvc` y ahora es una salida de la etapa `generate`, así que DVC no reconoce el archivo de la otra versión y no lo sobrescribe. Si está seguro de que es el de la otra versión, fuércelo:
+
+```powershell
+uv run dvc pull --force
 ```
 
 Si `dvc status` muestra otras etapas como cambiadas porque faltan sus salidas, use `uv run dvc checkout <etapa>` en lugar de `dvc repro`, para no volver a ejecutarlas.

@@ -93,6 +93,42 @@ Razones:
 - La modalidad **presencial** sigue con el menor recall (0.525, frente a 0.756 en mixta
   y 0.719 en virtual). Se analiza en el cuaderno de equidad.
 
+## Revisión con los datos v2 (19 de noviembre de 2026)
+
+Las tablas anteriores son de la v1 (etiqueta `v1.0.0`). Con los datos del generador
+propio (v2) se repitió la comparación en los mismos 5 folds por cohorte, y la decisión
+se mantiene con más razón: ahora la logística queda primera.
+
+| Modelo | PR-AUC media | Por fold |
+|---|---|---|
+| Regresión logística (sin tunear, C = 1.0) | 0.595 | 0.626 · 0.570 · 0.606 · 0.574 · 0.596 |
+| LightGBM (tuneado con Optuna, 50 trials) | 0.589 | 0.618 · 0.565 · 0.597 · 0.569 · 0.595 |
+| Red neuronal (`MLPClassifier`, capas 32-16) | 0.571 | 0.601 · 0.557 · 0.577 · 0.546 · 0.573 |
+| Referencia: azar | 0.318 | 0.331 · 0.312 · 0.334 · 0.308 · 0.303 |
+
+- La logística gana a LightGBM en los 5 folds, aunque por poco (0.001 a 0.009), y eso
+  que los hiperparámetros de LightGBM se buscaron en esos mismos folds.
+- Era lo esperable: en el generador v2 la deserción sale de una fórmula logística, así
+  que un modelo lineal tiene la forma correcta. Con datos reales no hay por qué suponerlo,
+  y la comparación hay que repetirla.
+- El techo ya no es una suposición: un modelo que conociera la probabilidad real de cada
+  aprendiz llegaría en test a PR-AUC 0.613 y ROC-AUC 0.762, frente a 0.564 y 0.742 del
+  modelo (ver la [model card](../model_card.md)).
+- En test, con el umbral out-of-fold (0.491; recall out-of-fold 0.700):
+
+  | Métrica | Umbral 0.5 | Umbral 0.491 |
+  |---|---|---|
+  | Recall | 0.683 | 0.694 |
+  | Precisión | 0.485 | 0.480 |
+  | F1 | 0.567 | 0.568 |
+  | ROC-AUC / PR-AUC | 0.742 / 0.564 | sin cambio |
+
+- El recall en test (0.694) sigue un poco por debajo del objetivo de 0.70. Con la v2 no
+  puede ser un cambio en los datos, porque el generador no cambia entre cohortes: es
+  variación de muestreo. Presencial sigue con el menor recall (0.560, frente a 0.657 en
+  mixta y 0.743 en virtual); la causa está en la fórmula del generador (la modalidad
+  presencial resta 0.30), y se analiza en el ADR 0003.
+
 ## Cómo reproducir
 
 ```powershell

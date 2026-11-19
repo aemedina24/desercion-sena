@@ -41,8 +41,8 @@ RUTA_TRAIN = RAIZ / "data" / "features" / "train.parquet"
 RUTA_TEST = RAIZ / "data" / "features" / "test.parquet"
 
 # Pisos de rendimiento en test: barandas para detectar un modelo roto, no metas.
-# Valores actuales (ADR 0002): ROC-AUC 0.735, PR-AUC 0.576, recall 0.686 y
-# recall presencial 0.525. Si un cambio los baja de aquí, hay que explicarlo.
+# Valores actuales (datos v2, ADR 0002): ROC-AUC 0.742, PR-AUC 0.564, recall 0.694 y
+# recall presencial 0.560. Si un cambio los baja de aquí, hay que explicarlo.
 ROC_AUC_MINIMO = 0.70
 PR_AUC_MINIMO = 0.50
 RECALL_MINIMO = 0.60
