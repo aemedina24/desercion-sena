@@ -292,12 +292,10 @@ medidas:
 
   antecedentes_de_abandono:
     texto: >-
-      Hacer seguimiento cercano desde ya: el aprendiz abandonó o no terminó
-      cursos anteriores.
+      Hacer seguimiento cercano desde ya: el aprendiz abandonó cursos
+      anteriores.
     variables:
-      - abandono_ultimo_curso
       - n_cursos_abandonados
-      - tasa_finalizacion_previa
     plan:
       accion: >-
         Tener una conversación breve con el aprendiz sobre cómo va y acordar un contacto
@@ -358,6 +356,14 @@ sin_medida:
   # cuál de las dos sale con el signo invertido depende de los datos.
   # Ver "Problemas conocidos" en docs/guia_desarrollo.md.
   - porcentaje_actividades_aprobadas
+  # Lo mismo con el historial: por la colinealidad con n_cursos_abandonados,
+  # tasa_finalizacion_previa sale con el signo invertido (+0.037) y la marca
+  # como factor en quienes terminaron MÁS cursos que el promedio (40 de las 716
+  # alertas de test); abandono_ultimo_curso también sale invertido (−0.043).
+  # Con medida, se le diría "abandonó cursos anteriores" a quien no abandonó
+  # ninguno. La medida queda solo con n_cursos_abandonados (+0.125).
+  - tasa_finalizacion_previa
+  - abandono_ultimo_curso
   - modalidad
   - area_formacion
   - nivel_formacion

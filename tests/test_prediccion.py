@@ -1,8 +1,8 @@
 """Pruebas de prediccion.py, recomendaciones.py y la referencia de explain.
 
 Como en test_evaluate_explain.py, usan un Pipeline entrenado con datos
-sintéticos, así que corren en el CI. Solo la última prueba usa el modelo y los
-datos reales (se omite si no se ha hecho `uv run dvc pull`).
+sintéticos, así que corren en el CI. Solo las dos últimas pruebas usan el modelo
+y los datos reales (se omiten si no se ha hecho `uv run dvc pull`).
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from desercion.explain import (
     RUTA_REFERENCIA,
     cargar_referencia,
     guardar_referencia,
+    matriz_transformada,
     referencia_train,
 )
 from desercion.features import agregar_variables, quitar_columnas
@@ -192,6 +193,55 @@ def test_medidas_yaml_cubre_cada_variable_del_modelo_una_vez():
     )
 
 
+# Dirección en que cada variable con medida sube el riesgo: +1 = más es peor,
+# -1 = menos es peor (los booleanos cuentan como 0/1). El texto de la medida
+# supone esa dirección: "no está entrando", "abandonó cursos anteriores". Por la
+# colinealidad, el modelo puede darle a una variable el signo contrario, y
+# entonces la marcaría como factor en quien está MEJOR que el promedio (pasó con
+# porcentaje_actividades_aprobadas y tasa_finalizacion_previa con los datos v2).
+DIRECCION_CON_MEDIDA = {
+    "porcentaje_actividades_entregadas": -1,
+    "actividades_pendientes": +1,
+    "evaluaciones_no_presentadas": +1,
+    "tasa_aprobacion_entregas": -1,
+    "promedio_calificaciones": -1,
+    "ingresos_plataforma_ultimos_7d": -1,
+    "dias_sin_ingreso": +1,
+    "sin_ingreso_reciente": +1,
+    "asistencia_porcentaje": -1,
+    "disponibilidad_equipo": -1,
+    "comparte_dispositivo": +1,
+    "horas_disponibles_estudio": -1,
+    "horas_trabajo_semana": +1,
+    "responsabilidades_cuidado": +1,
+    "experiencia_virtual_previa": -1,
+    "es_primer_curso": +1,
+    "n_cursos_abandonados": +1,
+    "solicito_apoyo": +1,
+}
+# En las categóricas el factor es una categoría, no una dirección: se revisan a
+# mano (con los datos v2 solo salen dificultad alta, plan "otro" y conexión "otra").
+CATEGORICAS_CON_MEDIDA = {
+    "calidad_internet",
+    "tipo_conexion",
+    "tipo_plan_internet",
+    "dispositivo_principal",
+    "dificultad_economica_reportada",
+    "situacion_laboral",
+}
+
+
+def test_cada_variable_con_medida_declara_su_direccion():
+    # Una variable nueva con medida obliga a decir hacia dónde sube el riesgo.
+    con_medida = set(cargar_medidas()["por_variable"])
+    declaradas = set(DIRECCION_CON_MEDIDA) | CATEGORICAS_CON_MEDIDA
+    assert not set(DIRECCION_CON_MEDIDA) & CATEGORICAS_CON_MEDIDA
+    assert declaradas == con_medida, (
+        f"Sin dirección: {sorted(con_medida - declaradas)}; "
+        f"ya no tienen medida: {sorted(declaradas - con_medida)}"
+    )
+
+
 def test_ninguna_medida_por_caracteristicas_personales():
     personales = {"edad", "nivel_educativo", "modalidad", "area_formacion"}
     assert not personales & set(cargar_medidas()["por_variable"])
@@ -332,3 +382,38 @@ def test_reproduce_las_alertas_de_evaluate():
         respuesta = RiesgoAprendiz(**fila, umbral=umbral)
         # Toda alerta llega con entre 1 y 3 acciones para el instructor.
         assert (1 <= len(respuesta.plan_de_accion) <= 3) == respuesta.alerta
+
+
+@requiere_artefactos
+def test_factores_con_medida_van_en_la_direccion_esperada():
+    # Con el modelo real: si una variable con medida sale como factor, el valor
+    # del aprendiz debe estar del lado malo del promedio de train. Si no, el
+    # modelo le dio el signo invertido y hay que pasarla a `sin_medida`.
+    # Los nulos se saltan: el factor viene del indicador de dato faltante, no
+    # del valor.
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    test = pd.read_parquet(RUTA_TEST)
+    modelo = cargar_modelo()
+    referencia = cargar_referencia()
+    riesgo = predecir_riesgo(test, modelo=modelo, referencia=referencia, umbral=umbral)
+
+    x, _ = separar_x_y(test)
+    frente_al_promedio = matriz_transformada(modelo, x) - referencia
+    invertidos: dict[str, int] = {}
+    for posicion, fila in enumerate(riesgo.itertuples()):
+        if not fila.alerta:
+            continue
+        for factor in fila.factores:
+            variable = factor["variable"]
+            if variable not in DIRECCION_CON_MEDIDA or pd.isna(
+                x[variable].iloc[posicion]
+            ):
+                continue
+            lado = frente_al_promedio[f"numericas__{variable}"].iloc[posicion]
+            if np.sign(lado) != DIRECCION_CON_MEDIDA[variable]:
+                invertidos[variable] = invertidos.get(variable, 0) + 1
+
+    assert not invertidos, (
+        "Factores con medida en aprendices que están mejor que el promedio "
+        f"(signo invertido en el modelo): {invertidos}"
+    )
