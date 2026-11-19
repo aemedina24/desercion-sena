@@ -135,7 +135,10 @@ cohorte no tiene aprendices activos.
 
 ## Cómo leer una respuesta
 
-- **`probabilidad`:** riesgo estimado de desertar, entre 0 y 1.
+- **`probabilidad`:** riesgo estimado de desertar, entre 0 y 1. Sirve para **ordenar**
+  a los aprendices, no como porcentaje: el balanceo de clases la infla (una alerta de
+  0.68 corresponde a unos 48 desertores de cada 100). Ver
+  [calibración](model_card.md#calibración-la-probabilidad-está-inflada).
 - **`alerta`:** `true` si la probabilidad es mayor o igual al umbral (0.461). El umbral
   se eligió para detectar al menos el 70 % de los desertores
   ([ADR 003](decisiones/0003-umbral-y-equidad.md)).

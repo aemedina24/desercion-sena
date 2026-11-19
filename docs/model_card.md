@@ -73,6 +73,41 @@ En la práctica, de los 493 desertores de test el modelo alerta a unos **338** y
 sin alertar a unos 155. De cada 100 alertas, unas 48 corresponden a desertores reales
 (al azar serían 32).
 
+## Calibración: la probabilidad está inflada
+
+> Medido con los datos del generador v2 (rama `datos-v2`): etapa `calibrate`,
+> `reports/calibracion.json` y `reports/figures/calibracion.png`.
+
+El modelo se entrena con `class_weight="balanced"`, que le da a cada desertor más peso
+del que le corresponde para subir el recall. El efecto secundario es que **la
+probabilidad que muestra la API no se puede leer como un porcentaje**: su media es 0.46
+cuando deserta el 31 % de los aprendices, y entre los que reciben alerta promete 0.68
+cuando desertan 48 de cada 100.
+
+| | Modelo | Corregida |
+|---|---|---|
+| Probabilidad media (tasa real: 0.313) | 0.463 | 0.319 |
+| ECE (0 = calibración perfecta) | 0.150 | 0.028 |
+| Brier (constante: 0.2152) | 0.2064 | 0.1820 |
+| Alertas y recall | 716 · 0.694 | 716 · 0.694 |
+
+La corrección resta a todos el mismo valor en log-odds
+(`log(no desertores / desertores)` en train = 0.765). Como es un desplazamiento igual
+para todos, **no cambia el orden de los aprendices**: con el umbral equivalente (0.310)
+alerta exactamente a los mismos 716 y el recall sigue en 0.694. Lo único que cambia es
+el número que se muestra.
+
+Con el generador v2 se puede comparar contra la probabilidad real de cada aprendiz, que
+ningún modelo puede conocer: el error absoluto medio baja de 0.162 a 0.075, y la
+correlación de orden con la probabilidad real es 0.889.
+
+**Qué significa para quien usa la API.** Hoy la probabilidad sirve para **ordenar** a
+los aprendices, no para decir "este tiene 70 % de riesgo". Mientras no se decida
+corregirla, es mejor leerla como una posición en la lista. Aplicar la corrección, o
+mostrar bandas de prioridad en vez del número, queda como decisión pendiente del
+equipo; también falta probar una calibración ajustada (Platt o isotónica) con
+predicciones out-of-fold, que podría corregir lo que el desplazamiento no alcanza.
+
 ### Por modalidad
 
 | Modalidad | Aprendices | Desertores | Alertas | Recall | Precisión |

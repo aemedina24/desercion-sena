@@ -1,6 +1,7 @@
 stages:
   # Datos sintéticos v2: la semilla y las fórmulas están en el YAML de params.
-  # verdad.parquet no es dependencia de ninguna otra etapa: el modelo nunca la ve.
+  # verdad.parquet nunca llega al modelo: no es dependencia de process, train ni
+  # tune. Solo la lee calibrate, que es una etapa de reporte.
   generate:
     cmd: uv run python -m desercion.generar_datos
     deps:
@@ -71,6 +72,23 @@ stages:
     outs:
       - models/referencia.json
       - reports/importancia_variables.json:
+          cache: false
+  # No toca el modelo ni el umbral: solo mide si la probabilidad es creíble.
+  calibrate:
+    cmd: uv run python -m desercion.calibracion
+    deps:
+      - models/modelo.skops
+      - data/features/train.parquet
+      - data/features/test.parquet
+      # Solo para comparar con la probabilidad real del generador; nunca entrena.
+      - data/raw/verdad.parquet
+      - reports/metricas_modelo_base.json
+      - src/desercion/calibracion.py
+      - src/desercion/modelado.py
+    outs:
+      - reports/calibracion.json:
+          cache: false
+      - reports/figures/calibracion.png:
           cache: false
   monitor:
     cmd: uv run python -m desercion.monitor
