@@ -57,7 +57,8 @@ def predecir_riesgo(
     - `alerta`: probabilidad >= umbral, el mismo criterio de evaluate.py.
     - `factores`: los `n_factores` que más suben el riesgo frente al aprendiz
       promedio de train, con aporte de al menos APORTE_MINIMO.
-    - `medidas`: solo para quienes tienen alerta (recomendaciones.py).
+    - `medidas`: solo para quienes tienen alerta (recomendaciones.py). Un factor
+      cuyo dato está vacío se muestra, pero no genera medida (factores_con_dato).
     - `plan_de_accion`: qué hacer y qué decir por cada medida, en el mismo orden.
     """
     if not 1 <= n_factores <= MAX_FACTORES:
@@ -73,8 +74,9 @@ def predecir_riesgo(
         principales_factores(fila[fila >= APORTE_MINIMO], n=n_factores)
         for _, fila in tabla_aportes.iterrows()
     ]
-    medidas = [medidas_para(f, bool(a)) for f, a in zip(factores, alerta, strict=True)]
-    planes = [plan_para(f, bool(a)) for f, a in zip(factores, alerta, strict=True)]
+    con_dato = factores_con_dato(factores, x)
+    medidas = [medidas_para(f, bool(a)) for f, a in zip(con_dato, alerta, strict=True)]
+    planes = [plan_para(f, bool(a)) for f, a in zip(con_dato, alerta, strict=True)]
 
     return pd.DataFrame(
         {
@@ -87,6 +89,24 @@ def predecir_riesgo(
         },
         columns=COLUMNAS_PREDICCION,
     )
+
+
+def factores_con_dato(factores: list[list[dict]], x: pd.DataFrame) -> list[list[dict]]:
+    """Quita de cada aprendiz los factores cuyo valor está vacío.
+
+    Un dato vacío no es un problema del aprendiz: su aporte viene del indicador
+    de faltante que agrega el imputador. Por ejemplo, `asistencia_porcentaje` es
+    nula en todos los virtuales (no tienen sesiones) y ese indicador sube el
+    riesgo, así que la medida de inasistencia les llegaba con un guion que dice
+    "te he echado de menos en las sesiones". El factor se sigue mostrando, porque
+    explica la probabilidad; solo deja de activar medidas y planes.
+    """
+    vacios = x.isna().to_numpy()
+    posicion = {columna: i for i, columna in enumerate(x.columns)}
+    return [
+        [f for f in fila if not vacios[i, posicion[f["variable"]]]]
+        for i, fila in enumerate(factores)
+    ]
 
 
 def validar_referencia(modelo: Pipeline, referencia: pd.Series) -> None:

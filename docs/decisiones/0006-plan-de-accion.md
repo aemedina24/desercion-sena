@@ -57,6 +57,12 @@ Cada medida de `config/recomendaciones/medidas.yaml`, incluida la general, lleva
   que el aprendiz promedio", no "cero": un aprendiz con pocos ingresos a la
   plataforma puede recibir el guion de inactividad aunque sí haya entrado. Por eso
   el guion empieza con una pregunta y el instructor lo adapta.
+- **Un dato vacío no activa un plan.** El imputador agrega un indicador de faltante
+  que puede subir el riesgo, pero eso no describe algo que le pase al aprendiz: la
+  asistencia es nula en todos los virtuales porque no tienen sesiones. Con los datos
+  v2, 397 virtuales con alerta recibían el guion "te he echado de menos en las
+  sesiones". El factor se sigue mostrando, pero no genera medida
+  (`prediccion.factores_con_dato`); si no queda ninguno, va el plan general.
 - La respuesta de la API es más larga: hasta tres planes por aprendiz con alerta.
 
 ## Pendiente

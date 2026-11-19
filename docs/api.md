@@ -145,9 +145,13 @@ cohorte no tiene aprendices activos.
 - **`medidas`:** solo cuando hay alerta. Hasta 3, en orden de aporte y sin repetir (dos
   factores pueden compartir medida). Se definen en `config/recomendaciones/medidas.yaml`
   y nunca se sugieren por características personales como la edad o el nivel
-  educativo. `porcentaje_actividades_entregadas` tampoco genera medida: por
-  colinealidad sale como factor en aprendices que entregan más que el promedio (ver la
-  [model card](model_card.md)).
+  educativo. Tampoco generan medida las variables a las que la colinealidad les invierte
+  el signo (con los datos v2: `porcentaje_actividades_aprobadas`,
+  `tasa_finalizacion_previa` y `abandono_ultimo_curso`), porque salen como factor en
+  aprendices que están mejor que el promedio (ver la [model card](model_card.md)). Un
+  factor cuyo dato está vacío se muestra en `factores`, pero no genera medida: la
+  asistencia de los virtuales es nula porque no tienen sesiones, y sin ese filtro les
+  llegaba el guion de inasistencia.
 - **`plan_de_accion`:** un plan por cada medida, en el mismo orden; vacío si no hay
   alerta ([ADR 006](decisiones/0006-plan-de-accion.md)). Cada plan trae:
 

@@ -1,7 +1,7 @@
 """Pruebas de prediccion.py, recomendaciones.py y la referencia de explain.
 
 Como en test_evaluate_explain.py, usan un Pipeline entrenado con datos
-sintéticos, así que corren en el CI. Solo las dos últimas pruebas usan el modelo
+sintéticos, así que corren en el CI. Solo las tres últimas pruebas usan el modelo
 y los datos reales (se omiten si no se ha hecho `uv run dvc pull`).
 """
 
@@ -30,7 +30,12 @@ from desercion.modelado import (
     separar_x_y,
     tipos_de_columnas,
 )
-from desercion.prediccion import APORTE_MINIMO, COLUMNAS_PREDICCION, predecir_riesgo
+from desercion.prediccion import (
+    APORTE_MINIMO,
+    COLUMNAS_PREDICCION,
+    factores_con_dato,
+    predecir_riesgo,
+)
 from desercion.recomendaciones import (
     CAMPOS_PLAN,
     MEDIDA_GENERAL,
@@ -231,6 +236,31 @@ CATEGORICAS_CON_MEDIDA = {
 }
 
 
+def test_factor_con_dato_vacio_no_genera_medida():
+    # Un virtual no tiene asistencia: el factor se muestra, pero sin medida.
+    x = pd.DataFrame(
+        {"asistencia_porcentaje": [np.nan, 0.5], "dias_sin_ingreso": [9.0, 9.0]}
+    )
+    asistencia = {"variable": "asistencia_porcentaje", "aporte": 0.3}
+    inactividad = {"variable": "dias_sin_ingreso", "aporte": 0.1}
+    factores = [[asistencia, inactividad], [asistencia, inactividad]]
+
+    con_dato = factores_con_dato(factores, x)
+
+    assert con_dato == [[inactividad], [asistencia, inactividad]]
+    assert factores[0] == [asistencia, inactividad], "No debe modificar la entrada"
+    assert medidas_para(con_dato[0], alerta=True) == medidas_para(
+        [inactividad], alerta=True
+    )
+
+
+def test_si_el_unico_factor_esta_vacio_va_la_medida_general():
+    x = pd.DataFrame({"asistencia_porcentaje": [np.nan]})
+    factores = [[{"variable": "asistencia_porcentaje", "aporte": 0.3}]]
+    plan = plan_para(factores_con_dato(factores, x)[0], alerta=True)
+    assert [p["medida"] for p in plan] == [MEDIDA_GENERAL]
+
+
 def test_cada_variable_con_medida_declara_su_direccion():
     # Una variable nueva con medida obliga a decir hacia dónde sube el riesgo.
     con_medida = set(cargar_medidas()["por_variable"])
@@ -389,8 +419,8 @@ def test_factores_con_medida_van_en_la_direccion_esperada():
     # Con el modelo real: si una variable con medida sale como factor, el valor
     # del aprendiz debe estar del lado malo del promedio de train. Si no, el
     # modelo le dio el signo invertido y hay que pasarla a `sin_medida`.
-    # Los nulos se saltan: el factor viene del indicador de dato faltante, no
-    # del valor.
+    # Los nulos se saltan: su factor viene del indicador de dato faltante y no
+    # genera medida (prueba siguiente).
     umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
     test = pd.read_parquet(RUTA_TEST)
     modelo = cargar_modelo()
@@ -416,4 +446,31 @@ def test_factores_con_medida_van_en_la_direccion_esperada():
     assert not invertidos, (
         "Factores con medida en aprendices que están mejor que el promedio "
         f"(signo invertido en el modelo): {invertidos}"
+    )
+
+
+@requiere_artefactos
+def test_ninguna_medida_sale_de_un_dato_vacio():
+    # Con el modelo real: cada medida debe venir de un factor con dato. Antes,
+    # 397 virtuales con alerta recibían el guion de inasistencia porque su
+    # asistencia es nula (no tienen sesiones).
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    test = pd.read_parquet(RUTA_TEST)
+    riesgo = predecir_riesgo(
+        test, modelo=cargar_modelo(), referencia=cargar_referencia(), umbral=umbral
+    )
+    medida_por_variable = cargar_medidas()["medida_por_variable"]
+    x, _ = separar_x_y(test)
+
+    for posicion, fila in enumerate(riesgo.itertuples()):
+        activadas = {
+            medida_por_variable.get(f["variable"])
+            for f in fila.factores
+            if pd.notna(x[f["variable"]].iloc[posicion])
+        }
+        for plan in fila.plan_de_accion:
+            assert plan["medida"] == MEDIDA_GENERAL or plan["medida"] in activadas
+    virtuales = riesgo[test["modalidad"].to_numpy() == "virtual"]
+    assert not any(
+        p["medida"] == "inasistencia" for ps in virtuales["plan_de_accion"] for p in ps
     )
