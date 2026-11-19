@@ -251,6 +251,10 @@ stages:
       hash: md5
       md5: ea90fc294f90a1efda8166c80c10a3b5
       size: 284680
+    - path: data/raw/verdad.parquet
+      hash: md5
+      md5: 54b02e54fa739b875fba60f94cd328cd
+      size: 361608
     - path: models/modelo.skops
       hash: md5
       md5: 9b58e3fead5766bcb03c85931f27a882

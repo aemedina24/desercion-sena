@@ -36,7 +36,7 @@ Reglas que aplica `src/desercion/process.py`:
 | Salida | Contenido | Quién la usa |
 |---|---|---|
 | `data/raw/aprendices.parquet` | 10.000 aprendices × 50 columnas | Etapa `process` |
-| `data/raw/verdad.parquet` | `id_aprendiz`, `constancia`, `compromiso`, `probabilidad_desercion` | Solo análisis: ninguna etapa del pipeline la lee |
+| `data/raw/verdad.parquet` | `id_aprendiz`, `constancia`, `compromiso`, `probabilidad_desercion` | Solo análisis: el modelo nunca la ve; la lee solo `calibrate` (etapa de reporte) |
 
 **Cómo se generan:**
 
