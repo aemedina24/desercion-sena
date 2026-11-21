@@ -40,6 +40,30 @@ class Factor(BaseModel):
     aporte: float = Field(gt=0)
 
 
+class Accion(BaseModel):
+    """Qué hacer y qué decir ante una medida sugerida (ADR 0006).
+
+    Los textos salen de config/recomendaciones/medidas.yaml. Son una guía para
+    el instructor, que la adapta al aprendiz: no una decisión automática.
+    """
+
+    # Nombre de la medida en medidas.yaml (por ejemplo, contacto_por_inactividad).
+    medida: str
+    # Qué hacer y por qué canal.
+    accion: str
+    # En cuántos días hacerlo, contados desde que el instructor ve la alerta.
+    plazo_dias: int = Field(ge=1)
+    # Guion corto: apertura, pregunta abierta y propuesta. Nunca menciona la
+    # alerta ni la deserción.
+    decir: list[str] = Field(min_length=1)
+    evitar: str
+    si_no_responde: str
+    # Qué anotar en el seguimiento del aprendiz.
+    registrar: str
+    # En cuántos días volver a revisar.
+    seguimiento_dias: int = Field(ge=1)
+
+
 class RiesgoAprendiz(BaseModel):
     """Riesgo de deserción de un aprendiz en la fecha de corte."""
 
@@ -50,6 +74,8 @@ class RiesgoAprendiz(BaseModel):
     umbral: float = Field(gt=0, lt=1)
     factores: list[Factor] = Field(default_factory=list, max_length=5)
     medidas: list[str] = Field(default_factory=list)
+    # Un plan por cada medida, en el mismo orden. Vacío si no hay alerta.
+    plan_de_accion: list[Accion] = Field(default_factory=list)
 
 
 class RiesgoCohorte(BaseModel):

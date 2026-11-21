@@ -41,8 +41,8 @@ RUTA_TRAIN = RAIZ / "data" / "features" / "train.parquet"
 RUTA_TEST = RAIZ / "data" / "features" / "test.parquet"
 
 # Pisos de rendimiento en test: barandas para detectar un modelo roto, no metas.
-# Valores actuales (ADR 0002): ROC-AUC 0.735, PR-AUC 0.576, recall 0.686 y
-# recall presencial 0.525. Si un cambio los baja de aquí, hay que explicarlo.
+# Valores actuales (datos v2, ADR 0002): ROC-AUC 0.742, PR-AUC 0.564, recall 0.694 y
+# recall presencial 0.560. Si un cambio los baja de aquí, hay que explicarlo.
 ROC_AUC_MINIMO = 0.70
 PR_AUC_MINIMO = 0.50
 RECALL_MINIMO = 0.60
@@ -236,11 +236,13 @@ def test_recall_minimo_por_modalidad(modelo_real, metricas_registradas, modalida
     assert recall >= RECALL_MINIMO_POR_MODALIDAD
 
 
-# Dirección esperada (+1 = sube el riesgo). No se incluye
-# porcentaje_actividades_entregadas: por su correlación de 0.95 con aprobadas su
-# coeficiente sale positivo (cuaderno 02), así que su efecto aislado no se interpreta.
+# Dirección esperada (+1 = sube el riesgo). De las dos variables de actividades
+# (entregadas y aprobadas, correlación de 0.94) solo se prueba una: el modelo no
+# puede repartir el efecto entre ambas y a una le sale el coeficiente positivo.
+# Con los datos de la v1 era entregadas; con los de la v2 es aprobadas, así que
+# su efecto aislado no se interpreta.
 DIRECCIONES = [
-    ("porcentaje_actividades_aprobadas", 0.2, -1),
+    ("porcentaje_actividades_entregadas", 0.2, -1),
     ("promedio_calificaciones", 0.5, -1),
     ("ingresos_plataforma_ultimos_7d", 3, -1),
     ("evaluaciones_no_presentadas", 1, +1),

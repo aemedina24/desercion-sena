@@ -4,9 +4,10 @@ Ficha del modelo para quien lo vaya a usar o revisar: qué hace, con qué datos 
 entrenó, cómo rinde y dónde no conviene confiar en él. Se actualiza en el mismo PR
 que cambie el modelo, el umbral o los datos.
 
-**Versión descrita:** `models/modelo.skops` con md5 `f0dd9683c0396c196eb6cd409b605c29`
-(el de `dvc.lock`; la API lo reporta en `/health` como `version_modelo`). Actualizada el
-9 de noviembre de 2026.
+**Versión descrita:** `models/modelo.skops` con md5 `9b58e3fead5766bcb03c85931f27a882`
+(el de `dvc.lock`; la API lo reporta en `/health` como `version_modelo`), entrenado con
+los datos del generador v2. Actualizada el 19 de noviembre de 2026. La versión entregada
+el 11 de noviembre (datos v1) está en la etiqueta `v1.0.0`.
 
 ## Resumen
 
@@ -15,7 +16,7 @@ que cambie el modelo, el umbral o los datos.
 | **Tarea** | Clasificación binaria: ¿desertará el aprendiz después de la fecha de corte? |
 | **Modelo** | Regresión logística (`class_weight="balanced"`, `C = 1.0`) |
 | **Momento de la predicción** | Alrededor de la semana 4 de la ficha (`fecha_corte`) |
-| **Salida** | Probabilidad de deserción y alerta (sí/no) con umbral **0.461** |
+| **Salida** | Probabilidad de deserción y alerta (sí/no) con umbral **0.491** |
 | **Código** | `src/desercion/train_model.py`, `src/desercion/modelado.py` |
 | **Configuración** | `config/model/logistic.yaml` |
 | **Registro** | MLflow (DagsHub), experimento `desercion-seguimiento`, run `modelo-base-logistica` |
@@ -35,9 +36,10 @@ que cambie el modelo, el umbral o los datos.
 
 ## Datos
 
-- **Origen:** `data/raw/aprendices.parquet`, versionado con DVC. Limpieza y roles de
-  cada variable en [datos.md](datos.md).
-- **Exclusiones:** traslados y cancelaciones (482 registros), porque no son la
+- **Origen:** `data/raw/aprendices.parquet`, que produce la etapa `generate` con la
+  semilla y las fórmulas de `config/data/generador.yaml` (generador v2). Limpieza,
+  generación y roles de cada variable en [datos.md](datos.md).
+- **Exclusiones:** traslados y cancelaciones (525 registros), porque no son la
   deserción que se predice.
 - **Variables:** 39 (perfil, historial en el SENA, conectividad, seguimiento hasta la
   fecha de corte y 3 derivadas en `features.py`). `id_aprendiz` e `id_cohorte` no
@@ -46,14 +48,14 @@ que cambie el modelo, el umbral o los datos.
 
 | Conjunto | Cohortes | Filas | Desertores |
 |---|---|---|---|
-| Train | 2023-T1 a 2025-T2 | 7974 | 31.0 % |
-| Test | 2025-T3 y 2025-T4 | 1544 | 493 (31.9 %) |
+| Train | 2023-T1 a 2025-T2 | 7892 | 2506 (31.8 %) |
+| Test | 2025-T3 y 2025-T4 | 1583 | 496 (31.3 %) |
 
 ## Umbral de decisión
 
 El umbral se eligió **sin mirar test**, con predicciones out-of-fold en train
 (`GroupKFold`, 5 folds por cohorte): entre los umbrales que alcanzan recall ≥ 0.70, el
-de mayor precisión. Resultado: **0.461** (recall out-of-fold 0.701, precisión 0.472).
+de mayor precisión. Resultado: **0.491** (recall out-of-fold 0.700, precisión 0.500).
 
 Se prioriza el recall porque en alerta temprana perder a un desertor cuesta más que
 una alerta de más. El objetivo se cambia en `config/model/logistic.yaml`
@@ -63,23 +65,62 @@ una alerta de más. El objetivo se cambia en `config/model/logistic.yaml`
 
 | Métrica | Valor |
 |---|---|
-| Recall | 0.686 |
-| Precisión | 0.481 |
-| F1 | 0.566 |
-| ROC-AUC | 0.735 |
-| PR-AUC | 0.576 (azar: 0.319) |
+| Recall | 0.694 |
+| Precisión | 0.480 |
+| F1 | 0.568 |
+| ROC-AUC | 0.742 |
+| PR-AUC | 0.564 (azar: 0.313) |
 
-En la práctica, de los 493 desertores de test el modelo alerta a unos **338** y deja
-sin alertar a unos 155. De cada 100 alertas, unas 48 corresponden a desertores reales
-(al azar serían 32).
+En la práctica, de los 496 desertores de test el modelo alerta a **344** y deja sin
+alertar a 152, con 716 alertas. De cada 100 alertas, unas 48 corresponden a desertores
+reales (al azar serían 31).
+
+**Techo conocido.** Con el generador v2 se sabe la probabilidad real de cada aprendiz
+(`data/raw/verdad.parquet`). Un modelo que la conociera llegaría a ROC-AUC 0.762 y PR-AUC
+0.613, y con las mismas 716 alertas tendría recall 0.692. El modelo ya rinde cerca de ese
+techo: lo que falta no se puede saber en la semana 4.
+
+## Calibración: la probabilidad está inflada
+
+> Etapa `calibrate`: `reports/calibracion.json` y `reports/figures/calibracion.png`.
+
+El modelo se entrena con `class_weight="balanced"`, que le da a cada desertor más peso
+del que le corresponde para subir el recall. El efecto secundario es que **la
+probabilidad que muestra la API no se puede leer como un porcentaje**: su media es 0.46
+cuando deserta el 31 % de los aprendices, y entre los que reciben alerta promete 0.68
+cuando desertan 48 de cada 100.
+
+| | Modelo | Corregida |
+|---|---|---|
+| Probabilidad media (tasa real: 0.313) | 0.463 | 0.319 |
+| ECE (0 = calibración perfecta) | 0.150 | 0.028 |
+| Brier (constante: 0.2152) | 0.2064 | 0.1820 |
+| Alertas y recall | 716 · 0.694 | 716 · 0.694 |
+
+La corrección resta a todos el mismo valor en log-odds
+(`log(no desertores / desertores)` en train = 0.765). Como es un desplazamiento igual
+para todos, **no cambia el orden de los aprendices**: con el umbral equivalente (0.310)
+alerta exactamente a los mismos 716 y el recall sigue en 0.694. Lo único que cambia es
+el número que se muestra.
+
+Con el generador v2 se puede comparar contra la probabilidad real de cada aprendiz, que
+ningún modelo puede conocer: el error absoluto medio baja de 0.162 a 0.075, y la
+correlación de orden con la probabilidad real es 0.889.
+
+**Qué significa para quien usa la API.** Hoy la probabilidad sirve para **ordenar** a
+los aprendices, no para decir "este tiene 70 % de riesgo". Mientras no se decida
+corregirla, es mejor leerla como una posición en la lista. Aplicar la corrección, o
+mostrar bandas de prioridad en vez del número, queda como decisión pendiente del
+equipo; también falta probar una calibración ajustada (Platt o isotónica) con
+predicciones out-of-fold, que podría corregir lo que el desplazamiento no alcanza.
 
 ### Por modalidad
 
 | Modalidad | Aprendices | Desertores | Alertas | Recall | Precisión |
 |---|---|---|---|---|---|
-| Mixta | 307 | 90 | 140 | 0.756 | 0.486 |
-| Virtual | 774 | 302 | 440 | 0.719 | 0.493 |
-| Presencial | 463 | 101 | 122 | **0.525** | 0.434 |
+| Mixta | 335 | 105 | 149 | 0.657 | 0.463 |
+| Virtual | 794 | 307 | 456 | 0.743 | 0.500 |
+| Presencial | 454 | 84 | 111 | **0.560** | 0.423 |
 
 ## Equidad
 
@@ -91,15 +132,23 @@ por bootstrap, porque los grupos son pequeños. Detalle en el cuaderno 04 y en e
 
 | Grupo | Razón de recall (IC 95 %) | ¿Cumple? |
 |---|---|---|
-| Sexo (solo se audita, no entra al modelo) | 0.96 (0.85–1.00) | Sí |
-| Modalidad, umbral global (v1) | 0.69 (0.55–0.84) | No: presencial queda atrás |
-| Modalidad, umbral por modalidad (evaluado) | 0.83 (0.71–0.93) | No concluyente: cumple el 61 % de las réplicas |
+| Sexo (solo se audita, no entra al modelo) | 0.955 (0.85–1.00) | Sí: 99.8 % de las réplicas |
+| Modalidad, umbral global (en uso) | 0.753 (0.60–0.89) | No: presencial queda atrás (25 % de las réplicas) |
+| Modalidad, modelo perfecto con umbral global (solo v2) | 0.810 (0.64–0.94) | En el límite: 50 % de las réplicas |
+| Modalidad, umbral por modalidad (evaluado) | 0.890 (0.74–0.97) | Casi: 85 % de las réplicas |
 
-El umbral por modalidad (mixta 0.44, presencial 0.34, virtual 0.53) redistribuye la
-detección en vez de mejorarla: presencial gana 16 desertores detectados y virtual pierde
-23, y las alertas en presencial pasan de 122 a 206. Por eso la v1 mantiene un umbral
-global y deja el umbral por modalidad como siguiente versión. La brecha en presencial
-aparece también en train: no es casualidad de las cohortes de prueba.
+Recall por modalidad con el umbral global: mixta 0.657, presencial 0.560 y virtual 0.743.
+La brecha en presencial es sistemática (también aparece en train con out-of-fold) y
+**viene sobre todo de los datos**: un modelo perfecto que conociera la probabilidad real
+de cada aprendiz (`verdad.parquet`), con las mismas 716 alertas, también deja atrás a
+presencial (0.583 frente a 0.720 en virtual). Allí se deserta menos y los desertores se
+parecen más a quienes no desertan, así que un modelo mejor no cierra la brecha.
+
+Un umbral por modalidad (mixta 0.491, presencial 0.354, virtual 0.539) casi la cierra,
+pero redistribuye la detección: presencial gana 15 desertores detectados y virtual pierde
+21, y las alertas en presencial pasan de 111 a 181. Por eso se mantiene un umbral global
+y el umbral por modalidad queda propuesto como decisión institucional
+([ADR 0003](decisiones/0003-umbral-y-equidad.md), revisión con los datos v2).
 
 ## Explicación de cada alerta y medidas
 
@@ -110,42 +159,58 @@ menos la del aprendiz promedio (`explain.py` lo verifica).
 
 La API muestra hasta 3 factores con aporte de al menos 0.05 log-odds y, solo si hay
 alerta, hasta 3 medidas de `config/recomendaciones/medidas.yaml`. Las 10 medidas cubren
-26 variables; las otras 13 explican el riesgo, pero no generan medida. Nunca se sugiere
-una medida por características personales (edad, nivel educativo, modalidad).
+24 variables; las otras 15 explican el riesgo, pero no generan medida. Nunca se sugiere
+una medida por características personales (edad, nivel educativo, modalidad), ni por
+una variable a la que la colinealidad le invierte el signo. Un factor cuyo dato está
+vacío se muestra, pero tampoco genera medida (la asistencia de los virtuales).
 
-Importancia media en test (|aporte| en log-odds): actividades aprobadas 0.60,
-actividades entregadas 0.25, promedio de calificaciones 0.15, evaluaciones no
-presentadas 0.15, ingresos a la plataforma en 7 días 0.15, asistencia 0.14.
+Cada medida trae además un plan de acción para el instructor (qué hacer, en qué plazo,
+qué decir, qué evitar, qué hacer si el aprendiz no responde, qué registrar y cuándo volver
+a revisar; [ADR 0006](decisiones/0006-plan-de-accion.md)). Los guiones son una propuesta
+del equipo: no están validados con instructores ni con Bienestar al Aprendiz, y nada
+demuestra que reduzcan la deserción.
+
+Importancia media en test (|aporte| en log-odds): actividades entregadas 0.46,
+asistencia 0.28, promedio de calificaciones 0.24, modalidad 0.18, tasa de aprobación de
+lo entregado 0.16, tasa de finalización previa 0.14. La importancia de la asistencia
+viene sobre todo de su indicador de dato faltante, que es lo mismo que ser virtual.
 
 ## Limitaciones y riesgos
 
-- **Techo de rendimiento:** tres modelos distintos (logística, LightGBM, red neuronal)
-  llegan a la misma PR-AUC (~0.56–0.58). El límite está en la información disponible,
-  no en el modelo; mejorar exige variables nuevas.
-- **Brecha en presencial:** el modelo detecta a casi la mitad menos de desertores en
-  presencial que en las otras modalidades. En esa modalidad conviene complementar la
+- **Techo de rendimiento:** el modelo está cerca de lo que permite la información de la
+  semana 4 (ROC-AUC 0.742 frente a 0.762 de un modelo que conociera la probabilidad
+  real; ver «Rendimiento en test»). Mejorar exige variables nuevas, no otro modelo.
+- **Brecha en presencial:** el modelo detecta menos desertores en presencial (0.560)
+  que en virtual (0.743). Con el generador v2 se conoce la causa: la modalidad
+  presencial resta 0.30 en la fórmula de deserción, así que allí desertan menos y son
+  más difíciles de distinguir. En esa modalidad conviene complementar la
   alerta con el criterio del instructor.
-- **Cambio en el tiempo:** en test el recall (0.686) queda por debajo del alcanzado en
-  validación cruzada (0.701). El monitoreo no encuentra drift en ninguna variable (PSI
-  máximo 0.02) y el recall por cohorte es 0.668 en 2025-T3 (IC 0.61–0.73, «revisar») y
-  0.703 en 2025-T4: la diferencia es variación de muestreo, no un cambio en los datos.
-  Hay que seguir midiendo cada cohorte nueva y reentrenar si el recall cae de forma
-  sostenida.
+- **Cambio en el tiempo:** el generador v2 no cambia entre cohortes, y el monitoreo no
+  encuentra drift en ninguna variable (PSI máximo 0.023). El recall por cohorte es 0.691
+  en 2025-T3 (IC 0.63–0.75) y 0.696 en 2025-T4 (IC 0.64–0.76): debajo de 0.70, pero con
+  intervalos que lo incluyen y al nivel del techo (0.692), así que el monitoreo las marca
+  «vigilar», no «revisar» ([ADR 0005](decisiones/0005-monitoreo-sin-evidently.md)). Es
+  variación de muestreo, no un cambio en los datos. Con datos reales hay que seguir midiendo cada cohorte nueva y
+  reentrenar si el recall cae de forma sostenida.
 - **Colinealidad en los factores:** `porcentaje_actividades_entregadas`,
-  `porcentaje_actividades_aprobadas` y `tasa_aprobacion_entregas` dicen casi lo mismo.
-  Con las otras dos fijas, entregar más termina sumando riesgo: en test, 623 aprendices
-  tienen actividades entregadas como factor con una media de 91 % entregado, frente al
-  75 % general. La variable se muestra como factor, pero no genera medida, para no
-  pedirle «entregar las pendientes» a quien ya entregó. La solución de fondo es agrupar
-  los factores por tema (v2).
+  `porcentaje_actividades_aprobadas` y `tasa_aprobacion_entregas` dicen casi lo mismo, y
+  a una le sale el signo invertido: con la v2, aprobar más termina sumando riesgo (277
+  aprendices de test la tienen como factor, con 92 % aprobado frente a 64 %). Pasa lo
+  mismo con `tasa_finalizacion_previa` y `abandono_ultimo_curso` frente a
+  `n_cursos_abandonados`. Esas variables se muestran como factor, pero no generan
+  medida, y una prueba verifica la dirección de cada variable que sí la genera. La
+  solución de fondo es agrupar los factores por tema.
 - **Datos de encuesta incompletos:** `horas_disponibles_estudio`,
-  `dificultad_economica_reportada` y `calidad_internet` faltan en 679 aprendices; el
-  modelo trata la ausencia como información.
+  `dificultad_economica_reportada` y `calidad_internet` faltan en 581 aprendices, y no
+  al azar (sin encuesta deserta el 36,5 %, con encuesta el 31,4 %); el modelo trata la
+  ausencia como información.
 - **Falsos positivos:** algo más de la mitad de las alertas son aprendices que no
-  desertan (364 de 702 en test). Las acciones de apoyo deben ser útiles también para
+  desertan (372 de 716 en test). Las acciones de apoyo deben ser útiles también para
   ellos.
-- **Datos sintéticos:** las cifras describen al generador de datos, no al SENA real. Lo
-  que se transfiere es el método; con datos reales hay que reentrenar y volver a auditar
+- **Datos sintéticos:** las cifras describen al generador de datos, no al SENA real. Que
+  el generador sea propio permite saber qué es señal y qué es ruido (por ejemplo, el
+  techo de rendimiento), pero también que el modelo encuentra justo lo que se puso en las
+  fórmulas. Lo que se transfiere es el método; con datos reales hay que reentrenar y volver a auditar
   la equidad.
 - **Sin autenticación en la API:** en la demo cualquiera puede consultar cualquier
   cohorte. En producción habría que restringir cada instructor a sus grupos

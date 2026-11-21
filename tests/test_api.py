@@ -27,7 +27,7 @@ from desercion.api.main import (
     crear_app,
     md5_archivo,
 )
-from desercion.api.schemas import Factor, RiesgoAprendiz, RiesgoCohorte, Salud
+from desercion.api.schemas import Accion, Factor, RiesgoAprendiz, RiesgoCohorte, Salud
 from desercion.explain import guardar_referencia, referencia_train
 from desercion.features import agregar_variables, quitar_columnas
 from desercion.modelado import guardar_modelo, separar_x_y, tipos_de_columnas
@@ -81,6 +81,19 @@ def probabilidad_conocida(id_aprendiz: str) -> float:
     return (int(id_aprendiz[2:]) % 20) / 20 + 0.01
 
 
+# Plan de acción del predictor falso: los campos del esquema Accion.
+PLAN_FALSO = {
+    "medida": "general",
+    "accion": "Contactar al aprendiz",
+    "plazo_dias": 5,
+    "decir": ["Quiero saber cómo te has sentido en la formación."],
+    "evitar": "Suponer una causa",
+    "si_no_responde": "Segundo intento por otro canal",
+    "registrar": "Situación que contó el aprendiz",
+    "seguimiento_dias": 14,
+}
+
+
 def predictor_falso(aprendices: pd.DataFrame) -> pd.DataFrame:
     probabilidad = aprendices["id_aprendiz"].map(probabilidad_conocida).to_numpy()
     alerta = probabilidad >= UMBRAL
@@ -98,6 +111,7 @@ def predictor_falso(aprendices: pd.DataFrame) -> pd.DataFrame:
             "medidas": [
                 ["Contactar al aprendiz esta semana"] if a else [] for a in alerta
             ],
+            "plan_de_accion": [[dict(PLAN_FALSO)] if a else [] for a in alerta],
         }
     )
 
@@ -214,6 +228,30 @@ def test_riesgo_de_un_aprendiz(cliente):
     assert cuerpo["umbral"] == UMBRAL
     assert cuerpo["factores"][0]["variable"] == "porcentaje_actividades_aprobadas"
     assert cuerpo["medidas"]
+    assert cuerpo["plan_de_accion"] == [PLAN_FALSO]
+
+
+def test_sin_alerta_no_hay_plan_de_accion(cliente):
+    cuerpo = cliente.get("/aprendices/A-000020/riesgo").json()  # probabilidad 0.01
+    assert cuerpo["alerta"] is False
+    assert cuerpo["medidas"] == []
+    assert cuerpo["plan_de_accion"] == []
+
+
+def test_health_503_si_el_predictor_no_entrega_el_plan_de_accion(archivos):
+    def sin_plan(df):
+        return predictor_falso(df).drop(columns="plan_de_accion")
+
+    respuesta = _salud(archivos, predecir=sin_plan)
+    assert respuesta.status_code == 503
+    assert "['plan_de_accion']" in respuesta.json()["detalle"]
+
+
+def test_la_documentacion_describe_el_plan_de_accion(cliente):
+    esquemas = cliente.get("/openapi.json").json()["components"]["schemas"]
+    assert set(esquemas["Accion"]["properties"]) == set(PLAN_FALSO)
+    plan = esquemas["RiesgoAprendiz"]["properties"]["plan_de_accion"]
+    assert plan["items"]["$ref"].endswith("/Accion")
 
 
 def test_aprendiz_inexistente_404(cliente):
@@ -358,12 +396,16 @@ def test_predictor_real_entrega_factores_y_medidas(archivos):
 
     for aprendiz in cuerpo["aprendices"]:
         assert aprendiz["alerta"] is (aprendiz["probabilidad"] >= UMBRAL)
-    # Quien tiene alerta llega con sus factores y al menos una medida; sin alerta,
-    # no hay medidas (recomendaciones.py).
+    # Quien tiene alerta llega con sus factores, al menos una medida y un plan de
+    # acción por medida; sin alerta, no hay medidas ni plan (recomendaciones.py).
     for aprendiz in con_alerta:
         assert aprendiz["factores"]
         assert aprendiz["medidas"]
+        assert len(aprendiz["plan_de_accion"]) == len(aprendiz["medidas"])
+        for accion in aprendiz["plan_de_accion"]:
+            assert accion["accion"] and accion["decir"]
     assert all(a["medidas"] == [] for a in sin_alerta)
+    assert all(a["plan_de_accion"] == [] for a in sin_alerta)
 
 
 def test_quien_menos_aprueba_tiene_ese_factor_primero(archivos):
@@ -407,8 +449,27 @@ def test_riesgo_aprendiz_valido():
         umbral=UMBRAL,
         factores=[Factor(variable="porcentaje_actividades_aprobadas", aporte=0.41)],
         medidas=["Contactar al aprendiz esta semana"],
+        plan_de_accion=[Accion(**PLAN_FALSO)],
     )
     assert riesgo.factores[0].variable == "porcentaje_actividades_aprobadas"
+    assert riesgo.plan_de_accion[0].medida == "general"
+
+
+def test_riesgo_aprendiz_sin_plan_de_accion_queda_vacio():
+    # El campo es opcional: quien no tiene alerta no trae plan.
+    riesgo = RiesgoAprendiz(
+        id_aprendiz="A-000123", probabilidad=0.1, alerta=False, umbral=UMBRAL
+    )
+    assert riesgo.plan_de_accion == []
+
+
+@pytest.mark.parametrize(
+    ("campo", "valor"),
+    [("plazo_dias", 0), ("seguimiento_dias", 0), ("decir", [])],
+)
+def test_accion_rechaza_valores_invalidos(campo, valor):
+    with pytest.raises(ValidationError):
+        Accion(**{**PLAN_FALSO, campo: valor})
 
 
 @pytest.mark.parametrize(
