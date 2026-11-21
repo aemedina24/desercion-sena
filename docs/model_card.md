@@ -132,15 +132,23 @@ por bootstrap, porque los grupos son pequeños. Detalle en el cuaderno 04 y en e
 
 | Grupo | Razón de recall (IC 95 %) | ¿Cumple? |
 |---|---|---|
-| Sexo (solo se audita, no entra al modelo) | 0.96 (0.85–1.00) | Sí |
-| Modalidad, umbral global (v1) | 0.69 (0.55–0.84) | No: presencial queda atrás |
-| Modalidad, umbral por modalidad (evaluado) | 0.83 (0.71–0.93) | No concluyente: cumple el 61 % de las réplicas |
+| Sexo (solo se audita, no entra al modelo) | 0.955 (0.85–1.00) | Sí: 99.8 % de las réplicas |
+| Modalidad, umbral global (en uso) | 0.753 (0.60–0.89) | No: presencial queda atrás (25 % de las réplicas) |
+| Modalidad, modelo perfecto con umbral global (solo v2) | 0.810 (0.64–0.94) | En el límite: 50 % de las réplicas |
+| Modalidad, umbral por modalidad (evaluado) | 0.890 (0.74–0.97) | Casi: 85 % de las réplicas |
 
-El umbral por modalidad (mixta 0.44, presencial 0.34, virtual 0.53) redistribuye la
-detección en vez de mejorarla: presencial gana 16 desertores detectados y virtual pierde
-23, y las alertas en presencial pasan de 122 a 206. Por eso la v1 mantiene un umbral
-global y deja el umbral por modalidad como siguiente versión. La brecha en presencial
-aparece también en train: no es casualidad de las cohortes de prueba.
+Recall por modalidad con el umbral global: mixta 0.657, presencial 0.560 y virtual 0.743.
+La brecha en presencial es sistemática (también aparece en train con out-of-fold) y
+**viene sobre todo de los datos**: un modelo perfecto que conociera la probabilidad real
+de cada aprendiz (`verdad.parquet`), con las mismas 716 alertas, también deja atrás a
+presencial (0.583 frente a 0.720 en virtual). Allí se deserta menos y los desertores se
+parecen más a quienes no desertan, así que un modelo mejor no cierra la brecha.
+
+Un umbral por modalidad (mixta 0.491, presencial 0.354, virtual 0.539) casi la cierra,
+pero redistribuye la detección: presencial gana 15 desertores detectados y virtual pierde
+21, y las alertas en presencial pasan de 111 a 181. Por eso se mantiene un umbral global
+y el umbral por modalidad queda propuesto como decisión institucional
+([ADR 0003](decisiones/0003-umbral-y-equidad.md), revisión con los datos v2).
 
 ## Explicación de cada alerta y medidas
 
