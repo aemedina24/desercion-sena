@@ -102,10 +102,11 @@ La etapa `monitor` compara cada cohorte nueva con los datos de entrenamiento
 
 - **Drift:** PSI por variable. Más de 0.20 es un cambio importante. Las pruebas KS y
   chi-cuadrado se reportan solo como información.
-- **Rendimiento:** recall de cada cohorte con intervalo de confianza por bootstrap. Si
-  queda por debajo de 0.70, el reporte la marca como «revisar», sin detener el pipeline.
+- **Rendimiento:** recall de cada cohorte con intervalo de confianza por bootstrap.
+  «ok» si llega a 0.70; «vigilar» si queda debajo pero el intervalo incluye 0.70;
+  «revisar» si todo el intervalo queda debajo. Ningún estado detiene el pipeline.
 
 En las cohortes de prueba ninguna variable tiene drift (PSI máximo 0.023). El recall
 es 0.691 en 2025-T3 (intervalo 0.63–0.75) y 0.696 en 2025-T4 (0.64–0.76): los dos quedan
-en «revisar», aunque sus intervalos incluyen el objetivo y están al nivel del techo que
+en «vigilar», porque sus intervalos incluyen el objetivo y están al nivel del techo que
 permiten los datos (0.692, ver la [model card](model_card.md)).

@@ -180,8 +180,9 @@ viene sobre todo de su indicador de dato faltante, que es lo mismo que ser virtu
 - **Cambio en el tiempo:** el generador v2 no cambia entre cohortes, y el monitoreo no
   encuentra drift en ninguna variable (PSI máximo 0.023). El recall por cohorte es 0.691
   en 2025-T3 (IC 0.63–0.75) y 0.696 en 2025-T4 (IC 0.64–0.76): debajo de 0.70, pero con
-  intervalos que lo incluyen y al nivel del techo (0.692). Es variación de muestreo, no
-  un cambio en los datos. Con datos reales hay que seguir midiendo cada cohorte nueva y
+  intervalos que lo incluyen y al nivel del techo (0.692), así que el monitoreo las marca
+  «vigilar», no «revisar» ([ADR 0005](decisiones/0005-monitoreo-sin-evidently.md)). Es
+  variación de muestreo, no un cambio en los datos. Con datos reales hay que seguir midiendo cada cohorte nueva y
   reentrenar si el recall cae de forma sostenida.
 - **Colinealidad en los factores:** `porcentaje_actividades_entregadas`,
   `porcentaje_actividades_aprobadas` y `tasa_aprobacion_entregas` dicen casi lo mismo, y

@@ -188,17 +188,17 @@ stages:
       size: 3284
     - path: src/desercion/monitor.py
       hash: md5
-      md5: 8fef769695d41b31bf5b8c0ffa2c552e
-      size: 14517
+      md5: 7ff45df82c22a62848231e32f9d1b4c0
+      size: 15543
     outs:
     - path: reports/drift/drift.html
       hash: md5
-      md5: 3d5099e41ef5b2e49c9f4ceca99aacaa
-      size: 13757
+      md5: 0134eb8a49d09c8a25c0506ffc4b8f1a
+      size: 13892
     - path: reports/drift/drift.json
       hash: md5
-      md5: b2d274aa7b75e93285409b058c3c3d98
-      size: 20262
+      md5: 212f7b76edad631e26cb8b00904003a4
+      size: 20345
   generate:
     cmd: uv run python -m desercion.generar_datos
     deps:
