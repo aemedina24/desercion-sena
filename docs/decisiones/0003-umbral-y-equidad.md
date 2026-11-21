@@ -1,8 +1,12 @@
 # ADR 003: Umbral de alerta y criterio de equidad
 
 - **Estado:** Aceptada
-- **Fecha:** 2026-11-06
+- **Fecha:** 2026-11-06 · **Revisión con los datos v2:** 2026-11-20
 - **Decisores:** Andrés Medina, David Montilla
+
+> Las secciones "Contexto" a "Decisión 2" son el análisis original con los datos v1
+> (etiqueta `v1.0.0`). Con los datos del generador v2 (adoptados el 19 nov), las cifras
+> vigentes están en **"Revisión con los datos v2"**, al final.
 
 ## Contexto
 
@@ -75,6 +79,50 @@ siguiente versión, condicionado a:
 1. Confirmarlo con más cohortes (que el ratio cumpla con un IC por encima de 0.80).
 2. Acordar con quienes usan el sistema el costo: más alertas por acierto en
    presencial y menos detección en virtual.
+
+## Revisión con los datos v2 (20 nov)
+
+Mismo criterio, mismo código (`equidad.py`) y cuaderno 04 ejecutado con la v2. Umbral
+global 0.491; test con 1.583 aprendices y 496 desertores.
+
+| Modalidad | Desertores en test | Recall (IC 95 %) | Precisión | % alertado |
+|---|---|---|---|---|
+| Mixta | 105 | 0.657 (0.57–0.75) | 0.463 | 44 % |
+| Presencial | 84 | 0.560 (0.45–0.66) | 0.423 | 24 % |
+| Virtual | 307 | 0.743 (0.69–0.79) | 0.500 | 57 % |
+
+| Grupo | Ratio min/max | IC 95 % | Réplicas ≥ 0.80 |
+|---|---|---|---|
+| Modalidad, umbral global | 0.753 | 0.60–0.89 | 25 % |
+| Sexo, umbral global | 0.955 | 0.85–1.00 | 99.8 % |
+| Modalidad, umbral por modalidad | 0.890 | 0.74–0.97 | 85 % |
+| Sexo, umbral por modalidad | 0.905 | 0.80–0.99 | 97 % |
+
+- **Por modalidad sigue sin cumplirse**, aunque la brecha es menor que con la v1
+  (0.75 frente a 0.69). Es sistemática: aparece en train con out-of-fold (presencial
+  0.49, virtual 0.77).
+- **Por sexo se cumple.** El sexo no está en las fórmulas del generador.
+- **Lo nuevo: casi toda la brecha viene de los datos.** Con `data/raw/verdad.parquet`
+  se puede simular un modelo perfecto que conociera la probabilidad real de cada
+  aprendiz. Con las mismas 716 alertas y un umbral global, también deja atrás a
+  presencial: recall 0.583 frente a 0.720 en virtual, ratio 0.810 (IC 0.64–0.94), que
+  cumple solo en el 50 % de las réplicas. La causa está en el generador: la modalidad
+  presencial resta 0.30 en la fórmula de deserción, y sus desertores tienen una
+  probabilidad real más baja (0.38 de media frente a 0.47 en virtual), así que se
+  parecen más a quienes no desertan. Un modelo mejor no cierra la brecha; la cierra
+  dónde se pone el umbral.
+- **El umbral por modalidad ya es una mejora clara** (85 % de las réplicas cumple,
+  frente al 61 % con la v1): mixta 0.491 (igual al global), presencial 0.354, virtual
+  0.539. Pero sigue redistribuyendo: con 721 alertas en vez de 716, presencial gana 15
+  desertores detectados y virtual pierde 21 (6 menos en total); las alertas en
+  presencial pasan de 111 a 181 y cada acierto allí cuesta 2.9 alertas en lugar de 2.4.
+
+**Decisión con la v2: se mantiene el umbral global** y el umbral por modalidad queda
+propuesto como decisión institucional para la siguiente versión. La condición 1 de la
+Decisión 2 está más cerca de cumplirse (85 % de réplicas), pero el límite inferior del
+IC (0.74) sigue debajo de 0.80 y hay que confirmarlo con cohortes nuevas. La condición
+2 no cambia: quién asume el costo (más alertas en presencial, menos detección en
+virtual) no lo decide el modelo.
 
 ## Consecuencias
 

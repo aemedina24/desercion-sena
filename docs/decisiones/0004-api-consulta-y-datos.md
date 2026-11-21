@@ -39,7 +39,7 @@ abiertas:
 - Al arrancar (lifespan), la API carga el modelo (`models/modelo.skops`), el
   umbral (`reports/metricas_modelo_base.json`) y los **aprendices activos**.
 - **En la demo, los aprendices activos son `data/features/test.parquet`**
-  (1.544 aprendices de 2025-T3 y 2025-T4). En producción vendrían de la base del
+  (1.583 aprendices de 2025-T3 y 2025-T4 con los datos v2; 1.544 con la v1). En producción vendrían de la base del
   SENA; la carga está en un solo lugar para cambiarla allí.
 - El riesgo de todos (probabilidad, alerta, factores y medidas) se calcula **una
   sola vez** con `predecir_riesgo(df)`. Los endpoints solo consultan esa tabla.
@@ -65,7 +65,7 @@ abiertas:
   alertó el modelo y si desertó, pero no es una predicción a futuro. Los datos
   son sintéticos.
 - **La API reproduce el pipeline.** Con el modelo de DVC, las dos cohortes suman
-  702 alertas, las mismas de `reports/evaluacion.json`.
+  716 alertas, las mismas de `reports/evaluacion.json` (702 con la v1).
 - **La imagen Docker necesita `uv run dvc pull` antes del build**: modelo, umbral,
   referencia y aprendices activos.
 - **`/health` distingue el motivo:** `sin_modelo` (no cargó el modelo o el

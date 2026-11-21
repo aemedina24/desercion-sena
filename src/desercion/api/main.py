@@ -7,7 +7,7 @@ Al arrancar (lifespan) se carga todo una sola vez:
 3. Los aprendices activos (data/features/test.parquet en la demo; en producción
    vendrían de la base del SENA).
 4. El riesgo de todos, calculado con `prediccion.predecir_riesgo`: probabilidad,
-   alerta, factores y medidas.
+   alerta, factores, medidas y plan de acción.
 
 Los endpoints solo consultan esa tabla. Si algo falla al arrancar, la API arranca
 igual: /health responde 503 con el motivo y los endpoints de riesgo también 503.
@@ -100,6 +100,7 @@ def a_respuesta(fila: pd.Series, umbral: float) -> RiesgoAprendiz:
         umbral=umbral,
         factores=list(fila["factores"]),
         medidas=list(fila["medidas"]),
+        plan_de_accion=list(fila["plan_de_accion"]),
     )
 
 
@@ -160,9 +161,10 @@ def crear_app(
         title="Alerta temprana de deserción SENA",
         description=(
             "Riesgo de deserción por aprendiz y por cohorte en la semana 4. "
-            "Umbral global (ADR 0003); consulta por cohorte con filtros (ADR 0004)."
+            "Umbral global (ADR 0003); consulta por cohorte con filtros (ADR 0004); "
+            "plan de acción para el instructor (ADR 0006)."
         ),
-        version="0.3.0",
+        version="0.4.0",
         lifespan=ciclo_de_vida,
     )
 
@@ -215,7 +217,7 @@ def crear_app(
     def riesgo_aprendiz(
         id_aprendiz: Annotated[str, RutaParam(pattern=r"^A-\d{6}$")],
     ) -> RiesgoAprendiz:
-        """Riesgo de un aprendiz: probabilidad, alerta, factores y medidas."""
+        """Riesgo de un aprendiz: probabilidad, alerta, factores, medidas y plan."""
         tabla = tabla_riesgo()
         fila = tabla[tabla["id_aprendiz"] == id_aprendiz]
         if fila.empty:

@@ -1,8 +1,8 @@
 """Pruebas de prediccion.py, recomendaciones.py y la referencia de explain.
 
 Como en test_evaluate_explain.py, usan un Pipeline entrenado con datos
-sintéticos, así que corren en el CI. Solo la última prueba usa el modelo y los
-datos reales (se omite si no se ha hecho `uv run dvc pull`).
+sintéticos, así que corren en el CI. Solo las tres últimas pruebas usan el modelo
+y los datos reales (se omiten si no se ha hecho `uv run dvc pull`).
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from desercion.explain import (
     RUTA_REFERENCIA,
     cargar_referencia,
     guardar_referencia,
+    matriz_transformada,
     referencia_train,
 )
 from desercion.features import agregar_variables, quitar_columnas
@@ -29,8 +30,19 @@ from desercion.modelado import (
     separar_x_y,
     tipos_de_columnas,
 )
-from desercion.prediccion import APORTE_MINIMO, COLUMNAS_PREDICCION, predecir_riesgo
-from desercion.recomendaciones import cargar_medidas, medidas_para
+from desercion.prediccion import (
+    APORTE_MINIMO,
+    COLUMNAS_PREDICCION,
+    factores_con_dato,
+    predecir_riesgo,
+)
+from desercion.recomendaciones import (
+    CAMPOS_PLAN,
+    MEDIDA_GENERAL,
+    cargar_medidas,
+    medidas_para,
+    plan_para,
+)
 from desercion.train_model import cargar_config, construir_pipeline
 
 UMBRAL = 0.4606
@@ -150,12 +162,12 @@ def test_medidas_sin_repetir_y_en_orden_de_aporte():
     factores = [
         {"variable": "dias_sin_ingreso", "aporte": 0.5},
         {"variable": "ingresos_plataforma_ultimos_7d", "aporte": 0.4},  # misma medida
-        {"variable": "porcentaje_actividades_aprobadas", "aporte": 0.3},
+        {"variable": "promedio_calificaciones", "aporte": 0.3},
     ]
     medidas = medidas_para(factores, alerta=True)
     assert medidas == [
         config["por_variable"]["dias_sin_ingreso"],
-        config["por_variable"]["porcentaje_actividades_aprobadas"],
+        config["por_variable"]["promedio_calificaciones"],
     ]
 
 
@@ -186,6 +198,80 @@ def test_medidas_yaml_cubre_cada_variable_del_modelo_una_vez():
     )
 
 
+# Dirección en que cada variable con medida sube el riesgo: +1 = más es peor,
+# -1 = menos es peor (los booleanos cuentan como 0/1). El texto de la medida
+# supone esa dirección: "no está entrando", "abandonó cursos anteriores". Por la
+# colinealidad, el modelo puede darle a una variable el signo contrario, y
+# entonces la marcaría como factor en quien está MEJOR que el promedio (pasó con
+# porcentaje_actividades_aprobadas y tasa_finalizacion_previa con los datos v2).
+DIRECCION_CON_MEDIDA = {
+    "porcentaje_actividades_entregadas": -1,
+    "actividades_pendientes": +1,
+    "evaluaciones_no_presentadas": +1,
+    "tasa_aprobacion_entregas": -1,
+    "promedio_calificaciones": -1,
+    "ingresos_plataforma_ultimos_7d": -1,
+    "dias_sin_ingreso": +1,
+    "sin_ingreso_reciente": +1,
+    "asistencia_porcentaje": -1,
+    "disponibilidad_equipo": -1,
+    "comparte_dispositivo": +1,
+    "horas_disponibles_estudio": -1,
+    "horas_trabajo_semana": +1,
+    "responsabilidades_cuidado": +1,
+    "experiencia_virtual_previa": -1,
+    "es_primer_curso": +1,
+    "n_cursos_abandonados": +1,
+    "solicito_apoyo": +1,
+}
+# En las categóricas el factor es una categoría, no una dirección: se revisan a
+# mano (con los datos v2 solo salen dificultad alta, plan "otro" y conexión "otra").
+CATEGORICAS_CON_MEDIDA = {
+    "calidad_internet",
+    "tipo_conexion",
+    "tipo_plan_internet",
+    "dispositivo_principal",
+    "dificultad_economica_reportada",
+    "situacion_laboral",
+}
+
+
+def test_factor_con_dato_vacio_no_genera_medida():
+    # Un virtual no tiene asistencia: el factor se muestra, pero sin medida.
+    x = pd.DataFrame(
+        {"asistencia_porcentaje": [np.nan, 0.5], "dias_sin_ingreso": [9.0, 9.0]}
+    )
+    asistencia = {"variable": "asistencia_porcentaje", "aporte": 0.3}
+    inactividad = {"variable": "dias_sin_ingreso", "aporte": 0.1}
+    factores = [[asistencia, inactividad], [asistencia, inactividad]]
+
+    con_dato = factores_con_dato(factores, x)
+
+    assert con_dato == [[inactividad], [asistencia, inactividad]]
+    assert factores[0] == [asistencia, inactividad], "No debe modificar la entrada"
+    assert medidas_para(con_dato[0], alerta=True) == medidas_para(
+        [inactividad], alerta=True
+    )
+
+
+def test_si_el_unico_factor_esta_vacio_va_la_medida_general():
+    x = pd.DataFrame({"asistencia_porcentaje": [np.nan]})
+    factores = [[{"variable": "asistencia_porcentaje", "aporte": 0.3}]]
+    plan = plan_para(factores_con_dato(factores, x)[0], alerta=True)
+    assert [p["medida"] for p in plan] == [MEDIDA_GENERAL]
+
+
+def test_cada_variable_con_medida_declara_su_direccion():
+    # Una variable nueva con medida obliga a decir hacia dónde sube el riesgo.
+    con_medida = set(cargar_medidas()["por_variable"])
+    declaradas = set(DIRECCION_CON_MEDIDA) | CATEGORICAS_CON_MEDIDA
+    assert not set(DIRECCION_CON_MEDIDA) & CATEGORICAS_CON_MEDIDA
+    assert declaradas == con_medida, (
+        f"Sin dirección: {sorted(con_medida - declaradas)}; "
+        f"ya no tienen medida: {sorted(declaradas - con_medida)}"
+    )
+
+
 def test_ninguna_medida_por_caracteristicas_personales():
     personales = {"edad", "nivel_educativo", "modalidad", "area_formacion"}
     assert not personales & set(cargar_medidas()["por_variable"])
@@ -207,6 +293,98 @@ def test_referencia_de_otro_modelo_falla_con_mensaje_claro(
     incompleta = referencia.drop(referencia.index[:2])
     with pytest.raises(ValueError, match="dvc repro explain"):
         predecir_riesgo(aprendices, modelo=modelo, referencia=incompleta, umbral=UMBRAL)
+
+
+# --- Plan de acción -----------------------------------------------------------------
+# Lo que el guion nunca le dice al aprendiz: que hay una alerta, un modelo o una
+# predicción, ni que podría desertar o ser sancionado (ADR 0006).
+PALABRAS_PROHIBIDAS = [
+    "riesgo",
+    "alerta",
+    "desert",
+    "abandon",
+    "modelo",
+    "predic",
+    "sanci",
+]
+
+
+def test_cada_medida_tiene_un_plan_completo():
+    config = cargar_medidas()
+    assert set(config["planes"]) == set(config["textos"])
+    assert MEDIDA_GENERAL in config["planes"]
+    for nombre, plan in config["planes"].items():
+        assert set(plan) == {"medida", *CAMPOS_PLAN}, nombre
+        assert plan["medida"] == nombre
+        # Guion corto: apertura, pregunta abierta y propuesta.
+        assert len(plan["decir"]) == 3, nombre
+        assert any("¿" in frase for frase in plan["decir"]), nombre
+        assert 1 <= plan["plazo_dias"] <= 7, nombre
+        assert plan["plazo_dias"] < plan["seguimiento_dias"] <= 30, nombre
+
+
+def test_el_guion_no_menciona_la_alerta_ni_la_desercion():
+    for nombre, plan in cargar_medidas()["planes"].items():
+        for frase in plan["decir"]:
+            usadas = [p for p in PALABRAS_PROHIBIDAS if p in frase.lower()]
+            assert not usadas, f"{nombre}: '{frase}' usa {usadas}"
+
+
+def test_plan_va_en_el_mismo_orden_que_las_medidas():
+    config = cargar_medidas()
+    factores = [
+        {"variable": "dias_sin_ingreso", "aporte": 0.5},
+        {"variable": "ingresos_plataforma_ultimos_7d", "aporte": 0.4},  # misma medida
+        {"variable": "promedio_calificaciones", "aporte": 0.3},
+    ]
+    plan = plan_para(factores, alerta=True)
+    assert [p["medida"] for p in plan] == [
+        "contacto_por_inactividad",
+        "plan_de_mejoramiento",
+    ]
+    assert [config["textos"][p["medida"]] for p in plan] == medidas_para(
+        factores, alerta=True
+    )
+
+
+def test_plan_general_si_ningun_factor_tiene_medida():
+    plan = plan_para([{"variable": "modalidad", "aporte": 0.4}], alerta=True)
+    assert [p["medida"] for p in plan] == [MEDIDA_GENERAL]
+    assert plan_para([], alerta=True) == plan
+
+
+def test_sin_alerta_no_hay_plan():
+    factores = [{"variable": "dias_sin_ingreso", "aporte": 0.5}]
+    assert plan_para(factores, alerta=False) == []
+
+
+def test_modificar_un_plan_no_cambia_la_configuracion():
+    factores = [{"variable": "dias_sin_ingreso", "aporte": 0.5}]
+    plan = plan_para(factores, alerta=True)
+    plan[0]["decir"].append("otra frase")
+    plan[0]["accion"] = "otra acción"
+    assert plan_para(factores, alerta=True) != plan
+
+
+def test_medidas_yaml_sin_plan_falla_con_mensaje_claro(tmp_path):
+    ruta = tmp_path / "medidas.yaml"
+    ruta.write_text(
+        "max_medidas: 3\n"
+        "general: Contactar al aprendiz\n"
+        "plan_general:\n"
+        "  accion: Contactar al aprendiz\n"
+        "medidas: {}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="faltan los campos"):
+        cargar_medidas(ruta)
+
+
+def test_el_riesgo_trae_un_plan_por_medida(riesgo):
+    assert riesgo["alerta"].any()
+    for _, fila in riesgo.iterrows():
+        assert len(fila["plan_de_accion"]) == len(fila["medidas"])
+        assert bool(fila["plan_de_accion"]) == bool(fila["alerta"])
 
 
 # --- Con el modelo y los datos reales ------------------------------------------------
@@ -231,4 +409,68 @@ def test_reproduce_las_alertas_de_evaluate():
     )
     assert int(riesgo["alerta"].sum()) == esperadas
     for fila in riesgo.to_dict(orient="records"):
-        RiesgoAprendiz(**fila, umbral=umbral)
+        respuesta = RiesgoAprendiz(**fila, umbral=umbral)
+        # Toda alerta llega con entre 1 y 3 acciones para el instructor.
+        assert (1 <= len(respuesta.plan_de_accion) <= 3) == respuesta.alerta
+
+
+@requiere_artefactos
+def test_factores_con_medida_van_en_la_direccion_esperada():
+    # Con el modelo real: si una variable con medida sale como factor, el valor
+    # del aprendiz debe estar del lado malo del promedio de train. Si no, el
+    # modelo le dio el signo invertido y hay que pasarla a `sin_medida`.
+    # Los nulos se saltan: su factor viene del indicador de dato faltante y no
+    # genera medida (prueba siguiente).
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    test = pd.read_parquet(RUTA_TEST)
+    modelo = cargar_modelo()
+    referencia = cargar_referencia()
+    riesgo = predecir_riesgo(test, modelo=modelo, referencia=referencia, umbral=umbral)
+
+    x, _ = separar_x_y(test)
+    frente_al_promedio = matriz_transformada(modelo, x) - referencia
+    invertidos: dict[str, int] = {}
+    for posicion, fila in enumerate(riesgo.itertuples()):
+        if not fila.alerta:
+            continue
+        for factor in fila.factores:
+            variable = factor["variable"]
+            if variable not in DIRECCION_CON_MEDIDA or pd.isna(
+                x[variable].iloc[posicion]
+            ):
+                continue
+            lado = frente_al_promedio[f"numericas__{variable}"].iloc[posicion]
+            if np.sign(lado) != DIRECCION_CON_MEDIDA[variable]:
+                invertidos[variable] = invertidos.get(variable, 0) + 1
+
+    assert not invertidos, (
+        "Factores con medida en aprendices que están mejor que el promedio "
+        f"(signo invertido en el modelo): {invertidos}"
+    )
+
+
+@requiere_artefactos
+def test_ninguna_medida_sale_de_un_dato_vacio():
+    # Con el modelo real: cada medida debe venir de un factor con dato. Antes,
+    # 397 virtuales con alerta recibían el guion de inasistencia porque su
+    # asistencia es nula (no tienen sesiones).
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    test = pd.read_parquet(RUTA_TEST)
+    riesgo = predecir_riesgo(
+        test, modelo=cargar_modelo(), referencia=cargar_referencia(), umbral=umbral
+    )
+    medida_por_variable = cargar_medidas()["medida_por_variable"]
+    x, _ = separar_x_y(test)
+
+    for posicion, fila in enumerate(riesgo.itertuples()):
+        activadas = {
+            medida_por_variable.get(f["variable"])
+            for f in fila.factores
+            if pd.notna(x[f["variable"]].iloc[posicion])
+        }
+        for plan in fila.plan_de_accion:
+            assert plan["medida"] == MEDIDA_GENERAL or plan["medida"] in activadas
+    virtuales = riesgo[test["modalidad"].to_numpy() == "virtual"]
+    assert not any(
+        p["medida"] == "inasistencia" for ps in virtuales["plan_de_accion"] for p in ps
+    )

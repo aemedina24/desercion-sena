@@ -17,6 +17,7 @@ from desercion.features import agregar_variables, quitar_columnas
 from desercion.modelado import RUTA_TEST, RUTA_TRAIN
 from desercion.monitor import (
     EPSILON,
+    ESTADOS_RENDIMIENTO,
     NULO,
     PSI_DRIFT,
     RECALL_OBJETIVO,
@@ -28,6 +29,7 @@ from desercion.monitor import (
     construir_reporte,
     drift_cohorte,
     drift_variable,
+    estado_rendimiento,
     guardar,
     nivel_psi,
     psi,
@@ -202,10 +204,42 @@ def test_recall_por_cohorte_y_estado():
     assert resultado["T3"]["recall"] == pytest.approx(1.0)
     assert resultado["T3"]["estado"] == "ok"
     assert resultado["T4"]["recall"] == pytest.approx(0.25)
-    assert resultado["T4"]["estado"] == "revisar"
+    # Con 4 desertores el IC de T4 es muy ancho: puede llegar a 0.70, así que el
+    # estado depende de él; lo que no puede ser es "ok".
+    assert resultado["T4"]["estado"] in {"vigilar", "revisar"}
+    assert resultado["T4"]["estado"] == estado_rendimiento(
+        resultado["T4"]["recall"], resultado["T4"]["ic_superior"]
+    )
     assert resultado["T4"]["alertas"] == 1
     for cohorte in resultado.values():
         assert cohorte["ic_inferior"] <= cohorte["recall"] <= cohorte["ic_superior"]
+
+
+@pytest.mark.parametrize(
+    ("recall", "ic_superior", "estado"),
+    [
+        (0.75, 0.80, "ok"),
+        (0.70, 0.76, "ok"),  # el objetivo exacto cuenta como alcanzado
+        (0.691, 0.747, "vigilar"),  # 2025-T3 con los datos v2
+        (0.65, 0.70, "vigilar"),  # el IC toca el objetivo
+        (0.60, 0.699, "revisar"),  # todo el IC debajo: caída clara
+    ],
+)
+def test_estado_rendimiento(recall, ic_superior, estado):
+    assert estado_rendimiento(recall, ic_superior) == estado
+    assert estado in ESTADOS_RENDIMIENTO
+
+
+def test_una_caida_clara_sale_en_revisar():
+    # 200 desertores por cohorte: IC estrecho. T3 detecta 140 (0.70), T4 solo 100.
+    y = pd.Series([1] * 400)
+    cohortes = pd.Series(["T3"] * 200 + ["T4"] * 200)
+    alerta = np.array([True] * 140 + [False] * 60 + [True] * 100 + [False] * 100)
+    resultado = recall_por_cohorte(y, alerta, cohortes)
+    assert resultado["T3"]["estado"] == "ok"
+    assert resultado["T4"]["recall"] == pytest.approx(0.5)
+    assert resultado["T4"]["ic_superior"] < RECALL_OBJETIVO
+    assert resultado["T4"]["estado"] == "revisar"
 
 
 # --- Reporte -----------------------------------------------------------------------
@@ -219,7 +253,7 @@ def test_reporte_tiene_una_entrada_por_cohorte(reporte):
     assert list(reporte["cohortes"]) == ["2025-T3", "2025-T4"]
     for cohorte in reporte["cohortes"].values():
         assert {"drift", "rendimiento"} <= set(cohorte)
-        assert cohorte["rendimiento"]["estado"] in {"ok", "revisar"}
+        assert cohorte["rendimiento"]["estado"] in ESTADOS_RENDIMIENTO
     assert reporte["criterios"]["recall_objetivo"] == RECALL_OBJETIVO
 
 
@@ -272,3 +306,6 @@ def test_reporte_real_cuadra_con_evaluate():
     )
     for cohorte in cohortes:
         assert len(cohorte["drift"]["variables"]) == 39
+        rend = cohorte["rendimiento"]
+        # El reporte guardado usa la regla actual (ADR 0005): no quedó desactualizado.
+        assert rend["estado"] == estado_rendimiento(rend["recall"], rend["ic_superior"])

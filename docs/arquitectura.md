@@ -84,7 +84,7 @@ FastAPI con tres endpoints: `/health`, `/aprendices/{id}/riesgo` y
 
 - **Pruebas** (`tests/`, pytest): fuga temporal, contrato de datos, rendimiento mínimo
   del modelo, contrato y errores de la API, que `deserto` nunca salga de la API, que la
-  predicción reproduzca las 702 alertas de `evaluate`, el monitoreo, y que los hashes de
+  predicción reproduzca las 716 alertas de `evaluate`, el monitoreo, y que los hashes de
   código en `dvc.lock` coincidan con los archivos. Las que necesitan datos reales se
   omiten si no están descargados.
 - **Integración continua** (`.github/workflows/ci.yaml`): en cada Pull Request instala
@@ -102,9 +102,11 @@ La etapa `monitor` compara cada cohorte nueva con los datos de entrenamiento
 
 - **Drift:** PSI por variable. Más de 0.20 es un cambio importante. Las pruebas KS y
   chi-cuadrado se reportan solo como información.
-- **Rendimiento:** recall de cada cohorte con intervalo de confianza por bootstrap. Si
-  queda por debajo de 0.70, el reporte la marca como «revisar», sin detener el pipeline.
+- **Rendimiento:** recall de cada cohorte con intervalo de confianza por bootstrap.
+  «ok» si llega a 0.70; «vigilar» si queda debajo pero el intervalo incluye 0.70;
+  «revisar» si todo el intervalo queda debajo. Ningún estado detiene el pipeline.
 
-En las cohortes de prueba ninguna variable tiene drift (PSI máximo 0.02); 2025-T4 queda
-en «ok» (recall 0.703) y 2025-T3 en «revisar» (0.668, con un intervalo de 0.61 a 0.73
-que incluye el objetivo).
+En las cohortes de prueba ninguna variable tiene drift (PSI máximo 0.023). El recall
+es 0.691 en 2025-T3 (intervalo 0.63–0.75) y 0.696 en 2025-T4 (0.64–0.76): los dos quedan
+en «vigilar», porque sus intervalos incluyen el objetivo y están al nivel del techo que
+permiten los datos (0.692, ver la [model card](model_card.md)).
