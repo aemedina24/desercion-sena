@@ -36,7 +36,7 @@ Datos sintéticos de un generador propio con semilla y fórmulas conocidas (v2, 
 
 - El modelo está cerca del techo: uno que conociera la probabilidad real de cada aprendiz llegaría a ROC-AUC 0.762 y PR-AUC 0.613. Mejorar exige otras variables, no otro modelo.
 - En validación cruzada la logística (PR-AUC 0.595) queda por encima de LightGBM con Optuna (0.589) y de una red neuronal (0.571); se eligió por ser igual de buena o mejor, más simple y explicable ([ADR 0002](docs/decisiones/0002-eleccion-modelo.md)).
-- Por sexo el modelo cumple la regla de los cuatro quintos (0.96); por modalidad no (0.69), por la brecha en presencial ([ADR 0003](docs/decisiones/0003-umbral-y-equidad.md)).
+- Por sexo el modelo cumple la regla de los cuatro quintos (0.955); por modalidad no (0.753), por la brecha en presencial. Casi toda esa brecha viene de los datos: un modelo perfecto con un umbral global también la tendría (0.810) ([ADR 0003](docs/decisiones/0003-umbral-y-equidad.md)).
 - El monitoreo no encuentra drift en las cohortes de prueba (PSI máximo 0.02).
 - La probabilidad sale inflada por `class_weight="balanced"` (media 0.46 con 31 % de deserción); sirve para ordenar, no como porcentaje. Una corrección sin reentrenar la calibra sin cambiar las alertas (model card).
 - Por cada medida sugerida, la API trae un plan de acción para el instructor: qué hacer, qué decir y qué evitar ([ADR 0006](docs/decisiones/0006-plan-de-accion.md)).
