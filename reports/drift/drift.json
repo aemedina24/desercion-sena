@@ -3,7 +3,8 @@
     "n_bins": 10,
     "psi_moderado": 0.1,
     "psi_drift": 0.2,
-    "recall_objetivo": 0.7
+    "recall_objetivo": 0.7,
+    "estado_recall": "ok >= objetivo; vigilar si el IC lo incluye; revisar si no"
   },
   "referencia": {
     "datos": "data/features/train.parquet",
@@ -338,7 +339,7 @@
         "ic_superior": 0.747268,
         "desertores": 249,
         "alertas": 347,
-        "estado": "revisar"
+        "estado": "vigilar"
       }
     },
     "2025-T4": {
@@ -669,7 +670,7 @@
         "ic_superior": 0.755365,
         "desertores": 247,
         "alertas": 369,
-        "estado": "revisar"
+        "estado": "vigilar"
       }
     }
   }

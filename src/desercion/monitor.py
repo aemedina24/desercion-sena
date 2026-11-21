@@ -16,8 +16,16 @@ Compara cada cohorte nueva con los datos de entrenamiento:
    por eso no deciden la alerta.
 3. **Recall por cohorte con IC bootstrap**, como en el cuaderno 04. En la demo
    se conoce el resultado real; en producción llega cuando termina la cohorte.
-   Si el recall queda por debajo de 0.70 el reporte marca "revisar", pero el
-   pipeline no falla: es una señal para el equipo, no un error.
+   El estado compara el objetivo de 0.70 con el intervalo, no solo con el punto:
+
+       ok       recall >= 0.70
+       vigilar  recall < 0.70, pero el IC llega a 0.70 (puede ser azar)
+       revisar  todo el IC queda debajo de 0.70 (caída clara)
+
+   0.70 está en el techo de los datos: con las mismas alertas, un modelo que
+   conociera la probabilidad real llegaría a 0.692 (ver la model card). Con la
+   regla del punto, cerca de la mitad de las cohortes saldría en "revisar" por
+   puro azar. Ningún estado hace fallar el pipeline: son señales para el equipo.
 
 `sexo` (atributo protegido, solo se audita) y `deserto` (la etiqueta) nunca
 entran al drift: se usan solo las variables del modelo.
@@ -64,6 +72,7 @@ EPSILON = 1e-4  # proporción mínima de un bin vacío: evita log(0) en el PSI
 PSI_MODERADO = 0.10
 PSI_DRIFT = 0.20  # criterio de alerta
 RECALL_OBJETIVO = 0.70  # el mismo objetivo con que se eligió el umbral
+ESTADOS_RENDIMIENTO = ("ok", "vigilar", "revisar")
 COLUMNA_COHORTE = "id_cohorte"
 # Nunca entran al drift (ver docstring). `sexo` no está en features, pero la
 # exclusión explícita protege si algún día se agrega.
@@ -210,6 +219,15 @@ def drift_cohorte(referencia: pd.DataFrame, actual: pd.DataFrame) -> dict:
 
 
 # --- Rendimiento -----------------------------------------------------------
+def estado_rendimiento(recall: float, ic_superior: float) -> str:
+    """ok, vigilar o revisar, según el objetivo de recall y su IC (ADR 0005)."""
+    if recall >= RECALL_OBJETIVO:
+        return "ok"
+    if ic_superior >= RECALL_OBJETIVO:
+        return "vigilar"
+    return "revisar"
+
+
 def recall_por_cohorte(
     y_real: pd.Series, alerta: np.ndarray, cohortes: pd.Series
 ) -> dict[str, dict]:
@@ -223,8 +241,8 @@ def recall_por_cohorte(
             "ic_superior": float(fila["ic_superior"]),
             "desertores": int(fila["desertores"]),
             "alertas": int(alertas[cohorte]),
-            # "revisar" no detiene el pipeline: avisa al equipo (ADR 0005).
-            "estado": "ok" if fila["recall"] >= RECALL_OBJETIVO else "revisar",
+            # Ningún estado detiene el pipeline: avisan al equipo (ADR 0005).
+            "estado": estado_rendimiento(fila["recall"], fila["ic_superior"]),
         }
         for cohorte, fila in tabla.iterrows()
     }
@@ -251,6 +269,7 @@ def construir_reporte(
             "psi_moderado": PSI_MODERADO,
             "psi_drift": PSI_DRIFT,
             "recall_objetivo": RECALL_OBJETIVO,
+            "estado_recall": "ok >= objetivo; vigilar si el IC lo incluye; revisar si no",
         },
         "referencia": {
             "datos": str(RUTA_TRAIN.as_posix()),
@@ -286,7 +305,8 @@ def a_html(reporte: dict) -> str:
             "table{border-collapse:collapse;margin:.5rem 0 1.5rem}"
             "td,th{border:1px solid #ccc;padding:.25rem .6rem;text-align:right}"
             "th{background:#f2f2f2}.drift{background:#f8d7da}"
-            ".moderado{background:#fff3cd}.revisar{background:#fff3cd}</style>"
+            ".moderado{background:#fff3cd}.vigilar{background:#fff3cd}"
+            ".revisar{background:#f8d7da}</style>"
         ),
         "</head><body>",
         "<h1>Monitoreo del modelo: drift y recall por cohorte</h1>",
@@ -295,7 +315,8 @@ def a_html(reporte: dict) -> str:
             f"({reporte['referencia']['aprendices']} aprendices). PSI &gt; "
             f"{PSI_DRIFT} = drift; {PSI_MODERADO}–{PSI_DRIFT} = moderado. KS y "
             "chi-cuadrado son informativos. Recall objetivo: "
-            f"{RECALL_OBJETIVO}.</p>"
+            f"{RECALL_OBJETIVO}: ok si lo alcanza; vigilar si queda debajo, pero "
+            "el IC 95 % lo incluye; revisar si todo el IC queda debajo.</p>"
         ),
     ]
     for cohorte, datos in reporte["cohortes"].items():
