@@ -38,6 +38,22 @@ class Factor(BaseModel):
     # Aporte al log-odds (explain.aportes). Siempre positivo: solo se muestran
     # los factores que suben el riesgo.
     aporte: float = Field(gt=0)
+    # Valor del aprendiz en la fecha de corte: un número (los porcentajes van de
+    # 0 a 1 y las booleanas son 0 o 1), un texto en las categóricas, o None si
+    # el dato está vacío (por ejemplo, la asistencia de un virtual).
+    valor: float | str | None = Field(
+        default=None,
+        description=(
+            "Valor del aprendiz en la fecha de corte (porcentajes de 0 a 1; "
+            "booleanas 0 o 1; texto en las categóricas; null si el dato está vacío)."
+        ),
+    )
+    # Promedio de train contra el que se compara (prediccion.promedios_train).
+    # None en las categóricas. En las booleanas es la proporción de aprendices.
+    promedio: float | None = Field(
+        default=None,
+        description="Promedio de train contra el que se compara; null en las categóricas.",
+    )
 
 
 class Accion(BaseModel):

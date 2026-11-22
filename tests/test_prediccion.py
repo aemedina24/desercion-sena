@@ -1,7 +1,7 @@
 """Pruebas de prediccion.py, recomendaciones.py y la referencia de explain.
 
 Como en test_evaluate_explain.py, usan un Pipeline entrenado con datos
-sintéticos, así que corren en el CI. Solo las tres últimas pruebas usan el modelo
+sintéticos, así que corren en el CI. Solo las cuatro últimas pruebas usan el modelo
 y los datos reales (se omiten si no se ha hecho `uv run dvc pull`).
 """
 
@@ -33,8 +33,10 @@ from desercion.modelado import (
 from desercion.prediccion import (
     APORTE_MINIMO,
     COLUMNAS_PREDICCION,
+    agregar_valores,
     factores_con_dato,
     predecir_riesgo,
+    promedios_train,
 )
 from desercion.recomendaciones import (
     CAMPOS_PLAN,
@@ -234,6 +236,68 @@ CATEGORICAS_CON_MEDIDA = {
     "dificultad_economica_reportada",
     "situacion_laboral",
 }
+
+
+# --- Valor del aprendiz junto a cada factor -----------------------------------------
+def test_agregar_valores_segun_el_tipo_de_dato():
+    x = pd.DataFrame(
+        {
+            "promedio_calificaciones": [2.5, 4.0],
+            "asistencia_porcentaje": [np.nan, 0.9],
+            "modalidad": ["presencial", "virtual"],
+            "responsabilidades_cuidado": [True, False],
+        }
+    )
+    promedios = {
+        "promedio_calificaciones": 3.8,
+        "asistencia_porcentaje": 0.85,
+        "responsabilidades_cuidado": 0.3,
+    }
+    factores = [
+        [
+            {"variable": "promedio_calificaciones", "aporte": 0.9},
+            {"variable": "asistencia_porcentaje", "aporte": 0.2},
+            {"variable": "modalidad", "aporte": 0.1},
+            {"variable": "responsabilidades_cuidado", "aporte": 0.06},
+        ],
+        [],
+    ]
+
+    con_valores = agregar_valores(factores, x, promedios)
+
+    nota, asistencia, modalidad, cuidado = con_valores[0]
+    assert (nota["valor"], nota["promedio"]) == (2.5, 3.8)
+    assert (asistencia["valor"], asistencia["promedio"]) == (None, 0.85)
+    assert (modalidad["valor"], modalidad["promedio"]) == ("presencial", None)
+    assert (cuidado["valor"], cuidado["promedio"]) == (1.0, 0.3)
+    assert con_valores[1] == []
+    assert "valor" not in factores[0][0], "No debe modificar la entrada"
+
+
+def test_el_promedio_es_el_de_train(modelo, aprendices):
+    x, _ = separar_x_y(aprendices)
+    promedios = promedios_train(modelo)
+    # Sin vacíos, la media del escalador es la media de train.
+    assert promedios["porcentaje_actividades_aprobadas"] == pytest.approx(
+        x["porcentaje_actividades_aprobadas"].mean()
+    )
+    assert not any(nombre.startswith("missingindicator_") for nombre in promedios)
+    assert "modalidad" not in promedios  # categórica: sin promedio
+
+
+def test_cada_factor_trae_su_valor_y_su_promedio(riesgo, aprendices, modelo):
+    x, _ = separar_x_y(aprendices)
+    promedios = promedios_train(modelo)
+    for posicion, fila in enumerate(riesgo.itertuples()):
+        for factor in fila.factores:
+            crudo = x[factor["variable"]].iloc[posicion]
+            if pd.isna(crudo):
+                assert factor["valor"] is None
+            elif isinstance(crudo, str):
+                assert factor["valor"] == crudo
+            else:
+                assert factor["valor"] == pytest.approx(float(crudo))
+            assert factor["promedio"] == promedios.get(factor["variable"])
 
 
 def test_factor_con_dato_vacio_no_genera_medida():
@@ -474,3 +538,31 @@ def test_ninguna_medida_sale_de_un_dato_vacio():
     assert not any(
         p["medida"] == "inasistencia" for ps in virtuales["plan_de_accion"] for p in ps
     )
+
+
+@requiere_artefactos
+def test_el_valor_de_cada_factor_esta_del_lado_malo_de_su_promedio():
+    # Con el modelo real: lo que ve el instructor ("entregó 25 %; promedio
+    # 73 %") debe contar lo mismo que el aporte. En las variables con dirección
+    # declarada, el valor queda del lado que sube el riesgo.
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    riesgo = predecir_riesgo(
+        pd.read_parquet(RUTA_TEST),
+        modelo=cargar_modelo(),
+        referencia=cargar_referencia(),
+        umbral=umbral,
+    )
+    contrarios = {}
+    revisados = 0
+    for factores in riesgo["factores"]:
+        for f in factores:
+            if f["variable"] not in DIRECCION_CON_MEDIDA or f["valor"] is None:
+                continue
+            revisados += 1
+            if (
+                np.sign(f["valor"] - f["promedio"])
+                != DIRECCION_CON_MEDIDA[f["variable"]]
+            ):
+                contrarios[f["variable"]] = contrarios.get(f["variable"], 0) + 1
+    assert revisados > 0
+    assert not contrarios, f"Valor del lado bueno del promedio: {contrarios}"

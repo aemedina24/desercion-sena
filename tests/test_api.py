@@ -231,6 +231,31 @@ def test_riesgo_de_un_aprendiz(cliente):
     assert cuerpo["plan_de_accion"] == [PLAN_FALSO]
 
 
+def test_cada_factor_trae_valor_y_promedio(archivos):
+    def con_valores(df):
+        riesgo = predictor_falso(df)
+        riesgo["factores"] = [
+            [{**f, "valor": 0.25, "promedio": 0.73} for f in factores]
+            for factores in riesgo["factores"]
+        ]
+        return riesgo
+
+    app = crear_app(**archivos, predecir=con_valores)
+    with TestClient(app) as cliente:
+        factor = cliente.get("/aprendices/A-000019/riesgo").json()["factores"][0]
+    assert factor == {
+        "variable": "porcentaje_actividades_aprobadas",
+        "aporte": 0.3,
+        "valor": 0.25,
+        "promedio": 0.73,
+    }
+
+
+def test_la_documentacion_describe_valor_y_promedio(cliente):
+    factor = cliente.get("/openapi.json").json()["components"]["schemas"]["Factor"]
+    assert {"valor", "promedio"} <= set(factor["properties"])
+
+
 def test_sin_alerta_no_hay_plan_de_accion(cliente):
     cuerpo = cliente.get("/aprendices/A-000020/riesgo").json()  # probabilidad 0.01
     assert cuerpo["alerta"] is False
