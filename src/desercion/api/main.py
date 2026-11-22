@@ -12,9 +12,13 @@ Al arrancar (lifespan) se carga todo una sola vez:
 Los endpoints solo consultan esa tabla. Si algo falla al arrancar, la API arranca
 igual: /health responde 503 con el motivo y los endpoints de riesgo también 503.
 
+/instructor sirve una página (instructor.html) que usa esos mismos endpoints: la
+lista de alertas de una cohorte y, por aprendiz, el porqué, qué hacer y qué decir.
+
 Uso (desde la raíz del repositorio):
     uv run uvicorn desercion.api.main:app --reload
     Documentación interactiva: http://127.0.0.1:8000/docs
+    Vista del instructor:      http://127.0.0.1:8000/instructor
 """
 
 from __future__ import annotations
@@ -25,14 +29,22 @@ import logging
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from functools import partial
+from importlib.resources import files
 from pathlib import Path
 from typing import Annotated, Literal
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Response, status
 from fastapi import Path as RutaParam
+from fastapi.responses import HTMLResponse
 
-from desercion.api.schemas import Error, RiesgoAprendiz, RiesgoCohorte, Salud
+from desercion.api.schemas import (
+    Error,
+    ResumenCohorte,
+    RiesgoAprendiz,
+    RiesgoCohorte,
+    Salud,
+)
 from desercion.explain import RUTA_REFERENCIA, cargar_referencia
 from desercion.modelado import RUTA_METRICAS, RUTA_MODELO, RUTA_TEST, cargar_modelo
 from desercion.prediccion import COLUMNAS_PREDICCION, predecir_riesgo
@@ -54,6 +66,8 @@ COLUMNAS_FILTRO = [
 LIMITE_POR_DEFECTO = 50
 LIMITE_MAXIMO = 500
 DESCRIPCION_503 = "Modelo o datos no cargados: la API arrancó, pero no puede responder"
+# La página va dentro del paquete para que la imagen Docker la lleve sin copiar src/.
+VISTA_INSTRUCTOR = files("desercion.api").joinpath("instructor.html")
 
 # Valores permitidos en los filtros: los mismos del contrato de datos (validate.py).
 # Un valor fuera de la lista responde 422 y /docs los muestra como desplegable.
@@ -162,7 +176,8 @@ def crear_app(
         description=(
             "Riesgo de deserción por aprendiz y por cohorte en la semana 4. "
             "Umbral global (ADR 0003); consulta por cohorte con filtros (ADR 0004); "
-            "plan de acción para el instructor (ADR 0006)."
+            "plan de acción para el instructor (ADR 0006). "
+            "Vista para el instructor en /instructor."
         ),
         version="0.5.0",
         lifespan=ciclo_de_vida,
@@ -201,6 +216,29 @@ def crear_app(
             umbral=app.state.umbral,
             aprendices=len(app.state.riesgo),
         )
+
+    @app.get("/instructor", response_class=HTMLResponse, tags=["instructor"])
+    def vista_instructor() -> HTMLResponse:
+        """Página para el instructor: alertas de su cohorte, porqué y plan.
+
+        Solo usa los endpoints públicos de esta API; no recibe datos propios.
+        """
+        return HTMLResponse(VISTA_INSTRUCTOR.read_text(encoding="utf-8"))
+
+    @app.get(
+        "/cohortes",
+        response_model=list[ResumenCohorte],
+        tags=["riesgo"],
+        responses={503: {"model": Error, "description": DESCRIPCION_503}},
+    )
+    def cohortes() -> list[ResumenCohorte]:
+        """Cohortes con aprendices activos, con su número de aprendices y de alertas."""
+        tabla = tabla_riesgo()
+        resumen = tabla.groupby("id_cohorte", sort=True)["alerta"].agg(["size", "sum"])
+        return [
+            ResumenCohorte(id_cohorte=str(c), aprendices=int(n), alertas=int(a))
+            for c, (n, a) in resumen.iterrows()
+        ]
 
     @app.get(
         "/aprendices/{id_aprendiz}/riesgo",

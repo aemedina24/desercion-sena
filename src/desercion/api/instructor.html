@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alerta temprana · Vista del instructor</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --tinta: #1f2328; --suave: #59636e; --linea: #d8dee4; --fondo: #f6f8fa;
+    --blanco: #ffffff; --acento: #0b6e4f; --acento-claro: #e6f2ed;
+    --alto: #b42318; --alto-claro: #fdecea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--tinta); background: var(--fondo); font-size: 15px; line-height: 1.45;
+  }
+  header {
+    background: var(--blanco); border-bottom: 1px solid var(--linea);
+    padding: 14px 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+  }
+  header h1 { font-size: 18px; margin: 0 auto 0 0; }
+  header h1 span { color: var(--suave); font-weight: 400; }
+  label { font-size: 13px; color: var(--suave); display: flex; gap: 6px; align-items: center; }
+  select { font: inherit; padding: 5px 8px; border: 1px solid var(--linea); border-radius: 6px; background: var(--blanco); }
+  main { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 16px; padding: 16px 24px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--blanco); border: 1px solid var(--linea); border-radius: 10px; }
+  .resumen { padding: 12px 16px; border-bottom: 1px solid var(--linea); color: var(--suave); font-size: 13px; }
+  .resumen strong { color: var(--tinta); font-size: 15px; }
+  ol#lista { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 190px); overflow-y: auto; }
+  ol#lista li { border-bottom: 1px solid var(--linea); }
+  ol#lista button {
+    all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
+    display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 10px 16px;
+  }
+  ol#lista button:hover { background: var(--fondo); }
+  ol#lista button[aria-current="true"] { background: var(--acento-claro); }
+  ol#lista button:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+  .puesto { font-weight: 700; color: var(--suave); font-variant-numeric: tabular-nums; }
+  .id { font-weight: 600; }
+  .motivo { color: var(--suave); font-size: 13px; }
+  #detalle { padding: 20px 24px; }
+  #detalle h2 { margin: 0 0 4px; font-size: 20px; }
+  .sub { color: var(--suave); margin: 0 0 18px; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); margin: 22px 0 8px; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--linea); }
+  th { font-size: 12px; color: var(--suave); font-weight: 600; }
+  td.num { text-align: right; }
+  .plan { border: 1px solid var(--linea); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+  .plan h4 { margin: 0 0 6px; font-size: 16px; }
+  .plazo { display: inline-block; background: var(--alto-claro); color: var(--alto); font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-bottom: 8px; }
+  .decir { background: var(--acento-claro); border-left: 3px solid var(--acento); padding: 8px 12px; margin: 8px 0; }
+  .decir p { margin: 4px 0; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0 0; font-size: 14px; }
+  dt { color: var(--suave); }
+  dd { margin: 0; }
+  .vacio { color: var(--suave); padding: 24px; }
+  .error { color: var(--alto); padding: 16px; }
+  footer { color: var(--suave); font-size: 12px; padding: 0 24px 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Alerta temprana <span>· vista del instructor</span></h1>
+  <label>Cohorte <select id="cohorte" aria-label="Cohorte"></select></label>
+  <label>Modalidad
+    <select id="modalidad" aria-label="Modalidad">
+      <option value="">Todas</option>
+      <option value="virtual">Virtual</option>
+      <option value="mixta">Mixta</option>
+      <option value="presencial">Presencial</option>
+    </select>
+  </label>
+</header>
+<main>
+  <section class="panel" aria-label="Aprendices con alerta">
+    <div class="resumen" id="resumen">Cargando…</div>
+    <ol id="lista"></ol>
+  </section>
+  <section class="panel" id="detalle" aria-live="polite">
+    <p class="vacio">Elija un aprendiz de la lista para ver por qué tiene alerta y cómo acercarse.</p>
+  </section>
+</main>
+<footer>
+  La lista está ordenada de mayor a menor riesgo. Una alerta es una invitación a acompañar,
+  no un diagnóstico ni una sanción. Datos sintéticos (generador v2).
+</footer>
+
+<script>
+"use strict";
+// Nombres para el instructor de cada variable y de cada medida (config/recomendaciones/medidas.yaml).
+const ETIQUETAS = {
+  porcentaje_actividades_entregadas: "Actividades entregadas",
+  porcentaje_actividades_aprobadas: "Actividades aprobadas",
+  tasa_aprobacion_entregas: "Aprobación de lo entregado",
+  promedio_calificaciones: "Promedio de calificaciones",
+  actividades_pendientes: "Actividades pendientes",
+  evaluaciones_no_presentadas: "Evaluaciones no presentadas",
+  ingresos_plataforma_ultimos_7d: "Ingresos a la plataforma en 7 días",
+  dias_sin_ingreso: "Días sin entrar a la plataforma",
+  sin_ingreso_reciente: "Sin ingreso en la última semana",
+  asistencia_porcentaje: "Asistencia",
+  n_cursos_abandonados: "Cursos abandonados antes",
+  n_cursos_previos: "Cursos previos",
+  n_cursos_completados: "Cursos completados antes",
+  tasa_finalizacion_previa: "Cursos previos terminados",
+  abandono_ultimo_curso: "Abandonó el último curso",
+  meses_desde_ultimo_curso: "Meses desde el último curso",
+  es_primer_curso: "Es su primer curso",
+  experiencia_virtual_previa: "Experiencia virtual previa",
+  horas_trabajo_semana: "Horas de trabajo a la semana",
+  horas_disponibles_estudio: "Horas disponibles para estudiar",
+  responsabilidades_cuidado: "Cuida a otras personas",
+  dificultad_economica_reportada: "Dificultad económica",
+  situacion_laboral: "Situación laboral",
+  calidad_internet: "Calidad de internet",
+  tipo_conexion: "Tipo de conexión",
+  tipo_plan_internet: "Plan de internet",
+  dispositivo_principal: "Dispositivo principal",
+  comparte_dispositivo: "Comparte el dispositivo",
+  disponibilidad_equipo: "Tiene equipo propio",
+  solicito_apoyo: "Pidió apoyo",
+  modalidad: "Modalidad",
+  nivel_formacion: "Nivel del programa",
+  nivel_educativo: "Nivel educativo",
+  area_formacion: "Área de formación",
+  jornada: "Jornada",
+  duracion_programa_meses: "Duración del programa (meses)",
+  progreso_programa: "Avance en el programa",
+  dias_desde_inicio: "Días desde el inicio",
+  edad: "Edad",
+};
+const MEDIDAS = {
+  ponerse_al_dia: "Ponerse al día con las entregas",
+  plan_de_mejoramiento: "Plan de mejoramiento o tutoría",
+  contacto_por_inactividad: "Contacto por inactividad",
+  inasistencia: "Conversar sobre la asistencia",
+  antecedentes_de_abandono: "Seguimiento cercano desde ya",
+  apoyo_economico: "Orientar hacia apoyos económicos",
+  conectividad_y_equipo: "Conectividad y equipo",
+  tiempo_disponible: "Organizar el tiempo de estudio",
+  induccion_virtual: "Inducción a la plataforma",
+  solicitud_de_apoyo: "Responder a su solicitud de apoyo",
+  general: "Acercamiento general",
+};
+const PORCENTAJES = new Set([
+  "porcentaje_actividades_entregadas", "porcentaje_actividades_aprobadas",
+  "tasa_aprobacion_entregas", "asistencia_porcentaje", "tasa_finalizacion_previa",
+  "progreso_programa",
+]);
+const BOOLEANAS = new Set([
+  "sin_ingreso_reciente", "abandono_ultimo_curso", "es_primer_curso",
+  "experiencia_virtual_previa", "responsabilidades_cuidado", "comparte_dispositivo",
+  "disponibilidad_equipo", "solicito_apoyo",
+]);
+// Conteos: se muestran sin decimales. El resto de números, con uno.
+const CONTEOS = new Set([
+  "n_cursos_previos", "n_cursos_completados", "n_cursos_abandonados", "dias_sin_ingreso",
+  "ingresos_plataforma_ultimos_7d", "actividades_pendientes", "evaluaciones_no_presentadas",
+  "edad", "duracion_programa_meses", "dias_desde_inicio",
+]);
+const LIMITE = 500;
+
+const $ = (id) => document.getElementById(id);
+const etiqueta = (v) => ETIQUETAS[v] || v.replaceAll("_", " ");
+const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+
+function valorTexto(variable, valor) {
+  if (valor === null || valor === undefined) return "sin dato";
+  if (typeof valor === "string") return capital(valor);
+  if (BOOLEANAS.has(variable)) return valor >= 0.5 ? "Sí" : "No";
+  if (PORCENTAJES.has(variable)) return `${Math.round(valor * 100)} %`;
+  return CONTEOS.has(variable) ? String(Math.round(valor)) : valor.toFixed(1).replace(".", ",");
+}
+
+function promedioTexto(variable, promedio) {
+  if (promedio === null || promedio === undefined) return "—";
+  if (BOOLEANAS.has(variable)) return `${Math.round(promedio * 100)} % de los aprendices`;
+  if (PORCENTAJES.has(variable)) return `${Math.round(promedio * 100)} %`;
+  return promedio.toFixed(1).replace(".", ",");
+}
+
+function motivo(aprendiz) {
+  const f = aprendiz.factores[0];
+  if (!f) return "Sin un factor dominante";
+  const v = valorTexto(f.variable, f.valor);
+  return f.promedio === null || f.valor === null
+    ? `${etiqueta(f.variable)}: ${v}`
+    : `${etiqueta(f.variable)}: ${v} (promedio ${promedioTexto(f.variable, f.promedio)})`;
+}
+
+function el(tag, texto, clase) {
+  const n = document.createElement(tag);
+  if (texto !== undefined) n.textContent = texto;
+  if (clase) n.className = clase;
+  return n;
+}
+
+async function pedir(url) {
+  const r = await fetch(url);
+  if (!r.ok) {
+    const cuerpo = await r.json().catch(() => ({}));
+    throw new Error(cuerpo.detail ? JSON.stringify(cuerpo.detail) : `Error ${r.status}`);
+  }
+  return r.json();
+}
+
+async function cargarCohortes() {
+  const cohortes = await pedir("/cohortes");
+  const sel = $("cohorte");
+  for (const c of cohortes) {
+    const op = el("option", `${c.id_cohorte} · ${c.alertas} alertas`);
+    op.value = c.id_cohorte;
+    sel.append(op);
+  }
+  if (cohortes.length) sel.value = cohortes[cohortes.length - 1].id_cohorte;
+}
+
+async function cargarLista() {
+  const cohorte = $("cohorte").value;
+  if (!cohorte) return;
+  const params = new URLSearchParams({ solo_alertas: "true", limite: String(LIMITE) });
+  if ($("modalidad").value) params.set("modalidad", $("modalidad").value);
+  $("resumen").textContent = "Cargando…";
+  $("lista").replaceChildren();
+  try {
+    const datos = await pedir(`/cohortes/${encodeURIComponent(cohorte)}/riesgo?${params}`);
+    const resumen = $("resumen");
+    resumen.replaceChildren(
+      el("strong", `${datos.total_alertas} aprendices con alerta`),
+      document.createTextNode(` en ${datos.id_cohorte}. Empiece por los primeros de la lista.`),
+    );
+    datos.aprendices.forEach((a, i) => {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.append(el("span", String(i + 1), "puesto"));
+      const texto = el("span");
+      texto.append(el("span", a.id_aprendiz, "id"), el("br"), el("span", motivo(a), "motivo"));
+      boton.append(texto);
+      boton.addEventListener("click", () => {
+        document.querySelectorAll("#lista button").forEach((b) => b.removeAttribute("aria-current"));
+        boton.setAttribute("aria-current", "true");
+        mostrar(a, i + 1, datos.total_alertas);
+      });
+      const li = el("li");
+      li.append(boton);
+      $("lista").append(li);
+    });
+    if (!datos.aprendices.length) $("lista").append(el("li", "No hay alertas con estos filtros.", "vacio"));
+  } catch (e) {
+    $("resumen").replaceChildren(el("span", `No se pudo cargar la cohorte: ${e.message}`, "error"));
+  }
+}
+
+function mostrar(a, puesto, total) {
+  const d = $("detalle");
+  d.replaceChildren();
+  d.append(el("h2", a.id_aprendiz));
+  d.append(el("p", `Puesto ${puesto} de ${total} en la lista de esta cohorte.`, "sub"));
+
+  d.append(el("h3", "Por qué tiene alerta"));
+  if (a.factores.length) {
+    const tabla = el("table");
+    const cab = el("tr");
+    ["Factor", "Este aprendiz", "Promedio"].forEach((t, i) => {
+      const th = el("th", t);
+      if (i) th.className = "num";
+      cab.append(th);
+    });
+    tabla.append(cab);
+    for (const f of a.factores) {
+      const tr = el("tr");
+      tr.append(
+        el("td", etiqueta(f.variable)),
+        el("td", valorTexto(f.variable, f.valor), "num"),
+        el("td", promedioTexto(f.variable, f.promedio), "num"),
+      );
+      tabla.append(tr);
+    }
+    d.append(tabla);
+  } else {
+    d.append(el("p", "Ningún factor sobresale: el riesgo viene de varias cosas pequeñas.", "sub"));
+  }
+
+  d.append(el("h3", "Qué hacer"));
+  for (const p of a.plan_de_accion) {
+    const caja = el("div", undefined, "plan");
+    caja.append(el("h4", MEDIDAS[p.medida] || p.medida));
+    caja.append(el("span", `En los próximos ${p.plazo_dias} días`, "plazo"));
+    caja.append(el("p", p.accion));
+    const decir = el("div", undefined, "decir");
+    decir.append(el("strong", "Qué decirle"));
+    for (const frase of p.decir) decir.append(el("p", `«${frase}»`));
+    caja.append(decir);
+    const dl = el("dl");
+    const fila = (t, v) => dl.append(el("dt", t), el("dd", v));
+    fila("Evitar", p.evitar);
+    fila("Si no responde", p.si_no_responde);
+    fila("Registrar", p.registrar);
+    fila("Seguimiento", `Revisar de nuevo en ${p.seguimiento_dias} días`);
+    caja.append(dl);
+    d.append(caja);
+  }
+}
+
+$("cohorte").addEventListener("change", cargarLista);
+$("modalidad").addEventListener("change", cargarLista);
+cargarCohortes()
+  .then(cargarLista)
+  .catch((e) => {
+    $("resumen").replaceChildren(el("span", `La API no está lista: ${e.message}`, "error"));
+  });
+</script>
+</body>
+</html>
