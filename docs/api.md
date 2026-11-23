@@ -153,7 +153,9 @@ cohorte no tiene aprendices activos.
 Una página para el instructor, servida por la misma API, en
 <http://127.0.0.1:8000/instructor>. Se elige la cohorte y, si se quiere, la modalidad.
 A la izquierda salen los aprendices con alerta, de mayor a menor riesgo, cada uno con su
-factor principal en palabras («Actividades entregadas: 14 % (promedio 73 %)»). Al
+factor principal en palabras («Actividades entregadas: 14 % (promedio 73 %)»): el
+primero con dato, porque la asistencia de los virtuales está vacía (en el detalle dice
+«No aplica (sin sesiones presenciales)»). Al
 elegir uno, a la derecha salen el porqué (cada factor con el valor del aprendiz y el
 promedio) y el plan: qué hacer y en cuántos días, qué decirle, qué evitar, qué hacer
 si no responde, qué registrar y cuándo volver a revisar.
@@ -186,7 +188,9 @@ si no responde, qué registrar y cuándo volver a revisar.
   el `valor` es un texto y no hay `promedio`; si el dato está vacío (la asistencia de un
   virtual), `valor` es `null`. El promedio sale del modelo (la media que guarda su
   escalador), así que en variables con vacíos incluye los vacíos rellenados con la
-  mediana.
+  mediana. No sale un factor cuyo valor está del lado bueno del promedio: por la
+  colinealidad, el modelo marcaba «Cursos previos terminados: 100 % (promedio 79 %)»
+  como razón de 40 alertas. Su lugar lo toma el siguiente factor.
 - **`medidas`:** solo cuando hay alerta. Hasta 3, en orden de aporte y sin repetir (dos
   factores pueden compartir medida). Se definen en `config/recomendaciones/medidas.yaml`
   y nunca se sugieren por características personales como la edad o el nivel

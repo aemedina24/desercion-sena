@@ -197,9 +197,12 @@ viene sobre todo de su indicador de dato faltante, que es lo mismo que ser virtu
   a una le sale el signo invertido: con la v2, aprobar más termina sumando riesgo (277
   aprendices de test la tienen como factor, con 92 % aprobado frente a 64 %). Pasa lo
   mismo con `tasa_finalizacion_previa` y `abandono_ultimo_curso` frente a
-  `n_cursos_abandonados`. Esas variables se muestran como factor, pero no generan
-  medida, y una prueba verifica la dirección de cada variable que sí la genera. La
-  solución de fondo es agrupar los factores por tema.
+  `n_cursos_abandonados`. Esas variables no generan medida, y desde el 22 de noviembre
+  tampoco se muestran como factor cuando el valor del aprendiz está del lado bueno del
+  promedio (`prediccion.quitar_contrarios`): el instructor veía «Cursos previos
+  terminados: 100 % (promedio 79 %)» como razón de 40 alertas. Su lugar lo toma el
+  siguiente factor; las alertas no cambian. La solución de fondo es agrupar los
+  factores por tema.
 - **Datos de encuesta incompletos:** `horas_disponibles_estudio`,
   `dificultad_economica_reportada` y `calidad_internet` faltan en 581 aprendices, y no
   al azar (sin encuesta deserta el 36,5 %, con encuesta el 31,4 %); el modelo trata la
