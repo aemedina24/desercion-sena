@@ -39,10 +39,13 @@ aprendices antes de aceptar consultas. Luego responde en <http://127.0.0.1:8000>
 | `models/referencia.json` | El aprendiz promedio de train, para calcular los factores | etapa `explain` |
 | `data/features/test.parquet` | Los aprendices activos (en la demo, las cohortes 2025-T3 y 2025-T4) | etapa `features` |
 | `config/recomendaciones/medidas.yaml` | Las medidas sugeridas | se edita a mano |
+| `reports/calibracion.json` | La corrección de la probabilidad (opcional) | etapa `calibrate` |
 
 Con eso calcula una sola vez la probabilidad, la alerta, los factores y las medidas de
 cada aprendiz (`prediccion.predecir_riesgo`), y después solo consulta esa tabla. Si
 algo falla al cargar, la API arranca igual y `/health` informa el motivo con un 503.
+La calibración es la excepción: si falta o es de otro modelo, la API responde normal,
+sin `probabilidad_calibrada`, y `/health` lo dice con `calibrada: false`.
 Para tomar datos o un modelo nuevos hay que reiniciarla.
 
 ## Endpoints
@@ -64,6 +67,7 @@ Para tomar datos o un modelo nuevos hay que reiniciarla.
   "version_modelo": "9b58e3fead5766bcb03c85931f27a882",
   "umbral": 0.4910441072721096,
   "aprendices": 1583,
+  "calibrada": true,
   "detalle": null
 }
 ```
@@ -73,7 +77,8 @@ Para tomar datos o un modelo nuevos hay que reiniciarla.
 | `estado` | `ok`; `sin_modelo` si no cargó el modelo o el umbral; `sin_datos` si el modelo cargó pero faltan los aprendices o la referencia, o la referencia es de otro modelo |
 | `version_modelo` | md5 de `models/modelo.skops`. Debe coincidir con el de `dvc.lock`: así se sabe qué modelo está sirviendo la API |
 | `aprendices` | Cuántos aprendices activos tiene cargados |
-| `detalle` | Si el estado no es `ok`, qué falló y cómo resolverlo (por ejemplo, `uv run dvc repro explain`) |
+| `calibrada` | Si cada aprendiz trae `probabilidad_calibrada`. Es `false` si falta `reports/calibracion.json` o si es de otro modelo (su umbral no coincide); la API responde igual |
+| `detalle` | Si el estado no es `ok`, qué falló y cómo resolverlo (por ejemplo, `uv run dvc repro explain`). Con estado `ok` y `calibrada: false`, por qué no cargó la calibración |
 
 Si el estado no es `ok`, responde con código 503 y el mismo formato.
 
@@ -86,6 +91,7 @@ Si el estado no es `ok`, responde con código 503 y el mismo formato.
 {
   "id_aprendiz": "A-005693",
   "probabilidad": 0.8758127287801957,
+  "probabilidad_calibrada": 0.766427300486834,
   "alerta": true,
   "umbral": 0.4910441072721096,
   "factores": [
@@ -158,9 +164,10 @@ elegir uno, a la derecha salen el porqué (cada factor con el valor del aprendiz
 promedio) y el plan: qué hacer y en cuántos días, qué decirle, qué evitar, qué hacer
 si no responde, qué registrar y cuándo volver a revisar.
 
-- No muestra la probabilidad como porcentaje, porque está inflada por
-  `class_weight="balanced"` (ver la calibración en la [model card](model_card.md)):
-  muestra el puesto en la lista.
+- No muestra la probabilidad: muestra el puesto en la lista. La `probabilidad` del
+  modelo está inflada por `class_weight="balanced"`; la `probabilidad_calibrada` sí se
+  puede leer como porcentaje, pero mostrarla al instructor (o convertirla en bandas de
+  prioridad) es una decisión que falta validar con los instructores.
 - Solo usa `GET /cohortes` y `GET /cohortes/{id_cohorte}/riesgo`, con `solo_alertas` y
   hasta 500 aprendices. No carga nada de internet: funciona igual dentro de Docker.
 - Los nombres para el instructor de cada variable y de cada medida están en la misma
@@ -169,10 +176,16 @@ si no responde, qué registrar y cuándo volver a revisar.
 
 ## Cómo leer una respuesta
 
-- **`probabilidad`:** riesgo estimado de desertar, entre 0 y 1. Sirve para **ordenar**
-  a los aprendices, no como porcentaje: el balanceo de clases la infla (una alerta de
-  0.68 corresponde a unos 48 desertores de cada 100). Ver
+- **`probabilidad`:** riesgo estimado de desertar, entre 0 y 1, tal como sale del
+  modelo. Sirve para **ordenar** a los aprendices y decidir la alerta, no como
+  porcentaje: el balanceo de clases la infla (en las alertas promete 0.68 en promedio y
+  desertan 48 de cada 100). Ver
   [calibración](model_card.md#calibración-la-probabilidad-está-inflada).
+- **`probabilidad_calibrada`:** la misma probabilidad sin el efecto del balanceo; esta
+  sí se puede leer como porcentaje (en las alertas promete 0.51 en promedio y desertan
+  0.48). Le resta a todos el mismo valor en log-odds (0.765, de
+  `reports/calibracion.json`), así que el orden y las alertas no cambian. Es `null` si
+  la API no cargó la calibración (`/health` → `calibrada: false`).
 - **`alerta`:** `true` si la probabilidad es mayor o igual al umbral (0.491). El umbral
   se eligió para detectar al menos el 70 % de los desertores
   ([ADR 003](decisiones/0003-umbral-y-equidad.md)).

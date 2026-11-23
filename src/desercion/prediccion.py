@@ -18,8 +18,11 @@ Conexión con la API (en crear_app):
 
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
@@ -42,6 +45,11 @@ MAX_FACTORES = 5
 # umbral. Es el orden de las variables menos importantes en test
 # (reports/importancia_variables.json).
 APORTE_MINIMO = 0.05
+# Probabilidades que nunca llegan a 0 ni a 1: el log-odds sería infinito.
+EPSILON = 1e-9
+# El umbral de reports/calibracion.json y el de metricas_modelo_base.json salen
+# del mismo modelo; entre Windows y Linux difieren desde el decimal 13.
+TOLERANCIA_UMBRAL = 1e-6
 
 
 def predecir_riesgo(
@@ -177,6 +185,40 @@ def validar_referencia(modelo: Pipeline, referencia: pd.Series) -> None:
             f"La referencia no corresponde al modelo: le faltan {len(faltantes)} "
             f"columnas (por ejemplo {min(faltantes)}). Ejecuta `uv run dvc repro explain`."
         )
+
+
+def cargar_desplazamiento(ruta: Path, umbral: float) -> float:
+    """Corrimiento de la calibración (reports/calibracion.json) para este modelo.
+
+    Lo escribe la etapa `calibrate` de DVC: `log(no desertores / desertores)` en
+    train, lo que `class_weight="balanced"` le sumó al log-odds de todos. Falla
+    si el reporte es de otro modelo (su umbral no coincide con el que cargó la
+    API): pasa si se reentrena sin volver a correr `calibrate`. La tolerancia
+    deja pasar la diferencia de decimales entre Windows y Linux.
+    """
+    calibracion = json.loads(ruta.read_text(encoding="utf-8"))
+    umbral_reporte = float(calibracion["modelo"]["umbral"])
+    if not math.isclose(umbral_reporte, umbral, abs_tol=TOLERANCIA_UMBRAL):
+        raise ValueError(
+            f"La calibración es de otro modelo: su umbral es {umbral_reporte:.6f} y el "
+            f"de la API {umbral:.6f}. Ejecuta `uv run dvc repro calibrate`."
+        )
+    desplazamiento = float(calibracion["desplazamiento_por_balanceo"])
+    if not math.isfinite(desplazamiento):
+        raise ValueError(f"Desplazamiento de calibración inválido: {desplazamiento}")
+    return desplazamiento
+
+
+def corregir_probabilidad(probabilidad: pd.Series, desplazamiento: float) -> pd.Series:
+    """Probabilidad sin el empujón del balanceo: la que se puede leer como porcentaje.
+
+    Resta el mismo valor al log-odds de todos (la corrección de calibracion.py,
+    que no se importa aquí porque usa matplotlib, ausente en la imagen Docker).
+    No cambia el orden de los aprendices, así que tampoco las alertas.
+    """
+    p = probabilidad.clip(EPSILON, 1 - EPSILON)
+    log_odds = np.log(p / (1 - p)) - desplazamiento
+    return 1 / (1 + np.exp(-log_odds))
 
 
 def variables_modelo(aprendices: pd.DataFrame) -> pd.DataFrame:

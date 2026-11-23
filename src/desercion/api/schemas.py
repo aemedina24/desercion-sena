@@ -28,6 +28,9 @@ class Salud(BaseModel):
     umbral: float | None = Field(default=None, gt=0, lt=1)
     # Aprendices activos con el riesgo ya calculado al arrancar.
     aprendices: int | None = Field(default=None, ge=0)
+    # True si cada aprendiz trae probabilidad_calibrada (reports/calibracion.json
+    # cargado y del mismo modelo). Si es False con estado ok, detalle dice por qué.
+    calibrada: bool = False
     detalle: str | None = None
 
 
@@ -84,7 +87,24 @@ class RiesgoAprendiz(BaseModel):
     """Riesgo de deserción de un aprendiz en la fecha de corte."""
 
     id_aprendiz: str = Field(pattern=r"^A-\d{6}$")
-    probabilidad: float = Field(ge=0, le=1)
+    probabilidad: float = Field(
+        ge=0,
+        le=1,
+        description=(
+            "Salida del modelo. Sirve para ordenar y decidir la alerta, pero exagera "
+            "el riesgo: el modelo se entrenó con clases balanceadas."
+        ),
+    )
+    probabilidad_calibrada: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+        description=(
+            "La misma probabilidad sin el efecto del balanceo: se puede leer como "
+            "porcentaje (de 100 aprendices con 0,40, desertan alrededor de 40). "
+            "Mismo orden y mismas alertas. Vacía si la API no cargó la calibración."
+        ),
+    )
     # True si probabilidad >= umbral (elegido con out-of-fold en train).
     alerta: bool
     umbral: float = Field(gt=0, lt=1)

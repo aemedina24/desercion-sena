@@ -8,6 +8,10 @@ Al arrancar (lifespan) se carga todo una sola vez:
    vendrían de la base del SENA).
 4. El riesgo de todos, calculado con `prediccion.predecir_riesgo`: probabilidad,
    alerta, factores, medidas y plan de acción.
+5. La calibración (reports/calibracion.json, la escribe `calibrate`): con ella
+   cada aprendiz trae además `probabilidad_calibrada`, la que se puede leer como
+   porcentaje. Es opcional: si falta o es de otro modelo, la API responde igual,
+   sin ese campo, y /health lo dice (`calibrada: false`).
 
 Los endpoints solo consultan esa tabla. Si algo falla al arrancar, la API arranca
 igual: /health responde 503 con el motivo y los endpoints de riesgo también 503.
@@ -47,7 +51,12 @@ from desercion.api.schemas import (
 )
 from desercion.explain import RUTA_REFERENCIA, cargar_referencia
 from desercion.modelado import RUTA_METRICAS, RUTA_MODELO, RUTA_TEST, cargar_modelo
-from desercion.prediccion import COLUMNAS_PREDICCION, predecir_riesgo
+from desercion.prediccion import (
+    COLUMNAS_PREDICCION,
+    cargar_desplazamiento,
+    corregir_probabilidad,
+    predecir_riesgo,
+)
 from desercion.validate import AREAS_FORMACION, MODALIDADES, NIVELES_FORMACION
 
 logger = logging.getLogger(__name__)
@@ -65,6 +74,9 @@ COLUMNAS_FILTRO = [
 ]
 LIMITE_POR_DEFECTO = 50
 LIMITE_MAXIMO = 500
+# La escribe la etapa `calibrate` (calibracion.py). No se importa la constante de
+# allá porque ese módulo usa matplotlib, que no está en la imagen Docker.
+RUTA_CALIBRACION = Path("reports/calibracion.json")
 DESCRIPCION_503 = "Modelo o datos no cargados: la API arrancó, pero no puede responder"
 # La página va dentro del paquete para que la imagen Docker la lleve sin copiar src/.
 VISTA_INSTRUCTOR = files("desercion.api").joinpath("instructor.html")
@@ -107,9 +119,11 @@ def construir_tabla_riesgo(
 
 
 def a_respuesta(fila: pd.Series, umbral: float) -> RiesgoAprendiz:
+    calibrada = fila.get("probabilidad_calibrada")
     return RiesgoAprendiz(
         id_aprendiz=fila["id_aprendiz"],
         probabilidad=float(fila["probabilidad"]),
+        probabilidad_calibrada=None if calibrada is None else float(calibrada),
         alerta=bool(fila["alerta"]),
         umbral=umbral,
         factores=list(fila["factores"]),
@@ -124,6 +138,7 @@ def crear_app(
     ruta_aprendices: Path = RUTA_TEST,
     ruta_referencia: Path = RUTA_REFERENCIA,
     predecir: Predictor | None = None,
+    ruta_calibracion: Path = RUTA_CALIBRACION,
 ) -> FastAPI:
     """Construye la API.
 
@@ -140,6 +155,7 @@ def crear_app(
         app.state.version_modelo = None
         app.state.riesgo = None
         app.state.error_carga = None
+        app.state.error_calibracion = None
         try:
             modelo = cargar_modelo(ruta_modelo)
             metricas = json.loads(ruta_metricas.read_text(encoding="utf-8"))
@@ -156,7 +172,19 @@ def crear_app(
                 umbral=app.state.umbral,
             )
             aprendices = pd.read_parquet(ruta_aprendices)
-            app.state.riesgo = construir_tabla_riesgo(aprendices, funcion(aprendices))
+            riesgo = construir_tabla_riesgo(aprendices, funcion(aprendices))
+            # Sin calibración la API responde igual: es un dato más, no decide nada.
+            try:
+                desplazamiento = cargar_desplazamiento(
+                    ruta_calibracion, app.state.umbral
+                )
+                riesgo["probabilidad_calibrada"] = corregir_probabilidad(
+                    riesgo["probabilidad"], desplazamiento
+                )
+            except Exception as error:  # noqa: BLE001
+                app.state.error_calibracion = f"{type(error).__name__}: {error}"
+                logger.warning("Sin calibración: %s", app.state.error_calibracion)
+            app.state.riesgo = riesgo
             logger.info(
                 "Modelo %s · %s aprendices activos",
                 app.state.version_modelo,
@@ -179,7 +207,7 @@ def crear_app(
             "plan de acción para el instructor (ADR 0006). "
             "Vista para el instructor en /instructor."
         ),
-        version="0.5.0",
+        version="0.6.0",
         lifespan=ciclo_de_vida,
     )
 
@@ -209,12 +237,17 @@ def crear_app(
                 umbral=app.state.umbral,
                 detalle=app.state.error_carga,
             )
+        calibrada = "probabilidad_calibrada" in app.state.riesgo.columns
         return Salud(
             estado="ok",
             modelo_cargado=True,
             version_modelo=app.state.version_modelo,
             umbral=app.state.umbral,
             aprendices=len(app.state.riesgo),
+            calibrada=calibrada,
+            detalle=None
+            if calibrada
+            else f"Sin calibración: {app.state.error_calibracion}",
         )
 
     @app.get("/instructor", response_class=HTMLResponse, tags=["instructor"])

@@ -44,10 +44,10 @@ WORKDIR /app
 COPY --from=dependencias /app/.venv /app/.venv
 
 # Lo que la API lee al arrancar, con las mismas rutas relativas del repositorio
-# (modelado.py, explain.py, recomendaciones.py).
+# (modelado.py, explain.py, recomendaciones.py, api/main.py).
 COPY config/recomendaciones/medidas.yaml config/recomendaciones/
 COPY models/modelo.skops models/referencia.json models/
-COPY reports/metricas_modelo_base.json reports/
+COPY reports/metricas_modelo_base.json reports/calibracion.json reports/
 COPY data/features/test.parquet data/features/
 
 ENV PATH="/app/.venv/bin:$PATH" \

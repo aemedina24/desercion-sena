@@ -101,8 +101,9 @@ Trabajo adicional a la entrega. Los datos de la v1 se recibieron generados con C
 - [x] A: Andrés · R: David · Fusionar `datos-v2` en `main` (PR #33)
 - [x] A: Andrés · R: David · Notas de la revisión del #33 y prueba desde cero en Linux: mismos datos y métricas (PR #38)
 - [ ] A: Juntos · Ejecutar todo desde cero con la v2 en Windows: `git clone` → `uv sync` → `dvc repro` → `pytest`
-- [ ] A: Andrés · R: David · Valor del aprendiz y promedio junto a cada factor, API 0.5.0
+- [x] A: Andrés · R: David · Valor del aprendiz y promedio junto a cada factor, API 0.5.0 (PR #39)
 - [ ] A: Andrés · R: David · Vista del instructor servida por la API (`/instructor` y `/cohortes`)
+- [ ] A: Andrés · R: David · Probabilidad calibrada en la API (`probabilidad_calibrada`), API 0.6.0
 - [ ] A: Juntos · Actualizar la presentación con la v2 (techo conocido, plan de acción, calibración, equidad y monitoreo) y ensayarla
 - [ ] A: Juntos · Crear la etiqueta `v2.0.0` después de fusionar
 - [ ] A: Juntos · Sustentación (25 nov)
@@ -110,6 +111,6 @@ Trabajo adicional a la entrega. Los datos de la v1 se recibieron generados con C
 ### Para después (no entran en la sustentación)
 
 - [ ] Umbral por modalidad: decisión institucional ([ADR 0003](decisiones/0003-umbral-y-equidad.md))
-- [ ] Calibración: aplicar la corrección en la API o mostrar bandas; probar Platt o isotónica con out-of-fold
+- [ ] Calibración: bandas de prioridad con la probabilidad calibrada; probar Platt o isotónica con out-of-fold
 - [ ] Plan de acción: validar los guiones con instructores y Bienestar
 - [ ] Sugerencias de revisión pendientes: frase de inactividad "noté poca actividad", tamaño de `/cohortes` con planes, redondear `calibracion.json`
