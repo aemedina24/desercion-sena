@@ -16,4 +16,5 @@ src/**/__pycache__
 !models/modelo.skops
 !models/referencia.json
 !reports/metricas_modelo_base.json
+!reports/calibracion.json
 !data/features/test.parquet
