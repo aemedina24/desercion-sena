@@ -197,7 +197,7 @@ docker build -t desercion-api .
 docker run --rm -d -p 8000:8000 --name api desercion-api
 ```
 
-Espere unos segundos a que cargue el modelo. Compruebe que responde en <http://127.0.0.1:8000/health> (`"estado": "ok"`) y explore los endpoints en <http://127.0.0.1:8000/docs>; la [documentación de la API](docs/api.md) explica cada uno. Para detenerla: `docker stop api`. Sin Docker, la misma API se levanta con `uv run uvicorn desercion.api.main:app --reload`.
+Espere unos segundos a que cargue el modelo. Compruebe que responde en <http://127.0.0.1:8000/health> (`"estado": "ok"`), explore los endpoints en <http://127.0.0.1:8000/docs> y abra la vista del instructor en <http://127.0.0.1:8000/instructor>; la [documentación de la API](docs/api.md) explica cada uno. Para detenerla: `docker stop api`. Sin Docker, la misma API se levanta con `uv run uvicorn desercion.api.main:app --reload`.
 
 ---
 

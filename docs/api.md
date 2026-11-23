@@ -52,6 +52,8 @@ Para tomar datos o un modelo nuevos hay que reiniciarla.
 | `GET /health` | Si la API puede responder y con qué modelo | 200, 503 |
 | `GET /aprendices/{id_aprendiz}/riesgo` | El riesgo de un aprendiz | 200, 404, 422, 503 |
 | `GET /cohortes/{id_cohorte}/riesgo` | Los aprendices de una cohorte, de mayor a menor riesgo | 200, 404, 422, 503 |
+| `GET /cohortes` | Las cohortes con aprendices activos, con su número de aprendices y de alertas | 200, 503 |
+| `GET /instructor` | La vista del instructor: una página web que usa estos mismos endpoints | 200 |
 
 ### `GET /health`
 
@@ -136,6 +138,34 @@ responde 422. Ejemplo:
 `total_aprendices` y `total_alertas` cuentan a todos los que cumplen los filtros, antes
 de aplicar `limite`. La lista va de mayor a menor probabilidad. Responde 404 si la
 cohorte no tiene aprendices activos.
+
+### `GET /cohortes`
+
+```json
+[
+  {"id_cohorte": "2025-T3", "aprendices": 795, "alertas": 347},
+  {"id_cohorte": "2025-T4", "aprendices": 788, "alertas": 369}
+]
+```
+
+### `GET /instructor`
+
+Una página para el instructor, servida por la misma API, en
+<http://127.0.0.1:8000/instructor>. Se elige la cohorte y, si se quiere, la modalidad.
+A la izquierda salen los aprendices con alerta, de mayor a menor riesgo, cada uno con su
+factor principal en palabras («Actividades entregadas: 14 % (promedio 73 %)»). Al
+elegir uno, a la derecha salen el porqué (cada factor con el valor del aprendiz y el
+promedio) y el plan: qué hacer y en cuántos días, qué decirle, qué evitar, qué hacer
+si no responde, qué registrar y cuándo volver a revisar.
+
+- No muestra la probabilidad como porcentaje, porque está inflada por
+  `class_weight="balanced"` (ver la calibración en la [model card](model_card.md)):
+  muestra el puesto en la lista.
+- Solo usa `GET /cohortes` y `GET /cohortes/{id_cohorte}/riesgo`, con `solo_alertas` y
+  hasta 500 aprendices. No carga nada de internet: funciona igual dentro de Docker.
+- Los nombres para el instructor de cada variable y de cada medida están en la misma
+  página; una prueba falla si una variable o una medida de `medidas.yaml` no tiene
+  nombre.
 
 ## Cómo leer una respuesta
 

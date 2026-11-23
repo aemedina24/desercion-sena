@@ -102,7 +102,7 @@ Trabajo adicional a la entrega. Los datos de la v1 se recibieron generados con C
 - [x] A: Andrés · R: David · Notas de la revisión del #33 y prueba desde cero en Linux: mismos datos y métricas (PR #38)
 - [ ] A: Juntos · Ejecutar todo desde cero con la v2 en Windows: `git clone` → `uv sync` → `dvc repro` → `pytest`
 - [ ] A: Andrés · R: David · Valor del aprendiz y promedio junto a cada factor, API 0.5.0
-- [ ] A: Andrés · R: David · Vista del instructor servida por la API
+- [ ] A: Andrés · R: David · Vista del instructor servida por la API (`/instructor` y `/cohortes`)
 - [ ] A: Juntos · Actualizar la presentación con la v2 (techo conocido, plan de acción, calibración, equidad y monitoreo) y ensayarla
 - [ ] A: Juntos · Crear la etiqueta `v2.0.0` después de fusionar
 - [ ] A: Juntos · Sustentación (25 nov)

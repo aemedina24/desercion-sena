@@ -14,6 +14,7 @@ tiene). Cada prueba crea en una carpeta temporal:
 from __future__ import annotations
 
 import json
+import re
 
 import numpy as np
 import pandas as pd
@@ -31,6 +32,7 @@ from desercion.api.schemas import Accion, Factor, RiesgoAprendiz, RiesgoCohorte,
 from desercion.explain import guardar_referencia, referencia_train
 from desercion.features import agregar_variables, quitar_columnas
 from desercion.modelado import guardar_modelo, separar_x_y, tipos_de_columnas
+from desercion.recomendaciones import MEDIDA_GENERAL, cargar_medidas
 from desercion.train_model import cargar_config, construir_pipeline
 from desercion.validate import AREAS_FORMACION, MODALIDADES, NIVELES_FORMACION
 
@@ -195,6 +197,8 @@ def test_documentacion_incluye_los_endpoints(cliente):
         "/health",
         "/aprendices/{id_aprendiz}/riesgo",
         "/cohortes/{id_cohorte}/riesgo",
+        "/cohortes",
+        "/instructor",
     } <= set(rutas)
 
 
@@ -293,6 +297,52 @@ def test_endpoints_503_si_la_api_no_esta_lista(archivos, tmp_path):
     with TestClient(crear_app(**rotos, predecir=predictor_falso)) as c:
         assert c.get("/aprendices/A-000001/riesgo").status_code == 503
         assert c.get("/cohortes/2025-T3/riesgo").status_code == 503
+        assert c.get("/cohortes").status_code == 503
+
+
+# --- /cohortes y vista del instructor ---------------------------------------------
+def test_lista_las_cohortes_con_aprendices_y_alertas(cliente, aprendices):
+    esperado = []
+    alerta = aprendices["id_aprendiz"].map(probabilidad_conocida) >= UMBRAL
+    for cohorte, grupo in aprendices.groupby("id_cohorte"):
+        esperado.append(
+            {
+                "id_cohorte": cohorte,
+                "aprendices": len(grupo),
+                "alertas": int(alerta[grupo.index].sum()),
+            }
+        )
+    assert cliente.get("/cohortes").json() == esperado
+
+
+def test_la_vista_del_instructor_es_una_pagina_autonoma(cliente):
+    respuesta = cliente.get("/instructor")
+    assert respuesta.status_code == 200
+    assert respuesta.headers["content-type"].startswith("text/html")
+    html = respuesta.text
+    assert "vista del instructor" in html
+    # Solo usa los endpoints de esta API y no carga nada de internet.
+    assert "fetch(url)" in html and "/cohortes" in html
+    assert "http://" not in html and "https://" not in html
+    # Nunca muestra la etiqueta ni la probabilidad inflada como porcentaje.
+    assert "deserto" not in html and ".probabilidad" not in html
+
+
+def _claves_js(html: str, constante: str) -> set[str]:
+    bloque = html.split(f"const {constante} = {{", 1)[1].split("};", 1)[0]
+    return set(re.findall(r"^\s*([a-z0-9_]+):", bloque, flags=re.MULTILINE))
+
+
+def test_la_vista_nombra_cada_variable_con_medida_y_cada_medida(cliente):
+    html = cliente.get("/instructor").text
+    medidas = cargar_medidas()
+    sin_nombre = set(medidas["por_variable"]) - _claves_js(html, "ETIQUETAS")
+    assert not sin_nombre, (
+        f"Variables con medida sin nombre en la vista: {sorted(sin_nombre)}"
+    )
+    ids = {plan["medida"] for plan in medidas["planes"].values()} | {MEDIDA_GENERAL}
+    sin_titulo = ids - _claves_js(html, "MEDIDAS")
+    assert not sin_titulo, f"Medidas sin título en la vista: {sorted(sin_titulo)}"
 
 
 # --- /cohortes/{id}/riesgo ------------------------------------------------------

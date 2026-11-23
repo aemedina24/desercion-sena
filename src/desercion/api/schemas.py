@@ -94,6 +94,14 @@ class RiesgoAprendiz(BaseModel):
     plan_de_accion: list[Accion] = Field(default_factory=list)
 
 
+class ResumenCohorte(BaseModel):
+    """Una cohorte con aprendices activos, para elegirla en la vista del instructor."""
+
+    id_cohorte: str = Field(pattern=r"^\d{4}-T[1-4]$")
+    aprendices: int = Field(ge=1)
+    alertas: int = Field(ge=0)
+
+
 class RiesgoCohorte(BaseModel):
     """Aprendices de una cohorte, filtrados y ordenados de mayor a menor riesgo.
 

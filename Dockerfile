@@ -4,7 +4,8 @@
 #     uv run dvc pull
 #     docker build -t desercion-api .
 #     docker run --rm -p 8000:8000 desercion-api
-#     → http://127.0.0.1:8000/health y http://127.0.0.1:8000/docs
+#     → http://127.0.0.1:8000/health, http://127.0.0.1:8000/docs
+#       y la vista del instructor en http://127.0.0.1:8000/instructor
 #
 # Dos etapas: la primera instala las dependencias con uv; la segunda solo lleva
 # Python, el entorno ya instalado y los archivos que la API lee al arrancar.
