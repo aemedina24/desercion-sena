@@ -67,8 +67,9 @@ Cada medida de `config/recomendaciones/medidas.yaml`, incluida la general, lleva
 
 ## Pendiente
 
-- Mostrar el valor del aprendiz junto a cada factor (por ejemplo, "2 ingresos en la
-  semana; el promedio es 4"), para que el instructor sepa de dónde sale el plan.
+- ~~Mostrar el valor del aprendiz junto a cada factor~~. Hecho el 21 de noviembre
+  (API 0.5.0): cada factor trae `valor` y `promedio`; una prueba con el modelo real
+  verifica que el valor queda del lado del promedio que sube el riesgo.
 - Prioridad alta o media por aprendiz. Depende de calibrar primero la probabilidad,
   que hoy está inflada por `class_weight="balanced"`.
 - Un lugar donde registrar el seguimiento (hoy la API solo consulta).

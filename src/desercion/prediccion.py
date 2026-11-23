@@ -18,6 +18,8 @@ Conexión con la API (en crear_app):
 
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
@@ -56,7 +58,9 @@ def predecir_riesgo(
       no `deserto`: se ignora y nunca sale en el resultado.
     - `alerta`: probabilidad >= umbral, el mismo criterio de evaluate.py.
     - `factores`: los `n_factores` que más suben el riesgo frente al aprendiz
-      promedio de train, con aporte de al menos APORTE_MINIMO.
+      promedio de train, con aporte de al menos APORTE_MINIMO. Cada uno trae el
+      valor del aprendiz y el promedio de train contra el que se compara
+      (agregar_valores).
     - `medidas`: solo para quienes tienen alerta (recomendaciones.py). Un factor
       cuyo dato está vacío se muestra, pero no genera medida (factores_con_dato).
     - `plan_de_accion`: qué hacer y qué decir por cada medida, en el mismo orden.
@@ -74,6 +78,7 @@ def predecir_riesgo(
         principales_factores(fila[fila >= APORTE_MINIMO], n=n_factores)
         for _, fila in tabla_aportes.iterrows()
     ]
+    factores = agregar_valores(factores, x, promedios_train(modelo))
     con_dato = factores_con_dato(factores, x)
     medidas = [medidas_para(f, bool(a)) for f, a in zip(con_dato, alerta, strict=True)]
     planes = [plan_para(f, bool(a)) for f, a in zip(con_dato, alerta, strict=True)]
@@ -89,6 +94,56 @@ def predecir_riesgo(
         },
         columns=COLUMNAS_PREDICCION,
     )
+
+
+def promedios_train(modelo: Pipeline) -> dict[str, float]:
+    """Promedio de train de cada variable numérica, el que usa el modelo.
+
+    Es la media que guarda el StandardScaler: la misma referencia contra la que
+    se calcula el aporte de cada factor, así que un factor siempre está del lado
+    malo de su promedio. Las booleanas quedan como proporción (0.35 = 35 % de los
+    aprendices). Los vacíos se rellenan con la mediana antes de escalar, así que
+    en variables con vacíos (asistencia, encuesta, historial) es el promedio con
+    esos vacíos rellenados. Sale del modelo: no hay que leer train ni tocar DVC.
+    """
+    numericas = modelo.named_steps["preprocesamiento"].named_transformers_["numericas"]
+    nombres = numericas.get_feature_names_out()
+    medias = numericas.named_steps["escalar"].mean_
+    # Las columnas del indicador de faltante (missingindicator_*) no son variables.
+    return {
+        str(n): float(m)
+        for n, m in zip(nombres, medias, strict=True)
+        if not str(n).startswith("missingindicator_")
+    }
+
+
+def agregar_valores(
+    factores: list[list[dict]], x: pd.DataFrame, promedios: dict[str, float]
+) -> list[list[dict]]:
+    """Agrega a cada factor el valor del aprendiz y el promedio de train.
+
+    Así el instructor ve el porqué con números: "entregó el 45 % de las
+    actividades; el promedio es 72 %". `valor` es None si el dato está vacío, y
+    un texto en las categóricas (la modalidad, la situación laboral), que no
+    tienen promedio.
+    """
+    resultado = []
+    for i, fila in enumerate(factores):
+        nueva = []
+        for f in fila:
+            crudo = x[f["variable"]].iloc[i]
+            if pd.isna(crudo):
+                valor = None
+            elif isinstance(crudo, str):
+                valor = crudo
+            else:
+                valor = float(crudo)
+                valor = None if math.isnan(valor) else valor
+            nueva.append(
+                {**f, "valor": valor, "promedio": promedios.get(f["variable"])}
+            )
+        resultado.append(nueva)
+    return resultado
 
 
 def factores_con_dato(factores: list[list[dict]], x: pd.DataFrame) -> list[list[dict]]:

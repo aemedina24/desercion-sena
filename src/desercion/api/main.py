@@ -164,7 +164,7 @@ def crear_app(
             "Umbral global (ADR 0003); consulta por cohorte con filtros (ADR 0004); "
             "plan de acción para el instructor (ADR 0006)."
         ),
-        version="0.4.0",
+        version="0.5.0",
         lifespan=ciclo_de_vida,
     )
 

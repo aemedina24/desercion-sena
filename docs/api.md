@@ -87,9 +87,9 @@ Si el estado no es `ok`, responde con código 503 y el mismo formato.
   "alerta": true,
   "umbral": 0.4910441072721096,
   "factores": [
-    {"variable": "porcentaje_actividades_entregadas", "aporte": 1.4711291358811265},
-    {"variable": "promedio_calificaciones", "aporte": 0.889264713040094},
-    {"variable": "tasa_aprobacion_entregas", "aporte": 0.1856946887722884}
+    {"variable": "porcentaje_actividades_entregadas", "aporte": 1.4711291358811265, "valor": 0.254, "promedio": 0.7334016725798277},
+    {"variable": "promedio_calificaciones", "aporte": 0.889264713040094, "valor": 2.5, "promedio": 3.814749113025849},
+    {"variable": "tasa_aprobacion_entregas", "aporte": 0.1856946887722884, "valor": 0.7637795275590551, "promedio": 0.8573115365426366}
   ],
   "medidas": [
     "Acordar con el aprendiz un calendario para entregar las actividades y evaluaciones pendientes.",
@@ -148,7 +148,15 @@ cohorte no tiene aprendices activos.
   ([ADR 003](decisiones/0003-umbral-y-equidad.md)).
 - **`factores`:** hasta 3 variables que más suben el riesgo de ese aprendiz frente al
   aprendiz promedio de entrenamiento. El `aporte` está en log-odds y solo se muestran
-  los que aportan al menos 0.05; por debajo es ruido.
+  los que aportan al menos 0.05; por debajo es ruido. Cada factor trae el `valor` del
+  aprendiz y el `promedio` de entrenamiento contra el que se compara, para que el
+  instructor vea el porqué con números: en el ejemplo, entregó el 25 % de las
+  actividades frente a un promedio del 73 %. Los porcentajes van de 0 a 1 y las
+  booleanas son 0 o 1 (su promedio es la proporción de aprendices). En las categóricas
+  el `valor` es un texto y no hay `promedio`; si el dato está vacío (la asistencia de un
+  virtual), `valor` es `null`. El promedio sale del modelo (la media que guarda su
+  escalador), así que en variables con vacíos incluye los vacíos rellenados con la
+  mediana.
 - **`medidas`:** solo cuando hay alerta. Hasta 3, en orden de aporte y sin repetir (dos
   factores pueden compartir medida). Se definen en `config/recomendaciones/medidas.yaml`
   y nunca se sugieren por características personales como la edad o el nivel
