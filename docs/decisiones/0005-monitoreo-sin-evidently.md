@@ -50,7 +50,7 @@ Salidas, en Git (`cache: false`) y escritas con LF:
 `reports/drift/drift.json` y `reports/drift/drift.html` (las mismas tablas, para
 la demo). El reporte no lleva fecha: los mismos datos dan el mismo hash.
 
-## Resultado con el modelo de DVC
+## Resultado con el modelo de DVC (datos v1)
 
 | Cohorte | Drift (PSI) | Recall (IC 95 %) | Estado |
 |---|---|---|---|

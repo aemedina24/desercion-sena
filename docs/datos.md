@@ -58,7 +58,7 @@ El sorteo del paso 5 representa lo que ocurre después de la semana 4 y nadie pu
 - `abandono_ultimo_curso` solo es verdadero si `n_cursos_abandonados` es al menos 1.
 - El programa `P-201` no aparecía en la muestra de la v1; su nombre y área se completaron.
 
-**Reproducir:** `uv run dvc repro generate`. Con la misma semilla y las mismas versiones de `uv.lock`, el resultado es idéntico.
+**Reproducir:** `uv run dvc repro generate`. Con la misma semilla y las mismas versiones de `uv.lock`, `aprendices.parquet` sale idéntico byte a byte en Windows y en Linux. `verdad.parquet` puede diferir en el último decimal de la probabilidad entre sistemas operativos (redondeo de `exp()`), sin cambiar ninguna fila ni ningún resultado.
 
 ## Roles
 
