@@ -107,12 +107,15 @@ Con el generador v2 se puede comparar contra la probabilidad real de cada aprend
 ningún modelo puede conocer: el error absoluto medio baja de 0.162 a 0.075, y la
 correlación de orden con la probabilidad real es 0.889.
 
-**Qué significa para quien usa la API.** Hoy la probabilidad sirve para **ordenar** a
-los aprendices, no para decir "este tiene 70 % de riesgo". Mientras no se decida
-corregirla, es mejor leerla como una posición en la lista. Aplicar la corrección, o
-mostrar bandas de prioridad en vez del número, queda como decisión pendiente del
-equipo; también falta probar una calibración ajustada (Platt o isotónica) con
-predicciones out-of-fold, que podría corregir lo que el desplazamiento no alcanza.
+**Qué significa para quien usa la API.** Desde la API 0.6.0 cada aprendiz trae dos
+números: `probabilidad`, la del modelo, que sirve para **ordenar** y decidir la alerta,
+y `probabilidad_calibrada`, con esta corrección aplicada, que sí se puede leer como
+porcentaje. La API lee el desplazamiento de `reports/calibracion.json` y solo lo usa si
+el reporte es del mismo modelo (su umbral coincide); si no, responde sin el campo
+calibrado y `/health` lo informa. La vista del instructor sigue mostrando el puesto en
+la lista: mostrar el porcentaje o bandas de prioridad es una decisión que falta validar
+con los instructores. También falta probar una calibración ajustada (Platt o isotónica)
+con predicciones out-of-fold, que podría corregir lo que el desplazamiento no alcanza.
 
 ### Por modalidad
 

@@ -38,6 +38,7 @@ from desercion.validate import AREAS_FORMACION, MODALIDADES, NIVELES_FORMACION
 
 UMBRAL = 0.4606
 N_APRENDICES = 60
+DESPLAZAMIENTO = 0.7651
 
 
 # --- Datos y modelo sintéticos ---------------------------------------------------
@@ -69,11 +70,21 @@ def archivos(aprendices, tmp_path) -> dict:
         "ruta_metricas": tmp_path / "metricas.json",
         "ruta_aprendices": tmp_path / "aprendices.parquet",
         "ruta_referencia": tmp_path / "referencia.json",
+        "ruta_calibracion": tmp_path / "calibracion.json",
     }
     pipeline.fit(x, y)
     guardar_modelo(pipeline, rutas["ruta_modelo"])
     guardar_referencia(referencia_train(pipeline, x), rutas["ruta_referencia"])
     rutas["ruta_metricas"].write_text(json.dumps({"umbral": UMBRAL}), encoding="utf-8")
+    rutas["ruta_calibracion"].write_text(
+        json.dumps(
+            {
+                "desplazamiento_por_balanceo": DESPLAZAMIENTO,
+                "modelo": {"umbral": UMBRAL},
+            }
+        ),
+        encoding="utf-8",
+    )
     aprendices.to_parquet(rutas["ruta_aprendices"], index=False)
     return rutas
 
@@ -133,8 +144,75 @@ def test_health_ok(cliente, archivos):
     assert cuerpo["modelo_cargado"] is True
     assert cuerpo["umbral"] == UMBRAL
     assert cuerpo["aprendices"] == N_APRENDICES
+    assert cuerpo["calibrada"] is True
+    assert cuerpo["detalle"] is None
     # La versión es el md5 del archivo: el mismo dato que guarda dvc.lock.
     assert cuerpo["version_modelo"] == md5_archivo(archivos["ruta_modelo"])
+
+
+# --- Probabilidad calibrada -------------------------------------------------------
+def _calibrada(p: float) -> float:
+    return 1 / (1 + np.exp(-(np.log(p / (1 - p)) - DESPLAZAMIENTO)))
+
+
+def test_cada_aprendiz_trae_la_probabilidad_calibrada(cliente):
+    cuerpo = cliente.get("/cohortes/2025-T3/riesgo", params={"limite": 500}).json()
+    for a in cuerpo["aprendices"]:
+        assert a["probabilidad_calibrada"] == pytest.approx(
+            _calibrada(a["probabilidad"]), rel=1e-9
+        )
+        assert a["probabilidad_calibrada"] < a["probabilidad"]
+    individual = cliente.get("/aprendices/A-000001/riesgo").json()
+    assert individual["probabilidad_calibrada"] == pytest.approx(
+        _calibrada(individual["probabilidad"]), rel=1e-9
+    )
+
+
+def test_la_calibracion_no_cambia_ni_el_orden_ni_las_alertas(archivos, tmp_path):
+    sin = {**archivos, "ruta_calibracion": tmp_path / "no_existe.json"}
+    params = {"limite": 500}
+    with TestClient(crear_app(**archivos, predecir=predictor_falso)) as c:
+        con_calibracion = c.get("/cohortes/2025-T3/riesgo", params=params)
+    with TestClient(crear_app(**sin, predecir=predictor_falso)) as c:
+        sin_calibracion = c.get("/cohortes/2025-T3/riesgo", params=params)
+    assert _ids(con_calibracion) == _ids(sin_calibracion)
+    con_calibracion, sin_calibracion = con_calibracion.json(), sin_calibracion.json()
+    assert [a["alerta"] for a in con_calibracion["aprendices"]] == [
+        a["alerta"] for a in sin_calibracion["aprendices"]
+    ]
+    assert con_calibracion["total_alertas"] == sin_calibracion["total_alertas"]
+
+
+@pytest.mark.parametrize("caso", ["falta", "otro_modelo", "corrupta"])
+def test_sin_calibracion_la_api_responde_igual_y_lo_dice(archivos, tmp_path, caso):
+    ruta = tmp_path / "calibracion_rota.json"
+    if caso == "otro_modelo":
+        ruta.write_text(
+            json.dumps({"desplazamiento_por_balanceo": 0.7, "modelo": {"umbral": 0.9}}),
+            encoding="utf-8",
+        )
+    elif caso == "corrupta":
+        ruta.write_text("{no es json", encoding="utf-8")
+    with TestClient(
+        crear_app(**{**archivos, "ruta_calibracion": ruta}, predecir=predictor_falso)
+    ) as c:
+        salud = c.get("/health")
+        aprendiz = c.get("/aprendices/A-000001/riesgo")
+    assert salud.status_code == 200
+    assert salud.json()["estado"] == "ok"
+    assert salud.json()["calibrada"] is False
+    assert salud.json()["detalle"].startswith("Sin calibración")
+    if caso == "otro_modelo":
+        assert "otro modelo" in salud.json()["detalle"]
+    assert aprendiz.status_code == 200
+    assert aprendiz.json()["probabilidad_calibrada"] is None
+
+
+def test_la_documentacion_explica_las_dos_probabilidades(cliente):
+    esquema = cliente.get("/openapi.json").json()["components"]["schemas"]
+    campos = esquema["RiesgoAprendiz"]["properties"]
+    assert "exagera" in campos["probabilidad"]["description"]
+    assert "porcentaje" in campos["probabilidad_calibrada"]["description"]
 
 
 def _salud(archivos: dict, predecir=predictor_falso):

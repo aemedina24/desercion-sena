@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from desercion.api.main import RUTA_CALIBRACION
 from desercion.api.schemas import RiesgoAprendiz
 from desercion.explain import (
     RUTA_REFERENCIA,
@@ -34,6 +35,8 @@ from desercion.prediccion import (
     APORTE_MINIMO,
     COLUMNAS_PREDICCION,
     agregar_valores,
+    cargar_desplazamiento,
+    corregir_probabilidad,
     factores_con_dato,
     predecir_riesgo,
     promedios_train,
@@ -449,6 +452,73 @@ def test_el_riesgo_trae_un_plan_por_medida(riesgo):
     for _, fila in riesgo.iterrows():
         assert len(fila["plan_de_accion"]) == len(fila["medidas"])
         assert bool(fila["plan_de_accion"]) == bool(fila["alerta"])
+
+
+# --- Probabilidad calibrada -------------------------------------------------------
+def _calibracion(tmp_path, umbral: float, desplazamiento: float = 0.7651):
+    ruta = tmp_path / "calibracion.json"
+    ruta.write_text(
+        json.dumps(
+            {
+                "desplazamiento_por_balanceo": desplazamiento,
+                "modelo": {"umbral": umbral},
+            }
+        ),
+        encoding="utf-8",
+    )
+    return ruta
+
+
+def test_la_correccion_es_la_misma_de_calibracion_py():
+    # Se duplica aquí para no cargar matplotlib en la API: las dos deben coincidir.
+    from desercion.calibracion import corregir_por_balanceo, desplazamiento_por_balanceo
+
+    p = np.array([0.001, 0.2, 0.491, 0.75, 0.999])
+    tasa = 0.3175
+    esperada = corregir_por_balanceo(p, tasa)
+    obtenida = corregir_probabilidad(pd.Series(p), desplazamiento_por_balanceo(tasa))
+    np.testing.assert_allclose(obtenida.to_numpy(), esperada, rtol=1e-12)
+
+
+def test_la_correccion_baja_la_probabilidad_sin_cambiar_el_orden():
+    p = pd.Series(np.linspace(0.01, 0.99, 50)).sample(frac=1, random_state=0)
+    corregida = corregir_probabilidad(p, 0.7651)
+    assert (corregida < p).all()
+    assert (corregida.rank() == p.rank()).all()
+    # Sin desplazamiento no cambia nada.
+    np.testing.assert_allclose(corregir_probabilidad(p, 0.0), p, rtol=1e-12)
+
+
+def test_la_correccion_aguanta_probabilidades_extremas():
+    corregida = corregir_probabilidad(pd.Series([0.0, 1.0]), 0.7651)
+    assert np.isfinite(corregida).all()
+    assert ((corregida >= 0) & (corregida <= 1)).all()
+
+
+def test_carga_el_desplazamiento_con_la_tolerancia_entre_sistemas(tmp_path):
+    # Entre Windows y Linux el umbral difiere desde el decimal 13.
+    ruta = _calibracion(tmp_path, umbral=0.4910441072721096)
+    assert cargar_desplazamiento(ruta, umbral=0.4910441072721) == 0.7651
+
+
+def test_rechaza_la_calibracion_de_otro_modelo(tmp_path):
+    ruta = _calibracion(tmp_path, umbral=0.4606)
+    with pytest.raises(ValueError, match="otro modelo"):
+        cargar_desplazamiento(ruta, umbral=0.491)
+
+
+def test_rechaza_un_desplazamiento_no_finito(tmp_path):
+    ruta = _calibracion(tmp_path, umbral=0.491, desplazamiento=float("nan"))
+    with pytest.raises(ValueError, match="inválido"):
+        cargar_desplazamiento(ruta, umbral=0.491)
+
+
+def test_la_calibracion_versionada_es_del_modelo_versionado():
+    # Los dos reportes están en git (cache: false), así que corre también en CI:
+    # si alguien reentrena y no corre `calibrate`, la API perdería la calibración.
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    desplazamiento = cargar_desplazamiento(RUTA_CALIBRACION, umbral)
+    assert 0 < desplazamiento < 2
 
 
 # --- Con el modelo y los datos reales ------------------------------------------------

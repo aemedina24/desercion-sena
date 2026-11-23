@@ -70,6 +70,7 @@ Cada medida de `config/recomendaciones/medidas.yaml`, incluida la general, lleva
 - ~~Mostrar el valor del aprendiz junto a cada factor~~. Hecho el 21 de noviembre
   (API 0.5.0): cada factor trae `valor` y `promedio`; una prueba con el modelo real
   verifica que el valor queda del lado del promedio que sube el riesgo.
-- Prioridad alta o media por aprendiz. Depende de calibrar primero la probabilidad,
-  que hoy está inflada por `class_weight="balanced"`.
+- Prioridad alta o media por aprendiz. La probabilidad calibrada, que ya se puede leer
+  como porcentaje, está en la API desde la 0.6.0 (`probabilidad_calibrada`); falta
+  decidir con los instructores dónde cortar las bandas.
 - Un lugar donde registrar el seguimiento (hoy la API solo consulta).
