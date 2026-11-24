@@ -168,8 +168,14 @@ const $ = (id) => document.getElementById(id);
 const etiqueta = (v) => ETIQUETAS[v] || v.replaceAll("_", " ");
 const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
+// Un dato vacío que no es falta del aprendiz: los virtuales no tienen sesiones.
+const SIN_DATO = {
+  asistencia_porcentaje: "No aplica (sin sesiones presenciales)",
+};
+const vacio = (valor) => valor === null || valor === undefined;
+
 function valorTexto(variable, valor) {
-  if (valor === null || valor === undefined) return "sin dato";
+  if (vacio(valor)) return SIN_DATO[variable] || "Sin dato";
   if (typeof valor === "string") return capital(valor);
   if (BOOLEANAS.has(variable)) return valor >= 0.5 ? "Sí" : "No";
   if (PORCENTAJES.has(variable)) return `${Math.round(valor * 100)} %`;
@@ -183,11 +189,13 @@ function promedioTexto(variable, promedio) {
   return promedio.toFixed(1).replace(".", ",");
 }
 
+// El motivo de la lista es el primer factor con dato: "Asistencia: sin dato"
+// no le dice nada al instructor sobre un virtual. El detalle muestra todos.
 function motivo(aprendiz) {
-  const f = aprendiz.factores[0];
+  const f = aprendiz.factores.find((x) => !vacio(x.valor)) || aprendiz.factores[0];
   if (!f) return "Sin un factor dominante";
   const v = valorTexto(f.variable, f.valor);
-  return f.promedio === null || f.valor === null
+  return vacio(f.promedio) || vacio(f.valor)
     ? `${etiqueta(f.variable)}: ${v}`
     : `${etiqueta(f.variable)}: ${v} (promedio ${promedioTexto(f.variable, f.promedio)})`;
 }
@@ -276,7 +284,7 @@ function mostrar(a, puesto, total) {
       tr.append(
         el("td", etiqueta(f.variable)),
         el("td", valorTexto(f.variable, f.valor), "num"),
-        el("td", promedioTexto(f.variable, f.promedio), "num"),
+        el("td", vacio(f.valor) ? "—" : promedioTexto(f.variable, f.promedio), "num"),
       );
       tabla.append(tr);
     }

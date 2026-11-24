@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from desercion import prediccion
 from desercion.api.main import RUTA_CALIBRACION
 from desercion.api.schemas import RiesgoAprendiz
 from desercion.explain import (
@@ -34,12 +35,15 @@ from desercion.modelado import (
 from desercion.prediccion import (
     APORTE_MINIMO,
     COLUMNAS_PREDICCION,
+    DIRECCION_RIESGO,
     agregar_valores,
     cargar_desplazamiento,
     corregir_probabilidad,
+    es_contrario,
     factores_con_dato,
     predecir_riesgo,
     promedios_train,
+    quitar_contrarios,
 )
 from desercion.recomendaciones import (
     CAMPOS_PLAN,
@@ -203,31 +207,12 @@ def test_medidas_yaml_cubre_cada_variable_del_modelo_una_vez():
     )
 
 
-# Dirección en que cada variable con medida sube el riesgo: +1 = más es peor,
-# -1 = menos es peor (los booleanos cuentan como 0/1). El texto de la medida
-# supone esa dirección: "no está entrando", "abandonó cursos anteriores". Por la
-# colinealidad, el modelo puede darle a una variable el signo contrario, y
-# entonces la marcaría como factor en quien está MEJOR que el promedio (pasó con
-# porcentaje_actividades_aprobadas y tasa_finalizacion_previa con los datos v2).
+# Las variables con medida y su dirección (+1 = más es peor, -1 = menos es peor).
+# La lista completa, con las que el modelo invierte, está en prediccion.py.
 DIRECCION_CON_MEDIDA = {
-    "porcentaje_actividades_entregadas": -1,
-    "actividades_pendientes": +1,
-    "evaluaciones_no_presentadas": +1,
-    "tasa_aprobacion_entregas": -1,
-    "promedio_calificaciones": -1,
-    "ingresos_plataforma_ultimos_7d": -1,
-    "dias_sin_ingreso": +1,
-    "sin_ingreso_reciente": +1,
-    "asistencia_porcentaje": -1,
-    "disponibilidad_equipo": -1,
-    "comparte_dispositivo": +1,
-    "horas_disponibles_estudio": -1,
-    "horas_trabajo_semana": +1,
-    "responsabilidades_cuidado": +1,
-    "experiencia_virtual_previa": -1,
-    "es_primer_curso": +1,
-    "n_cursos_abandonados": +1,
-    "solicito_apoyo": +1,
+    variable: direccion
+    for variable, direccion in DIRECCION_RIESGO.items()
+    if variable in cargar_medidas()["por_variable"]
 }
 # En las categóricas el factor es una categoría, no una dirección: se revisan a
 # mano (con los datos v2 solo salen dificultad alta, plan "otro" y conexión "otra").
@@ -337,6 +322,62 @@ def test_cada_variable_con_medida_declara_su_direccion():
         f"Sin dirección: {sorted(con_medida - declaradas)}; "
         f"ya no tienen medida: {sorted(declaradas - con_medida)}"
     )
+
+
+def test_las_direcciones_sin_medida_estan_en_sin_medida():
+    config = cargar_medidas()
+    sin_medida_declaradas = set(DIRECCION_RIESGO) - set(config["por_variable"])
+    assert sin_medida_declaradas <= set(config["sin_medida"])
+    assert sin_medida_declaradas == {
+        "porcentaje_actividades_aprobadas",
+        "tasa_finalizacion_previa",
+        "abandono_ultimo_curso",
+    }
+
+
+# --- Factores contrarios (signo invertido) ---------------------------------------
+@pytest.mark.parametrize(
+    ("factor", "contrario"),
+    [
+        # Terminó todos sus cursos previos (menos es peor): del lado bueno.
+        (
+            {"variable": "tasa_finalizacion_previa", "valor": 1.0, "promedio": 0.79},
+            True,
+        ),
+        (
+            {"variable": "tasa_finalizacion_previa", "valor": 0.5, "promedio": 0.79},
+            False,
+        ),
+        # No abandonó el último curso (más es peor): del lado bueno.
+        ({"variable": "abandono_ultimo_curso", "valor": 0.0, "promedio": 0.3}, True),
+        ({"variable": "dias_sin_ingreso", "valor": 9.0, "promedio": 3.9}, False),
+        ({"variable": "dias_sin_ingreso", "valor": 1.0, "promedio": 3.9}, True),
+        # Sin lado: dato vacío, categoría o variable sin dirección declarada.
+        ({"variable": "asistencia_porcentaje", "valor": None, "promedio": 0.85}, False),
+        ({"variable": "modalidad", "valor": "virtual", "promedio": None}, False),
+        ({"variable": "edad", "valor": 40.0, "promedio": 25.0}, False),
+    ],
+)
+def test_es_contrario(factor, contrario):
+    assert es_contrario(factor) is contrario
+
+
+def test_quitar_contrarios_conserva_el_orden_de_los_demas():
+    fila = [
+        {"variable": "dias_sin_ingreso", "valor": 9.0, "promedio": 3.9},
+        {"variable": "tasa_finalizacion_previa", "valor": 1.0, "promedio": 0.79},
+        {"variable": "modalidad", "valor": "virtual", "promedio": None},
+        {"variable": "promedio_calificaciones", "valor": 2.5, "promedio": 3.8},
+    ]
+    assert [f["variable"] for f in quitar_contrarios([fila])[0]] == [
+        "dias_sin_ingreso",
+        "modalidad",
+        "promedio_calificaciones",
+    ]
+
+
+def test_ningun_factor_mostrado_es_contrario(riesgo):
+    assert not [f for fila in riesgo["factores"] for f in fila if es_contrario(f)]
 
 
 def test_ninguna_medida_por_caracteristicas_personales():
@@ -581,6 +622,38 @@ def test_factores_con_medida_van_en_la_direccion_esperada():
         "Factores con medida en aprendices que están mejor que el promedio "
         f"(signo invertido en el modelo): {invertidos}"
     )
+
+
+@requiere_artefactos
+def test_solo_se_quitan_las_variables_que_el_modelo_invierte(monkeypatch):
+    # Con el modelo real: sin el filtro, ¿qué factores dirían lo contrario de lo
+    # que muestran? Deben ser solo variables sin medida (40 de
+    # tasa_finalizacion_previa con los datos v2). Si aparece una variable con
+    # medida, el modelo le invirtió el signo: su medida le hablaría a quien está
+    # mejor que el promedio, aunque el factor ya no se muestre.
+    umbral = json.loads(RUTA_METRICAS.read_text(encoding="utf-8"))["umbral"]
+    test = pd.read_parquet(RUTA_TEST)
+    argumentos = {
+        "modelo": cargar_modelo(),
+        "referencia": cargar_referencia(),
+        "umbral": umbral,
+    }
+    with monkeypatch.context() as m:
+        m.setattr(prediccion, "quitar_contrarios", lambda factores: factores)
+        sin_filtro = predecir_riesgo(test, **argumentos)
+    con_filtro = predecir_riesgo(test, **argumentos)
+
+    quitados: dict[str, int] = {}
+    for fila in sin_filtro.loc[sin_filtro["alerta"], "factores"]:
+        for f in fila:
+            if es_contrario(f):
+                quitados[f["variable"]] = quitados.get(f["variable"], 0) + 1
+    assert quitados, "El filtro ya no quita nada: revisar DIRECCION_RIESGO"
+    assert set(quitados) <= set(cargar_medidas()["sin_medida"]), quitados
+    assert not [f for fila in con_filtro["factores"] for f in fila if es_contrario(f)]
+    # Las alertas no cambian y cada una sigue con sus 3 factores.
+    assert (con_filtro["alerta"] == sin_filtro["alerta"]).all()
+    assert (con_filtro.loc[con_filtro["alerta"], "factores"].str.len() == 3).all()
 
 
 @requiere_artefactos

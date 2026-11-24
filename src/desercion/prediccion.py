@@ -30,6 +30,39 @@ from desercion.explain import aportes, principales_factores
 from desercion.modelado import ETIQUETA, separar_x_y
 from desercion.recomendaciones import medidas_para, plan_para
 
+# Dirección en que cada variable sube el riesgo según el sentido común (y el
+# texto de su medida): +1 = más es peor, -1 = menos es peor; las booleanas
+# cuentan como 0/1. Por la colinealidad, el modelo puede darle a una variable el
+# signo contrario, y entonces la marcaría como factor en quien está MEJOR que el
+# promedio: con los datos v2, "Cursos previos terminados: 100 % (promedio 79 %)"
+# en 40 alertas de test. Esos factores no se muestran (quitar_contrarios). Están
+# todas las variables con medida (una prueba lo exige) y las tres que el modelo
+# invierte con los datos v1 o v2, que están en `sin_medida`.
+DIRECCION_RIESGO = {
+    "porcentaje_actividades_entregadas": -1,
+    "actividades_pendientes": +1,
+    "evaluaciones_no_presentadas": +1,
+    "tasa_aprobacion_entregas": -1,
+    "promedio_calificaciones": -1,
+    "ingresos_plataforma_ultimos_7d": -1,
+    "dias_sin_ingreso": +1,
+    "sin_ingreso_reciente": +1,
+    "asistencia_porcentaje": -1,
+    "disponibilidad_equipo": -1,
+    "comparte_dispositivo": +1,
+    "horas_disponibles_estudio": -1,
+    "horas_trabajo_semana": +1,
+    "responsabilidades_cuidado": +1,
+    "experiencia_virtual_previa": -1,
+    "es_primer_curso": +1,
+    "n_cursos_abandonados": +1,
+    "solicito_apoyo": +1,
+    # Sin medida: el modelo les invierte el signo por la colinealidad.
+    "porcentaje_actividades_aprobadas": -1,
+    "tasa_finalizacion_previa": -1,
+    "abandono_ultimo_curso": +1,
+}
+
 COLUMNAS_PREDICCION = [
     "id_aprendiz",
     "probabilidad",
@@ -68,7 +101,8 @@ def predecir_riesgo(
     - `factores`: los `n_factores` que más suben el riesgo frente al aprendiz
       promedio de train, con aporte de al menos APORTE_MINIMO. Cada uno trae el
       valor del aprendiz y el promedio de train contra el que se compara
-      (agregar_valores).
+      (agregar_valores). No sale un factor cuyo valor está del lado bueno del
+      promedio (quitar_contrarios): su lugar lo toma el siguiente.
     - `medidas`: solo para quienes tienen alerta (recomendaciones.py). Un factor
       cuyo dato está vacío se muestra, pero no genera medida (factores_con_dato).
     - `plan_de_accion`: qué hacer y qué decir por cada medida, en el mismo orden.
@@ -82,11 +116,13 @@ def predecir_riesgo(
     probabilidad = modelo.predict_proba(x)[:, 1]
     alerta = probabilidad >= umbral
     tabla_aportes = aportes(modelo, x, referencia)
-    factores = [
-        principales_factores(fila[fila >= APORTE_MINIMO], n=n_factores)
+    # Se piden de más para que, si alguno se quita por contrario, entre el siguiente.
+    candidatos = [
+        principales_factores(fila[fila >= APORTE_MINIMO], n=MAX_FACTORES)
         for _, fila in tabla_aportes.iterrows()
     ]
-    factores = agregar_valores(factores, x, promedios_train(modelo))
+    candidatos = agregar_valores(candidatos, x, promedios_train(modelo))
+    factores = [fila[:n_factores] for fila in quitar_contrarios(candidatos)]
     con_dato = factores_con_dato(factores, x)
     medidas = [medidas_para(f, bool(a)) for f, a in zip(con_dato, alerta, strict=True)]
     planes = [plan_para(f, bool(a)) for f, a in zip(con_dato, alerta, strict=True)]
@@ -108,8 +144,7 @@ def promedios_train(modelo: Pipeline) -> dict[str, float]:
     """Promedio de train de cada variable numérica, el que usa el modelo.
 
     Es la media que guarda el StandardScaler: la misma referencia contra la que
-    se calcula el aporte de cada factor, así que un factor siempre está del lado
-    malo de su promedio. Las booleanas quedan como proporción (0.35 = 35 % de los
+    se calcula el aporte de cada factor. Las booleanas quedan como proporción (0.35 = 35 % de los
     aprendices). Los vacíos se rellenan con la mediana antes de escalar, así que
     en variables con vacíos (asistencia, encuesta, historial) es el promedio con
     esos vacíos rellenados. Sale del modelo: no hay que leer train ni tocar DVC.
@@ -152,6 +187,31 @@ def agregar_valores(
             )
         resultado.append(nueva)
     return resultado
+
+
+def es_contrario(factor: dict) -> bool:
+    """True si el valor del aprendiz está del lado bueno de su promedio.
+
+    Solo para las variables de DIRECCION_RIESGO con valor y promedio numéricos:
+    un dato vacío o una categoría no tienen lado.
+    """
+    direccion = DIRECCION_RIESGO.get(factor["variable"])
+    valor, promedio = factor.get("valor"), factor.get("promedio")
+    if direccion is None or not isinstance(valor, float) or promedio is None:
+        return False
+    return (valor - promedio) * direccion < 0
+
+
+def quitar_contrarios(factores: list[list[dict]]) -> list[list[dict]]:
+    """Quita los factores que dirían lo contrario de lo que muestran.
+
+    El aporte es real para el modelo, pero al instructor le llegaría "Cursos
+    previos terminados: 100 % (promedio 79 %)" como razón de la alerta: un
+    número que contradice el texto. Pasa con las variables a las que la
+    colinealidad les invierte el signo. Con el modelo real, una prueba verifica
+    que los que se quitan son justo esos.
+    """
+    return [[f for f in fila if not es_contrario(f)] for fila in factores]
 
 
 def factores_con_dato(factores: list[list[dict]], x: pd.DataFrame) -> list[list[dict]]:

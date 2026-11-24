@@ -423,6 +423,15 @@ def test_la_vista_nombra_cada_variable_con_medida_y_cada_medida(cliente):
     assert not sin_titulo, f"Medidas sin título en la vista: {sorted(sin_titulo)}"
 
 
+def test_la_vista_explica_la_asistencia_vacia_de_los_virtuales(cliente):
+    # "Asistencia: sin dato" era el motivo de 103 virtuales con alerta. La vista
+    # usa como motivo el primer factor con dato y, en el detalle, explica el vacío.
+    html = cliente.get("/instructor").text
+    assert "No aplica (sin sesiones presenciales)" in html
+    assert _claves_js(html, "SIN_DATO") <= _claves_js(html, "ETIQUETAS")
+    assert "factores.find((x) => !vacio(x.valor))" in html
+
+
 # --- /cohortes/{id}/riesgo ------------------------------------------------------
 def _ids(respuesta) -> list[str]:
     return [a["id_aprendiz"] for a in respuesta.json()["aprendices"]]
